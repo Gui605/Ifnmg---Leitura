@@ -1,3 +1,9 @@
+backend/node_modules
+backend/.env
+backend/.traeignore
+backend/dist
+frontend/dist
+frontend/node_modules
 .traerules
 CHANGELOG_AI.md
 DOCUMENTACAO_API_FRONTEND.md
