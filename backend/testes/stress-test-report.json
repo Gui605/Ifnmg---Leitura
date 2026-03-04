@@ -1,0 +1,510 @@
+{
+  "timestamp": "2026-03-03T23:34:54.027Z",
+  "summary": {
+    "total": 26,
+    "passed": 26,
+    "failed": 0,
+    "slow": 2
+  },
+  "performance": {
+    "avgMs": 212.34615384615384,
+    "maxMs": 2889,
+    "slowestEndpoints": [
+      {
+        "endpoint": "POST /auth/solicitar-recuperacao",
+        "ms": 2889
+      },
+      {
+        "endpoint": "GET /saude",
+        "ms": 2111
+      },
+      {
+        "endpoint": "POST /auth/logar",
+        "ms": 122
+      },
+      {
+        "endpoint": "POST /auth/logar",
+        "ms": 105
+      },
+      {
+        "endpoint": "DELETE /posts/:id",
+        "ms": 38
+      }
+    ]
+  },
+  "results": [
+    {
+      "nome": "Auth: Recuperação de Senha (Simulado)",
+      "endpoint": "/auth/solicitar-recuperacao",
+      "method": "POST",
+      "ok": true,
+      "ms": 2889,
+      "slow": true,
+      "timestamp": "2026-03-03T23:34:51.612Z",
+      "details": {
+        "status": "success",
+        "message": "Se este e-mail estiver cadastrado, um link de recuperação será enviado."
+      }
+    },
+    {
+      "nome": "Health: Check",
+      "endpoint": "/saude",
+      "method": "GET",
+      "ok": true,
+      "ms": 2111,
+      "slow": true,
+      "timestamp": "2026-03-03T23:34:54.010Z",
+      "details": {
+        "status": "UP",
+        "timestamp": "2026-03-03T23:34:54.009Z",
+        "uptime": "0h 1m 41s",
+        "requestId": "788bfc48-260e-4b5f-93ef-56a27b07b4bf",
+        "services": {
+          "database": "UP",
+          "email": "UP"
+        }
+      }
+    },
+    {
+      "nome": "Auth: Login Admin",
+      "endpoint": "/auth/logar",
+      "method": "POST",
+      "ok": true,
+      "ms": 122,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:48.617Z",
+      "details": {
+        "status": "success",
+        "message": "Login realizado com sucesso.",
+        "data": {
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvX2lkIjo3LCJwZXJmaWxfaWQiOjgsImlzX2FkbWluIjp0cnVlLCJ0b2tlbl92ZXJzaW9uIjozOCwiaWF0IjoxNzcyNTgwODg4LCJleHAiOjE3NzMxODU2ODh9.zRnpAwt0i0dvUtQb1VfTDYryjHoFJkFP0qbWRqNlIAY"
+        }
+      }
+    },
+    {
+      "nome": "Auth: Login Falha",
+      "endpoint": "/auth/logar",
+      "method": "POST",
+      "ok": true,
+      "ms": 105,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:48.722Z",
+      "details": {
+        "timestamp": "2026-03-03T23:34:48.720Z",
+        "status": 401,
+        "error": "Unauthorized",
+        "errorCode": "UNAUTHENTICATED",
+        "message": "E-mail ou senha incorretos.",
+        "path": "/api/v1/auth/logar",
+        "requestId": "bfedb6d2-9c6a-4445-bd1b-575adadcbed5"
+      }
+    },
+    {
+      "nome": "Posts: Deixar de Seguir (Cleanup)",
+      "endpoint": "/posts/:id",
+      "method": "DELETE",
+      "ok": true,
+      "ms": 38,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.865Z",
+      "details": {
+        "status": 204
+      }
+    },
+    {
+      "nome": "Regra: Delete Post de Outro Usuário",
+      "endpoint": "/posts/:id",
+      "method": "DELETE",
+      "ok": true,
+      "ms": 33,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.899Z",
+      "details": {
+        "timestamp": "2026-03-03T23:34:51.897Z",
+        "status": 403,
+        "error": "Forbidden",
+        "errorCode": "FORBIDDEN",
+        "message": "Você não tem permissão para excluir esta publicação.",
+        "path": "/api/v1/posts/31",
+        "requestId": "afe8137a-eb14-4b99-a585-3ae06d84ee61"
+      }
+    },
+    {
+      "nome": "Posts: Criar",
+      "endpoint": "/posts",
+      "method": "POST",
+      "ok": true,
+      "ms": 30,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.799Z",
+      "details": {
+        "status": "success",
+        "message": "Post publicado com sucesso.",
+        "data": {
+          "post_id": 30,
+          "titulo": "Post de Stress Test",
+          "conteudo": "Conteudo relevante para teste.",
+          "data_criacao": "2026-03-03T23:34:51.780Z",
+          "total_upvotes": 0,
+          "total_downvotes": 0,
+          "total_comentarios": 0,
+          "autor_id": 8
+        }
+      }
+    },
+    {
+      "nome": "Posts: Listar",
+      "endpoint": "/posts",
+      "method": "GET",
+      "ok": true,
+      "ms": 28,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.827Z",
+      "details": {
+        "count": 10
+      }
+    },
+    {
+      "nome": "Interesses: Setup - Criar Categoria",
+      "endpoint": "/categorias",
+      "method": "POST",
+      "ok": true,
+      "ms": 24,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.662Z",
+      "details": {
+        "status": "success",
+        "message": "Categoria criada com sucesso.",
+        "data": {
+          "categoria_id": 67,
+          "nome": "InteresseTest_1772580891638"
+        }
+      }
+    },
+    {
+      "nome": "Categorias: Delete (Admin)",
+      "endpoint": "/categorias/:id",
+      "method": "DELETE",
+      "ok": true,
+      "ms": 17,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.755Z",
+      "details": {
+        "status": 204
+      }
+    },
+    {
+      "nome": "Categorias: Update (Admin)",
+      "endpoint": "/categorias/:id",
+      "method": "PATCH",
+      "ok": true,
+      "ms": 16,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.737Z",
+      "details": {
+        "status": "success",
+        "message": "Categoria atualizada com sucesso.",
+        "data": {
+          "categoria_id": 68,
+          "nome": "AdminUpdated"
+        }
+      }
+    },
+    {
+      "nome": "Interesses: Seguir",
+      "endpoint": "/categorias/:id/interesse",
+      "method": "POST",
+      "ok": true,
+      "ms": 14,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.690Z",
+      "details": {
+        "status": "success",
+        "message": "Agora você segue esta categoria."
+      }
+    },
+    {
+      "nome": "Interesses: Listar",
+      "endpoint": "/categorias/interesses",
+      "method": "GET",
+      "ok": true,
+      "ms": 13,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.675Z",
+      "details": {
+        "status": "success",
+        "message": "Interesses listados com sucesso.",
+        "data": []
+      }
+    },
+    {
+      "nome": "Posts: Setup - Criar Categoria",
+      "endpoint": "/categorias",
+      "method": "POST",
+      "ok": true,
+      "ms": 13,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.769Z",
+      "details": {
+        "status": "success",
+        "message": "Categoria criada com sucesso.",
+        "data": {
+          "categoria_id": 69,
+          "nome": "CatPost_1772580891756"
+        }
+      }
+    },
+    {
+      "nome": "Categorias: Criar (Admin)",
+      "endpoint": "/categorias",
+      "method": "POST",
+      "ok": true,
+      "ms": 12,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.721Z",
+      "details": {
+        "status": "success",
+        "message": "Categoria criada com sucesso.",
+        "data": {
+          "categoria_id": 68,
+          "nome": "AdminOnly"
+        }
+      }
+    },
+    {
+      "nome": "Interesses: Deixar de Seguir",
+      "endpoint": "/categorias/:id/interesse",
+      "method": "DELETE",
+      "ok": true,
+      "ms": 11,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.709Z",
+      "details": {
+        "status": 204
+      }
+    },
+    {
+      "nome": "Interesses: Seguir ID Inexistente",
+      "endpoint": "/categorias/:id/interesse",
+      "method": "POST",
+      "ok": true,
+      "ms": 8,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.698Z",
+      "details": {
+        "timestamp": "2026-03-03T23:34:51.696Z",
+        "status": 404,
+        "error": "Not Found",
+        "errorCode": "RESOURCE_NOT_FOUND",
+        "message": "A categoria que você tenta seguir não existe ou foi removida.",
+        "path": "/api/v1/categorias/999999/interesse",
+        "requestId": "3ed28f7a-f1a8-4eb7-b4fa-b622d37b9011"
+      }
+    },
+    {
+      "nome": "DX: JSON Inválido",
+      "endpoint": "/auth/logar",
+      "method": "POST",
+      "ok": true,
+      "ms": 7,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:54.021Z",
+      "details": {
+        "requestId": "failed"
+      }
+    },
+    {
+      "nome": "Perfil: Update Senha Fraca",
+      "endpoint": "/perfil/seguranca/senha",
+      "method": "PATCH",
+      "ok": true,
+      "ms": 5,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.623Z",
+      "details": {
+        "timestamp": "2026-03-03T23:34:51.622Z",
+        "status": 400,
+        "error": "Bad Request",
+        "errorCode": "FIELD_VALIDATION",
+        "message": "Falha na validação dos campos fornecidos.",
+        "path": "/api/v1/perfil/seguranca/senha",
+        "requestId": "785a73f5-95a9-4308-bb50-960c38212471",
+        "details": [
+          {
+            "field": "novaSenha",
+            "rule": "validation"
+          },
+          {
+            "field": "novaSenha",
+            "rule": "invalid_format"
+          }
+        ]
+      }
+    },
+    {
+      "nome": "Perfil: Mass Assignment Bloqueado",
+      "endpoint": "/perfil/me",
+      "method": "PATCH",
+      "ok": true,
+      "ms": 5,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.633Z",
+      "details": {
+        "timestamp": "2026-03-03T23:34:51.632Z",
+        "status": 400,
+        "error": "Bad Request",
+        "errorCode": "FIELD_VALIDATION",
+        "message": "Falha na validação dos campos fornecidos.",
+        "path": "/api/v1/perfil/me",
+        "requestId": "81335d03-f6a8-4999-a449-2d7d1baeb315",
+        "details": [
+          {
+            "field": "body",
+            "rule": "unrecognized_keys"
+          }
+        ]
+      }
+    },
+    {
+      "nome": "Auth: Registrar com is_admin (Mass Assignment)",
+      "endpoint": "/auth/registrar",
+      "method": "POST",
+      "ok": true,
+      "ms": 4,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.617Z",
+      "details": {
+        "timestamp": "2026-03-03T23:34:51.616Z",
+        "status": 400,
+        "error": "Bad Request",
+        "errorCode": "FIELD_VALIDATION",
+        "message": "Falha na validação dos campos fornecidos.",
+        "path": "/api/v1/auth/registrar",
+        "requestId": "271ba03b-c8a3-4ab2-841c-bbe969693ae0",
+        "details": [
+          {
+            "field": "nome_completo",
+            "rule": "type",
+            "expected": "string"
+          },
+          {
+            "field": "nome_user",
+            "rule": "type",
+            "expected": "string"
+          },
+          {
+            "field": "nome_campus",
+            "rule": "type",
+            "expected": "string"
+          },
+          {
+            "field": "data_nascimento",
+            "rule": "type",
+            "expected": "date",
+            "received": "Invalid Date"
+          },
+          {
+            "field": "body",
+            "rule": "unrecognized_keys"
+          }
+        ]
+      }
+    },
+    {
+      "nome": "Perfil: Update Senha Divergente",
+      "endpoint": "/perfil/seguranca/senha",
+      "method": "PATCH",
+      "ok": true,
+      "ms": 4,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.628Z",
+      "details": {
+        "timestamp": "2026-03-03T23:34:51.627Z",
+        "status": 400,
+        "error": "Bad Request",
+        "errorCode": "FIELD_VALIDATION",
+        "message": "Falha na validação dos campos fornecidos.",
+        "path": "/api/v1/perfil/seguranca/senha",
+        "requestId": "1518d2bd-a025-4569-8250-57da15db4494",
+        "details": [
+          {
+            "field": "confirmarNovaSenha",
+            "rule": "refine"
+          }
+        ]
+      }
+    },
+    {
+      "nome": "Segurança: Tentativa de alteração de Privilégio via PATCH Senha",
+      "endpoint": "/perfil/seguranca/senha",
+      "method": "PATCH",
+      "ok": true,
+      "ms": 4,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:51.637Z",
+      "details": {
+        "timestamp": "2026-03-03T23:34:51.636Z",
+        "status": 400,
+        "error": "Bad Request",
+        "errorCode": "FIELD_VALIDATION",
+        "message": "Falha na validação dos campos fornecidos.",
+        "path": "/api/v1/perfil/seguranca/senha",
+        "requestId": "e3980be7-b3b8-480c-9b7e-0ca6154b99e1",
+        "details": [
+          {
+            "field": "body",
+            "rule": "unrecognized_keys"
+          }
+        ]
+      }
+    },
+    {
+      "nome": "Health: Live Probe",
+      "endpoint": "/saude/live",
+      "method": "GET",
+      "ok": true,
+      "ms": 3,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:54.014Z",
+      "details": {
+        "status": "ALIVE"
+      }
+    },
+    {
+      "nome": "DX: Payload Bomba (Profundidade)",
+      "endpoint": "/auth/logar",
+      "method": "POST",
+      "ok": true,
+      "ms": 3,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:54.024Z",
+      "details": {
+        "timestamp": "2026-03-03T23:34:54.023Z",
+        "status": 400,
+        "error": "Bad Request",
+        "errorCode": "INVALID_JSON_STRUCTURE",
+        "message": "Estrutura de dados excessivamente complexa.",
+        "path": "/api/v1/auth/logar",
+        "requestId": "6ddc4231-8006-405e-b442-5446019465b6"
+      }
+    },
+    {
+      "nome": "DX: Payload Bomba em Posts",
+      "endpoint": "/posts",
+      "method": "POST",
+      "ok": true,
+      "ms": 2,
+      "slow": false,
+      "timestamp": "2026-03-03T23:34:54.026Z",
+      "details": {
+        "timestamp": "2026-03-03T23:34:54.025Z",
+        "status": 400,
+        "error": "Bad Request",
+        "errorCode": "INVALID_JSON_STRUCTURE",
+        "message": "Estrutura de dados excessivamente complexa.",
+        "path": "/api/v1/posts",
+        "requestId": "e59091de-052e-4f28-a94a-c572c0ba5cc1"
+      }
+    }
+  ]
+}

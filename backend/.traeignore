@@ -1,0 +1,33 @@
+# --- Dependências e Logs ---
+node_modules/
+npm-debug.log*
+.env
+.env.*
+
+# --- Pastas de Build e Cache ---
+dist/
+build/
+.cache/
+.prisma/
+
+# --- Arquivos Gerados de Tipagem (Redundância) ---
+# Ignoramos artefatos para focar na lógica escrita pelo humano
+**/*.d.ts
+**/*.d.cts
+**/*.cjs
+
+# --- Banco de Dados e Migrações ---
+# Focar apenas no schema.prisma atual
+prisma/migrations/
+prisma/migration_lock.toml
+
+# --- Testes e Logs de Auditoria ---
+# Mantemos o mega-stress-test.ts VISÍVEL para a IA entender o padrão de ataque.
+# Ignoramos apenas os relatórios gerados por ele:
+stress-test-report.json
+
+# --- Arquivos de Sistema ---
+.DS_Store
+Thumbs.db
+.git/
+.vscode/
