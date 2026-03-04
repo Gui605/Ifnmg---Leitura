@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300..800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Evitar flash de tema: oculta até aplicar classe inicial */
+  html:not(.theme-ready) body {
+    visibility: hidden;
+  }
+
+  :root {
+    --color-if-green: #2f9e41;
+    --color-if-red: #cd191e;
+    --color-if-black: #000000;
+
+    --bg-primary: #f7f8fa;
+    --bg-card: #ffffff;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --input-bg: #f5f5f5;
+    --border-color: #cecece;
+    --shadow-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.06);
+    --accent-primary: #f59e0b;
+    color-scheme: light;
+    --overlay-bg: rgba(0, 0, 0, 0.2);
+  }
+
+  .light-mode {
+    color-scheme: light;
+  }
+
+  /* Classe forçada pelo Toggle (Lâmpada) */
+  .dark-mode {
+    --bg-primary: #28292a;
+    --bg-card: #3c3c3c;
+    --text-primary: #f3f4f6;
+    --text-secondary: #d4d4d4;
+    --input-bg: #323232;
+    --border-color: #4b4b4b;
+    --shadow-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --accent-primary: #f59e0b;
+    color-scheme: dark;
+    --overlay-bg: rgba(0, 0, 0, 0.3);
+  }
+
+  body {
+    @apply transition-colors duration-300;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: "Open Sans", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .dark-mode body {
+    letter-spacing: 0.01em;
+  }
+
+  .card {
+    @apply transition-all duration-300;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-elevation-1);
+    border-radius: 0.5rem;
+  }
+  .light-mode .card {
+    border-color: rgba(0, 0, 0, 0.2) !important;
+  }
+
+  input, textarea, select {
+    @apply transition-colors duration-300;
+    background-color: var(--input-bg);
+    border: 2px solid var(--border-color);
+    outline: none !important;
+  }
+
+  input:focus, textarea:focus, select:focus,
+  input:focus-visible, textarea:focus-visible, select:focus-visible {
+    border-color: var(--color-if-green) !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Acessibilidade AAA para Erros */
+  .error-message {
+    color: var(--color-if-red);
+    background-color: var(--bg-card);
+    font-weight: 700;
+    font-size: 1.2rem;
+    line-height: 1.4;
+    opacity: 0;
+    transform: translateY(-8px); /* Começa um pouco acima */
+    animation: fadeInErro 0.4s forwards ease-out; /* O 'forwards' mantém o estado final */
+}
+
+@keyframes fadeInErro {
+  to {
+    opacity: 1;
+    transform: translateY(0); /* Desce suavemente para a posição correta */
+  }
+}
+  :focus-visible {
+    outline: 3px solid var(--color-if-green);
+    outline-offset: 2px;
+  }
+
+  /* Overlay da biblioteca */
+  .theme-overlay {
+    @apply transition-all duration-300;
+  }
+  
+  .login-page-container {
+    background: transparent !important;
+  }
+
+  /* Botões de ação do Login */
+  .btn-entrar {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+    font-weight: 700;
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    border: 0;
+  }
+
+  .btn-sucesso {
+    background-color: var(--color-if-green);
+    color: #ffffff;
+  }
+
+  .btn-erro {
+    background-color: var(--color-if-red);
+    color: #ffffff;
+  }
+
+  /* Estados futuros de validação */
+  .input-sucesso {
+    border-color: var(--color-if-green) !important;
+  }
+
+  .input-erro {
+    border-color: var(--color-if-red) !important;
+  }
+}

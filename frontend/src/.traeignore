@@ -1,0 +1,6 @@
+# --- Dependências e Logs ---
+node_modules/
+
+# --- Arquivos de Sistema ---
+.git/
+.vscode/
