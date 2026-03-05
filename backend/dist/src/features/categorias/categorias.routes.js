@@ -24,21 +24,33 @@ categoriasRoutes.get('/', categorias_controller_1.default.listar);
 // POST /api/v1/categorias
 categoriasRoutes.post('/', authMiddleware_1.middlewareAutenticacao, 
 // middlewareAdministrador, 
-(0, validate_middleware_1.validate)(categoria_types_1.CategoriaCreateSchema), // 🛡️ Bloqueia qualquer campo extra (Mass Assignment)
+(0, validate_middleware_1.validate)({ body: categoria_types_1.CategoriaCreateSchema }), // 🛡️ Bloqueia qualquer campo extra (Mass Assignment)
 categorias_controller_1.default.criar);
 // PATCH /api/v1/categorias/:id
 const CategoriaIdParamsSchema = zod_1.z.object({ id: zod_1.z.coerce.number().positive() }).strict();
 categoriasRoutes.patch('/:id', authMiddleware_1.middlewareAutenticacao, 
 // middlewareAdministrador, 
-(0, validate_middleware_1.validateParams)(CategoriaIdParamsSchema), (0, validate_middleware_1.validate)(categoria_types_1.CategoriaUpdateSchema), // 🛡️ Garante que apenas o 'nome' seja editado
+(0, validate_middleware_1.validate)({
+    params: CategoriaIdParamsSchema,
+    body: categoria_types_1.CategoriaUpdateSchema
+}), // 🛡️ Garante que apenas o campo 'nome' seja editado
 categorias_controller_1.default.atualizar);
 // DELETE /api/v1/categorias/:id
 categoriasRoutes.delete('/:id', authMiddleware_1.middlewareAutenticacao, 
 // middlewareAdministrador, 
-(0, validate_middleware_1.validateParams)(CategoriaIdParamsSchema), (0, validate_middleware_1.validate)(EmptyBodySchema), categorias_controller_1.default.excluir);
+(0, validate_middleware_1.validate)({
+    params: CategoriaIdParamsSchema,
+    body: EmptyBodySchema
+}), categorias_controller_1.default.excluir);
 exports.default = categoriasRoutes;
 // ====== Fusão de Interesses (Taxonomia) ======
 const CategoriaIdParamsSchema2 = zod_1.z.object({ id: zod_1.z.coerce.number().positive() }).strict();
 categoriasRoutes.get('/interesses', authMiddleware_1.middlewareAutenticacao, categorias_controller_2.listarInteressesCategoria);
-categoriasRoutes.post('/:id/interesse', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validateParams)(CategoriaIdParamsSchema2), (0, validate_middleware_1.validate)(EmptyBodySchema), categorias_controller_2.seguirCategoriaController);
-categoriasRoutes.delete('/:id/interesse', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validateParams)(CategoriaIdParamsSchema2), (0, validate_middleware_1.validate)(EmptyBodySchema), categorias_controller_2.deixarDeSeguirCategoriaController);
+categoriasRoutes.post('/:id/interesse', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validate)({
+    params: CategoriaIdParamsSchema2,
+    body: EmptyBodySchema
+}), categorias_controller_2.seguirCategoriaController);
+categoriasRoutes.delete('/:id/interesse', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validate)({
+    params: CategoriaIdParamsSchema2,
+    body: EmptyBodySchema
+}), categorias_controller_2.deixarDeSeguirCategoriaController);

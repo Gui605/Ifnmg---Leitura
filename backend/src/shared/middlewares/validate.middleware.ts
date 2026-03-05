@@ -1,40 +1,38 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodSchema, ZodError } from 'zod';
-import { AppError } from '../utils/AppError';
+import { ZodSchema } from 'zod';
 import { limpezaDeEntrada } from '../utils/sanitize';
 
-/**
- * 🛡️ MIDDLEWARE DE VALIDAÇÃO DE CONTRATO (ZOD)
- * Substitui o antigo securityContract manual.
- * * 1. Valida o formato e tipos dos dados.
- * 2. Remove campos extras (se usar .strip() - padrão).
- * 3. Bloqueia campos extras (se usar .strict() no schema).
- * 4. Sanitiza o input antes de chegar ao Controller.
- */
-export const validate = (schema: ZodSchema) => {
-  return async (req: Request, _: Response, next: NextFunction) => {
+interface ValidationSchema {
+  body?: ZodSchema;
+  query?: ZodSchema;
+  params?: ZodSchema;
+}
+
+export const validate = (schema: ValidationSchema) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     try {
-      req.body = limpezaDeEntrada(req.body, req) as any;
-      req.params = limpezaDeEntrada(req.params, req) as any;
-      req.query = limpezaDeEntrada(req.query, req) as any;
-      if (req.method === 'GET') {
-        req.query = await schema.parseAsync(req.query) as any;
-      } else {
-        req.body = await schema.parseAsync(req.body) as any;
+      // 1. Extraímos o ID como string (com fallback para undefined se não existir)
+      const requestId = req.headers['x-request-id'] as string;
+
+      // 2. Sanitização (Passando a string do requestId corretamente)
+      if (req.body) req.body = limpezaDeEntrada(req.body, requestId);
+      if (req.query) req.query = limpezaDeEntrada(req.query, requestId);
+      if (req.params) req.params = limpezaDeEntrada(req.params, requestId);
+
+      // 3. Validação com Zod
+      if (schema.body) {
+        req.body = await schema.body.parseAsync(req.body);
       }
       
-      next();
-    } catch (error) {
-      next(error);
-    }
-  };
-};
+      if (schema.query) {
+        // Cast para 'any' necessário devido à incompatibilidade de tipos do Express vs Zod
+        req.query = await schema.query.parseAsync(req.query) as any;
+      }
+      
+      if (schema.params) {
+        req.params = await schema.params.parseAsync(req.params) as any;
+      }
 
-export const validateParams = (schema: ZodSchema) => {
-  return async (req: Request, _: Response, next: NextFunction) => {
-    try {
-      req.params = limpezaDeEntrada(req.params, req) as any;
-      req.params = await schema.parseAsync(req.params) as any;
       next();
     } catch (error) {
       next(error);

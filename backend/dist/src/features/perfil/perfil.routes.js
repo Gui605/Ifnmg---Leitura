@@ -23,14 +23,14 @@ perfilRoutes.get('/me', perfil_controller_1.default.getPerfilInfo);
 /** * PATCH /me -> Atualização de dados básicos
  * 🛡️ Camada 2: Validação de Contrato (Apenas campos permitidos pelo Zod)
  */
-perfilRoutes.patch('/me', (0, validate_middleware_1.validate)(perfil_types_1.UpdatePerfilSchema), perfil_controller_1.default.updatePerfil);
+perfilRoutes.patch('/me', (0, validate_middleware_1.validate)({ body: perfil_types_1.UpdatePerfilSchema }), perfil_controller_1.default.updatePerfil);
 // --- 🔐 Operações de Segurança Crítica ---
 /** * PATCH /seguranca/senha -> Troca de credenciais
  * 🛡️ Camada 2: O Zod valida força da senha e se a confirmação é idêntica.
  */
-perfilRoutes.patch('/seguranca/senha', (0, validate_middleware_1.validate)(perfil_types_1.SenhaPatchSchema), perfil_controller_1.default.alterarSenha);
+perfilRoutes.patch('/seguranca/senha', (0, validate_middleware_1.validate)({ body: perfil_types_1.SenhaPatchSchema }), perfil_controller_1.default.alterarSenha);
 /** * DELETE /seguranca/conta -> Encerramento de conta
  * 🛡️ Camada 2: Exige apenas a senha atual para confirmação.
  */
-perfilRoutes.delete('/seguranca/conta', (0, validate_middleware_1.validate)(perfil_types_1.DeletarContaSchema), perfil_controller_1.default.deletarPerfil);
+perfilRoutes.delete('/seguranca/conta', (0, validate_middleware_1.validate)({ body: perfil_types_1.DeletarContaSchema }), perfil_controller_1.default.deletarPerfil);
 exports.default = perfilRoutes;

@@ -18,8 +18,8 @@ const router = Router();
 // 🛡️ RegistrarSchema.strict() impede a injeção de campos como 'role' ou 'is_admin'
 router.post(
     '/registrar', 
-    limitadorRegistro, 
-    validate(RegistrarSchema), 
+    limitadorRegistro,
+    validate({ body: RegistrarSchema }),
     authController.registrar
 );
 
@@ -29,22 +29,22 @@ router.get('/confirmar', authController.confirmarEmail);
 // 🛡️ LoginSchema garante que o payload contenha apenas email e senha válidos
 router.post(
     '/logar', 
-    limitadorLogin, 
-    validate(LoginSchema), 
+    limitadorLogin,
+    validate({ body: LoginSchema }),
     authController.logar
 );
 
 // --- Recuperação de Senha ---
 router.post(
     '/solicitar-recuperacao', 
-    limitadorRegistro, 
-    validate(SolicitarRecuperacaoSchema),
+    limitadorRegistro,
+    validate({ body: SolicitarRecuperacaoSchema }),
     authController.solicitarRecuperacao
 );
 router.post(
     '/redefinir-senha', 
     limitadorRegistro, 
-    validate(RedefinirSenhaSchema),
+    validate({ body: RedefinirSenhaSchema }),
     authController.redefinirSenha
 );
 

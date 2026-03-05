@@ -32,13 +32,8 @@ const listarPosts = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     return res.status(200).json({
         status: 'success',
         message: 'Publicações recuperadas com sucesso.',
-        data: result.posts,
-        meta: {
-            total: result.total,
-            page,
-            limit,
-            totalPages: Math.ceil(result.total / (limit || 10))
-        }
+        data: result.data,
+        meta: result.meta
     });
 });
 const deletarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {

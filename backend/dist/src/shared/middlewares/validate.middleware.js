@@ -1,26 +1,29 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateParams = exports.validate = void 0;
+exports.validate = void 0;
 const sanitize_1 = require("../utils/sanitize");
-/**
- * 🛡️ MIDDLEWARE DE VALIDAÇÃO DE CONTRATO (ZOD)
- * Substitui o antigo securityContract manual.
- * * 1. Valida o formato e tipos dos dados.
- * 2. Remove campos extras (se usar .strip() - padrão).
- * 3. Bloqueia campos extras (se usar .strict() no schema).
- * 4. Sanitiza o input antes de chegar ao Controller.
- */
 const validate = (schema) => {
-    return async (req, _, next) => {
+    return async (req, _res, next) => {
         try {
-            req.body = (0, sanitize_1.limpezaDeEntrada)(req.body, req);
-            req.params = (0, sanitize_1.limpezaDeEntrada)(req.params, req);
-            req.query = (0, sanitize_1.limpezaDeEntrada)(req.query, req);
-            if (req.method === 'GET') {
-                req.query = await schema.parseAsync(req.query);
+            // 1. Extraímos o ID como string (com fallback para undefined se não existir)
+            const requestId = req.headers['x-request-id'];
+            // 2. Sanitização (Passando a string do requestId corretamente)
+            if (req.body)
+                req.body = (0, sanitize_1.limpezaDeEntrada)(req.body, requestId);
+            if (req.query)
+                req.query = (0, sanitize_1.limpezaDeEntrada)(req.query, requestId);
+            if (req.params)
+                req.params = (0, sanitize_1.limpezaDeEntrada)(req.params, requestId);
+            // 3. Validação com Zod
+            if (schema.body) {
+                req.body = await schema.body.parseAsync(req.body);
             }
-            else {
-                req.body = await schema.parseAsync(req.body);
+            if (schema.query) {
+                // Cast para 'any' necessário devido à incompatibilidade de tipos do Express vs Zod
+                req.query = await schema.query.parseAsync(req.query);
+            }
+            if (schema.params) {
+                req.params = await schema.params.parseAsync(req.params);
             }
             next();
         }
@@ -30,16 +33,3 @@ const validate = (schema) => {
     };
 };
 exports.validate = validate;
-const validateParams = (schema) => {
-    return async (req, _, next) => {
-        try {
-            req.params = (0, sanitize_1.limpezaDeEntrada)(req.params, req);
-            req.params = await schema.parseAsync(req.params);
-            next();
-        }
-        catch (error) {
-            next(error);
-        }
-    };
-};
-exports.validateParams = validateParams;

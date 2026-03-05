@@ -22,19 +22,32 @@ const postsRoutes = (0, express_1.Router)();
 /** * GET /api/v1/posts
  * 🛡️ Validação de Query: Garante que page/limit sejam números válidos.
  */
-postsRoutes.get('/', optionalAuthMiddleware_1.middlewareAutenticacaoOpcional, rateLimiter_1.limitadorLeitura, (0, validate_middleware_1.validate)(post_types_1.PostsQuerySchema), // Valida e limpa os parâmetros de busca
+postsRoutes.get('/', optionalAuthMiddleware_1.middlewareAutenticacaoOpcional, rateLimiter_1.limitadorLeitura, (0, validate_middleware_1.validate)({
+    body: post_types_1.PostsQuerySchema
+}), // Valida e limpa os parâmetros de busca
 posts_controller_1.default.listarPosts);
 // --- ROTAS DE ESCRITA (Acesso Restrito) ---
 /** * POST /api/v1/posts
  * 🛡️ Validação de Body: Bloqueia autor_id manual e garante formato do conteúdo.
  */
-postsRoutes.post('/', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validate)(post_types_1.PostCreateSchema), posts_controller_1.default.criarPost);
+postsRoutes.post('/', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validate)({
+    body: post_types_1.PostCreateSchema
+}), posts_controller_1.default.criarPost);
 /** * DELETE /api/v1/posts/:id
  * 🛡️ Segurança: O Controller valida se quem deleta é o dono do post.
  */
 const PostIdParamsSchema = zod_1.z.object({ id: zod_1.z.coerce.number().positive() });
 const EmptyBodySchema = zod_1.z.object({}).strict();
-postsRoutes.delete('/:id', authMiddleware_1.middlewareAutenticacao, (0, validate_middleware_1.validateParams)(PostIdParamsSchema), (0, validate_middleware_1.validate)(EmptyBodySchema), posts_controller_1.default.deletarPost);
-postsRoutes.post('/:id/votar', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validateParams)(PostIdParamsSchema), (0, validate_middleware_1.validate)(post_types_1.PostVoteSchema), posts_controller_1.default.votarPost);
-postsRoutes.post('/:id/comentarios', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validateParams)(PostIdParamsSchema), (0, validate_middleware_1.validate)(post_types_1.PostCommentSchema), posts_controller_1.default.comentarPost);
+postsRoutes.delete('/:id', authMiddleware_1.middlewareAutenticacao, (0, validate_middleware_1.validate)({
+    params: PostIdParamsSchema,
+    body: EmptyBodySchema
+}), posts_controller_1.default.deletarPost);
+postsRoutes.post('/:id/votar', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validate)({
+    params: PostIdParamsSchema,
+    body: post_types_1.PostVoteSchema
+}), posts_controller_1.default.votarPost);
+postsRoutes.post('/:id/comentarios', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validate)({
+    params: PostIdParamsSchema,
+    body: post_types_1.PostCommentSchema
+}), posts_controller_1.default.comentarPost);
 exports.default = postsRoutes;

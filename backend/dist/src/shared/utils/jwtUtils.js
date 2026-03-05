@@ -9,7 +9,7 @@ exports.verificarToken = verificarToken;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const auth_types_1 = require("../types/auth.types");
 const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = '7d';
+const JWT_EXPIRES_IN = '4h';
 function obterSegredoJwt() {
     if (!JWT_SECRET) {
         throw new Error('JWT_SECRET não configurado.');

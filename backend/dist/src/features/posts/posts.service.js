@@ -38,6 +38,7 @@ async function listarPosts(q, perfilId, requestId) {
     const page = q.page ?? 1;
     const limit = q.limit ?? 10;
     const skip = (page - 1) * limit;
+    // Definição tipada do where (usando Prisma.PostsWhereInput se possível)
     const where = {};
     if (q.categoria) {
         where.categorias = { some: { categoria_id: q.categoria } };
@@ -57,14 +58,22 @@ async function listarPosts(q, perfilId, requestId) {
             }
         })
     ]);
-    const mapped = posts.map((p) => ({
-        post_id: p.post_id,
-        titulo: p.titulo,
-        conteudo: p.conteudo,
-        autor_id: p.autor_id || 0,
-        autor_nome_user: p.autor?.nome_user ?? undefined
+    const totalPages = Math.ceil(total / limit);
+    // Mantenha os contadores (stats) que o seu backend já calcula!
+    // O Frontend precisa deles para exibir o contador na tela.
+    const postsComDados = posts.map((p) => ({
+        ...p, // Espalha os dados brutos (inclui stats)
+        autor_nome_user: p.autor?.nome_user ?? 'Anônimo' // Fallback para não quebrar UI
     }));
-    return { total, posts: mapped };
+    return {
+        data: postsComDados,
+        meta: {
+            total,
+            page,
+            limit,
+            totalPages
+        }
+    };
 }
 async function votarPost(perfilId, postId, tipo, requestId) {
     const post = await prisma_client_1.default.posts.findUnique({ where: { post_id: postId }, select: { post_id: true } });

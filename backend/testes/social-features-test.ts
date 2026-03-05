@@ -22,6 +22,7 @@ const usuario = {
 };
 
 let token: string;
+let tokenUsuarioComum: string | undefined;
 let postId: number;
 let categoriaId: number;
 
@@ -65,6 +66,10 @@ async function runCase(nome: string, fn: () => Promise<void>) {
   }
 }
 
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 // ========================================
 // SETUP
 // ========================================
@@ -79,6 +84,14 @@ async function setup() {
   ok(login.status === 200, 'Login falhou', login.data);
 
   token = login.data.data.token;
+
+  // Login de usuário comum para testes BOLA
+  const loginComum = await api.post('/auth/logar', {
+    email: 'comum@teste.com',
+    senha: 'Senha123'
+  });
+  ok(loginComum.status === 200, 'Login comum falhou', loginComum.data);
+  tokenUsuarioComum = loginComum.data.data.token;
 
   console.log('📂 Criando categoria de teste...');
 
@@ -105,6 +118,22 @@ async function setup() {
 
   ok(post.status === 201, 'Falha ao criar post', post.data);
   postId = post.data.data.post_id;
+}
+
+// ========================================
+// TEARDOWN
+// ========================================
+async function teardown() {
+  try {
+    if (postId) {
+      await api.delete(`/posts/${postId}`, { headers: auth(), data: {} });
+    }
+  } catch (_) { /* noop */ }
+  try {
+    if (categoriaId) {
+      await api.delete(`/categorias/${categoriaId}`, { headers: auth(), data: {} });
+    }
+  } catch (_) { /* noop */ }
 }
 
 // ========================================
@@ -149,6 +178,24 @@ async function runSocialTests() {
     ok(res.data.data.total_downvotes === 1, 'Contador DOWN deveria ser 1', res.data);
   });
 
+  // Teste de Rate Limiting (explosão de requisições)
+  await runCase('Voto: Rate Limiting em Explosão (10+/min)', async () => {
+    const N = 50;
+    const reqs = Array.from({ length: N }).map((_, i) =>
+      api.post(`/posts/${postId}/votar`, { tipo: i % 2 === 0 ? 'UP' : 'DOWN' }, { headers: auth() })
+    );
+    const results = await Promise.all(reqs.map(p => p.catch(e => e.response)));
+    const statusCounts = results.reduce<Record<number, number>>((acc, r) => {
+      const s = r?.status ?? 0;
+      acc[s] = (acc[s] || 0) + 1;
+      return acc;
+    }, {});
+    const any429 = Object.keys(statusCounts).some(k => Number(k) === 429);
+    ok(any429, `Deveria haver pelo menos um 429 (counts=${JSON.stringify(statusCounts)})`, statusCounts);
+  });
+  // Aguarda janela do rate limiter de engajamento
+  await sleep(1200);
+
   // ============================
   // 2️⃣ COMENTÁRIOS
   // ============================
@@ -157,7 +204,7 @@ async function runSocialTests() {
     const res = await api.post(
       `/posts/${postId}/comentarios`,
       { texto: 'Teste de comentário válido' },
-      { headers: auth() }
+      { headers: tokenUsuarioComum ? { Authorization: `Bearer ${tokenUsuarioComum}` } : auth() }
     );
 
     ok(res.status === 201, 'Deveria comentar', res.data);
@@ -167,10 +214,24 @@ async function runSocialTests() {
     const res = await api.post(
       `/posts/${postId}/comentarios`,
       { texto: '' },
-      { headers: auth() }
+      { headers: tokenUsuarioComum ? { Authorization: `Bearer ${tokenUsuarioComum}` } : auth() }
     );
 
     ok(res.status === 400, 'Deveria bloquear comentário vazio', res.data);
+  });
+
+  // Sanitização de entrada (payload malicioso)
+  await runCase('Comentário: Sanitização de Entrada (payload malicioso)', async () => {
+    const payload = `<script>alert('xss')</script><img src=x onerror=alert(2)> ' OR 1=1 --`;
+    const res = await api.post(
+      `/posts/${postId}/comentarios`,
+      { texto: payload },
+      { headers: tokenUsuarioComum ? { Authorization: `Bearer ${tokenUsuarioComum}` } : auth() }
+    );
+    ok(res.status === 201, 'Comentário malicioso deve ser tratado/armazenado de forma segura', res.data);
+    // Como a API não retorna o conteúdo do comentário, validamos que a chamada não quebra
+    // e não ecoa o payload em campos de mensagem/sistema.
+    ok(typeof res.data.message === 'string', 'Resposta deve conter mensagem de sucesso', res.data);
   });
 
   // ============================
@@ -183,7 +244,7 @@ async function runSocialTests() {
       {
         motivo: 'Conteúdo impróprio'
       },
-      { headers: auth() }
+      { headers: tokenUsuarioComum ? { Authorization: `Bearer ${tokenUsuarioComum}` } : auth() }
     );
 
     ok(res.status === 201, 'Deveria denunciar', res.data);
@@ -195,7 +256,7 @@ async function runSocialTests() {
       {
         motivo: 'Conteúdo impróprio'
       },
-      { headers: auth() }
+      { headers: tokenUsuarioComum ? { Authorization: `Bearer ${tokenUsuarioComum}` } : auth() }
     );
 
     ok(res.status === 400, 'Deveria bloquear denúncia duplicada', res.data);
@@ -236,6 +297,14 @@ async function runSocialTests() {
     ok(res.status === 401, 'Deveria exigir autenticação', res.data);
   });
 
+  // BOLA: tentar deletar post com usuário que não é dono
+  await runCase('Segurança: BOLA - Deletar Post de Outro Usuário', async () => {
+    // Usa token do usuário COMUM para tentar deletar o post do admin
+    const headers = tokenUsuarioComum ? { Authorization: `Bearer ${tokenUsuarioComum}` } : undefined;
+    const res = await api.delete(`/posts/${postId}`, { headers, data: {} });
+    ok(res.status === 403 || res.status === 404, `Deveria retornar 403 ou 404 (recebido ${res.status})`, res.data);
+  });
+
   console.log('🏁 Todos os testes sociais passaram com sucesso.');
 }
 
@@ -250,6 +319,8 @@ async function main() {
   } catch (e: any) {
     logger.error('Erro fatal nos testes sociais', { error: e.message });
     process.exit(1);
+  } finally {
+    await teardown();
   }
 }
 

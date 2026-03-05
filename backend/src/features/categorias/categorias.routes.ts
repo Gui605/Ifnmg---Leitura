@@ -2,7 +2,7 @@ import { Router } from 'express';
 import categoriasController from './categorias.controller';
 import { middlewareAutenticacao } from '../../shared/middlewares/authMiddleware';
 import { middlewareAdministrador } from '../../shared/middlewares/adminMiddleware';
-import { validate, validateParams } from '../../shared/middlewares/validate.middleware';
+import { validate} from '../../shared/middlewares/validate.middleware';
 import { CategoriaCreateSchema, CategoriaUpdateSchema } from '../../shared/types/categoria.types';
 import { z } from 'zod';
 import { limitadorEngajamento } from '../../shared/middlewares/rateLimiter';
@@ -27,7 +27,7 @@ categoriasRoutes.get('/', categoriasController.listar);
 categoriasRoutes.post('/', 
     middlewareAutenticacao, 
     // middlewareAdministrador, 
-    validate(CategoriaCreateSchema), // 🛡️ Bloqueia qualquer campo extra (Mass Assignment)
+    validate({ body: CategoriaCreateSchema }), // 🛡️ Bloqueia qualquer campo extra (Mass Assignment)
     categoriasController.criar
 );
 
@@ -36,8 +36,10 @@ const CategoriaIdParamsSchema = z.object({ id: z.coerce.number().positive() }).s
 categoriasRoutes.patch('/:id', 
     middlewareAutenticacao, 
     // middlewareAdministrador, 
-    validateParams(CategoriaIdParamsSchema),
-    validate(CategoriaUpdateSchema), // 🛡️ Garante que apenas o 'nome' seja editado
+    validate({
+        params: CategoriaIdParamsSchema,
+        body: CategoriaUpdateSchema
+    }), // 🛡️ Garante que apenas o campo 'nome' seja editado
     categoriasController.atualizar
 );
 
@@ -45,8 +47,10 @@ categoriasRoutes.patch('/:id',
 categoriasRoutes.delete('/:id', 
     middlewareAutenticacao, 
     // middlewareAdministrador, 
-    validateParams(CategoriaIdParamsSchema),
-    validate(EmptyBodySchema),
+    validate({
+        params: CategoriaIdParamsSchema,
+        body: EmptyBodySchema
+    }),
     categoriasController.excluir
 );
 
@@ -65,8 +69,10 @@ categoriasRoutes.post(
     '/:id/interesse',
     middlewareAutenticacao,
     limitadorEngajamento,
-    validateParams(CategoriaIdParamsSchema2),
-    validate(EmptyBodySchema),
+    validate({
+        params: CategoriaIdParamsSchema2,
+        body: EmptyBodySchema
+    }),
     seguirCategoriaController
 );
 
@@ -74,7 +80,9 @@ categoriasRoutes.delete(
     '/:id/interesse',
     middlewareAutenticacao,
     limitadorEngajamento,
-    validateParams(CategoriaIdParamsSchema2),
-    validate(EmptyBodySchema),
+    validate({
+        params: CategoriaIdParamsSchema2,
+        body: EmptyBodySchema
+    }),
     deixarDeSeguirCategoriaController
 );

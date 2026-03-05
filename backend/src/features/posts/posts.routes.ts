@@ -2,7 +2,7 @@ import { Router } from 'express';
 import postsController from './posts.controller';
 import { middlewareAutenticacao } from '../../shared/middlewares/authMiddleware'; 
 import { middlewareAutenticacaoOpcional } from '../../shared/middlewares/optionalAuthMiddleware';
-import { validate, validateParams } from '../../shared/middlewares/validate.middleware';
+import { validate} from '../../shared/middlewares/validate.middleware';
 import { PostCreateSchema, PostsQuerySchema, PostVoteSchema, PostCommentSchema } from '../../shared/types/post.types';
 import { z } from 'zod';
 import { limitadorEngajamento, limitadorLeitura } from '../../shared/middlewares/rateLimiter';
@@ -25,7 +25,9 @@ postsRoutes.get(
     '/', 
     middlewareAutenticacaoOpcional, 
     limitadorLeitura,
-    validate(PostsQuerySchema), // Valida e limpa os parâmetros de busca
+    validate({
+            body: PostsQuerySchema
+        }), // Valida e limpa os parâmetros de busca
     postsController.listarPosts
 );
 
@@ -39,7 +41,9 @@ postsRoutes.post(
     '/', 
     middlewareAutenticacao, 
     limitadorEngajamento,
-    validate(PostCreateSchema), 
+    validate({
+            body: PostCreateSchema
+        }),
     postsController.criarPost
 );
 
@@ -48,21 +52,32 @@ postsRoutes.post(
  */
 const PostIdParamsSchema = z.object({ id: z.coerce.number().positive() });
 const EmptyBodySchema = z.object({}).strict();
-postsRoutes.delete('/:id', middlewareAutenticacao, validateParams(PostIdParamsSchema), validate(EmptyBodySchema), postsController.deletarPost);
+
+postsRoutes.delete('/:id',
+     middlewareAutenticacao,
+     validate({
+            params: PostIdParamsSchema,
+            body: EmptyBodySchema
+        }),
+    postsController.deletarPost);
 
 postsRoutes.post('/:id/votar',
     middlewareAutenticacao,
     limitadorEngajamento,
-    validateParams(PostIdParamsSchema),
-    validate(PostVoteSchema),
+    validate({
+            params: PostIdParamsSchema,
+            body: PostVoteSchema
+        }),
     postsController.votarPost
 );
 
 postsRoutes.post('/:id/comentarios',
     middlewareAutenticacao,
     limitadorEngajamento,
-    validateParams(PostIdParamsSchema),
-    validate(PostCommentSchema),
+    validate({
+            params: PostIdParamsSchema,
+            body: PostCommentSchema
+        }),
     postsController.comentarPost
 );
 

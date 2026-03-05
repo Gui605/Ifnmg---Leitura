@@ -30,7 +30,7 @@ perfilRoutes.get('/me', perfilController.getPerfilInfo);
  */
 perfilRoutes.patch(
     '/me', 
-    validate(UpdatePerfilSchema), 
+    validate({ body: UpdatePerfilSchema }),
     perfilController.updatePerfil
 );
 
@@ -42,7 +42,7 @@ perfilRoutes.patch(
  */
 perfilRoutes.patch(
     '/seguranca/senha', 
-    validate(SenhaPatchSchema),
+    validate({ body: SenhaPatchSchema }),
     perfilController.alterarSenha
 );
 
@@ -51,7 +51,7 @@ perfilRoutes.patch(
  */
 perfilRoutes.delete(
     '/seguranca/conta', 
-    validate(DeletarContaSchema),
+   validate({ body: DeletarContaSchema }),
     perfilController.deletarPerfil
 );
 
