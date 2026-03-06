@@ -4,6 +4,9 @@ import { AppError } from './AppError';
 import { ErrorCodes } from '../../errors/ErrorCodes';
 import { logger } from './logger';
 
+// Estado de cache para Health/Probes
+let smtpStatus: 'UP' | 'DOWN' | 'CHECKING' = 'CHECKING';
+
 /**
  * 🛠️ CONFIGURAÇÃO DE TRANSPORTE COM FAIL-FAST
  * Timeouts de 10 segundos garantem que o servidor não fique travado
@@ -42,24 +45,46 @@ function getTransporter() {
 }
 
 /**
- * [Diagnóstico] Verifica a saúde da conexão SMTP.
+ * Inicializa monitoramento assíncrono do SMTP em background.
+ * Executa um verify() inicial e agenda revalidações a cada 30s.
  */
-export async function verificarConexaoSMTP(): Promise<void> {
+export async function iniciarMonitoramentoSMTP(): Promise<void> {
     const EMAIL_HOST = process.env.EMAIL_HOST;
     const EMAIL_USER = process.env.EMAIL_USER;
     const EMAIL_PASS = process.env.EMAIL_PASS;
     if (!EMAIL_HOST || !EMAIL_USER || !EMAIL_PASS) {
+        smtpStatus = 'DOWN';
         logger.warn("SMTP não configurado. E-mails transacionais desativados", { evento: 'SMTP_NOT_CONFIGURED', errorCode: ErrorCodes.EMAIL_SERVICE_UNAVAILABLE });
         return;
     }
 
     try {
+        smtpStatus = 'CHECKING';
         const transporter = getTransporter();
         await transporter.verify();
+        smtpStatus = 'UP';
         logger.info("Servidor SMTP verificado: pronto para envio", { evento: 'SMTP_VERIFIED' });
     } catch (error) {
+        smtpStatus = 'DOWN';
         logger.error("Erro crítico ao verificar SMTP", { evento: 'SMTP_VERIFY_FAILED', error: (error as any)?.message, errorCode: ErrorCodes.EMAIL_SERVICE_UNAVAILABLE });
     }
+
+    // Monitoramento periódico (30s)
+    setInterval(async () => {
+        try {
+            const transporter = getTransporter();
+            await transporter.verify();
+            if (smtpStatus !== 'UP') {
+                logger.info("Servidor SMTP recuperado", { evento: 'SMTP_RECOVERED' });
+            }
+            smtpStatus = 'UP';
+        } catch (error: any) {
+            if (smtpStatus !== 'DOWN') {
+                logger.error("SMTP ficou indisponível", { evento: 'SMTP_BROKEN', error: error?.message, errorCode: ErrorCodes.EMAIL_SERVICE_UNAVAILABLE });
+            }
+            smtpStatus = 'DOWN';
+        }
+    }, 30_000);
 }
 
 /**
@@ -72,13 +97,8 @@ export async function diagnosticarSMTP(): Promise<'UP' | 'DOWN' | 'DISABLED'> {
     if (!EMAIL_HOST || !EMAIL_USER || !EMAIL_PASS) {
         return 'DISABLED';
     }
-    try {
-        const transporter = getTransporter();
-        await transporter.verify();
-        return 'UP';
-    } catch (error) {
-        return 'DOWN';
-    }
+    // Resposta instantânea baseada em cache (evita latência de verify em probes)
+    return smtpStatus === 'CHECKING' ? 'DOWN' : smtpStatus;
 }
 
 /**

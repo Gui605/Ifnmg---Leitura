@@ -97,7 +97,7 @@ const iniciarServidor = async () => {
             logger_1.logger.info(`Servidor rodando na porta ${PORT}`, { evento: 'SERVER_STARTED' });
         });
         // Background Services
-        (0, serviceEmail_1.verificarConexaoSMTP)();
+        await (0, serviceEmail_1.iniciarMonitoramentoSMTP)();
         // Agendador com Log de Observabilidade
         cron.schedule('0 * * * *', () => {
             logger_1.logger.info("Executando tarefa agendada: Limpeza de Contas Expiradas", { evento: 'JOB_CLEAN_EXPIRED_ACCOUNTS_STARTED' });

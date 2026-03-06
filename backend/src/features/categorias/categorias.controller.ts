@@ -13,7 +13,8 @@ const listar = tratarAssincrono(async (req: Request, res: Response) => {
     res.status(200).json({ 
         status: 'success',
         message: "Categorias listadas com sucesso.",
-        data 
+        data,
+        meta: null
     });
 });
 
@@ -25,7 +26,8 @@ const criar = tratarAssincrono(async (req: Request<{}, {}, CategoriaCreateBody>,
     res.status(201).json({ 
         status: 'success',
         message: "Categoria criada com sucesso.", 
-        data: nova 
+        data: nova,
+        meta: null
     });
 });
 
@@ -43,7 +45,8 @@ const atualizar = tratarAssincrono(async (req: Request<CategoriaIdParams, any, C
     res.status(200).json({ 
         status: 'success',
         message: "Categoria atualizada com sucesso.", 
-        data: editada 
+        data: editada,
+        meta: null
     });
 });
 
@@ -56,7 +59,12 @@ const excluir = tratarAssincrono(async (req: Request<CategoriaIdParams, any, Emp
 
     await categoriasService.excluir(id, req.requestId);
     
-    res.status(204).send();
+    res.status(200).json({
+        status: 'success',
+        message: "Categoria excluída com sucesso.",
+        data: null,
+        meta: null
+    });
 });
 
 export default { listar, criar, atualizar, excluir };
@@ -71,7 +79,8 @@ export const listarInteressesCategoria = tratarAssincrono(async (req: Request, r
     return res.status(200).json({
         status: 'success',
         message: "Interesses listados com sucesso.",
-        data: interesses
+        data: interesses,
+        meta: null
     });
 });
 
@@ -83,7 +92,7 @@ export const seguirCategoriaController = tratarAssincrono(async (req: Request<Ca
     }
     ToggleInteresseSchema.parse({ categoria_id: categoriaId });
     await seguirCategoria(perfilId, categoriaId, req.requestId);
-    return res.status(201).json({ status: 'success', message: "Agora você segue esta categoria." });
+    return res.status(201).json({ status: 'success', message: "Agora você segue esta categoria.", data: null, meta: null });
 });
 
 export const deixarDeSeguirCategoriaController = tratarAssincrono(async (req: Request<CategoriaIdParams, any, EmptyBody>, res: Response) => {
@@ -94,5 +103,5 @@ export const deixarDeSeguirCategoriaController = tratarAssincrono(async (req: Re
     }
     ToggleInteresseSchema.parse({ categoria_id: categoriaId });
     await deixarDeSeguirCategoria(perfilId, categoriaId, req.requestId);
-    return res.status(204).send();
+    return res.status(200).json({ status: 'success', message: "Você deixou de seguir esta categoria.", data: null, meta: null });
 });

@@ -43,7 +43,8 @@ const listar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     res.status(200).json({
         status: 'success',
         message: "Categorias listadas com sucesso.",
-        data
+        data,
+        meta: null
     });
 });
 const criar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
@@ -53,7 +54,8 @@ const criar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     res.status(201).json({
         status: 'success',
         message: "Categoria criada com sucesso.",
-        data: nova
+        data: nova,
+        meta: null
     });
 });
 const atualizar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
@@ -67,7 +69,8 @@ const atualizar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     res.status(200).json({
         status: 'success',
         message: "Categoria atualizada com sucesso.",
-        data: editada
+        data: editada,
+        meta: null
     });
 });
 const excluir = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
@@ -76,7 +79,12 @@ const excluir = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
         throw AppError_1.AppError.badRequest("ID de categoria inválido.");
     }
     await categorias_service_1.default.excluir(id, req.requestId);
-    res.status(204).send();
+    res.status(200).json({
+        status: 'success',
+        message: "Categoria excluída com sucesso.",
+        data: null,
+        meta: null
+    });
 });
 exports.default = { listar, criar, atualizar, excluir };
 // ====== Fusão de Interesses (Taxonomia) ======
@@ -89,7 +97,8 @@ exports.listarInteressesCategoria = (0, asyncHandler_1.tratarAssincrono)(async (
     return res.status(200).json({
         status: 'success',
         message: "Interesses listados com sucesso.",
-        data: interesses
+        data: interesses,
+        meta: null
     });
 });
 exports.seguirCategoriaController = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
@@ -100,7 +109,7 @@ exports.seguirCategoriaController = (0, asyncHandler_1.tratarAssincrono)(async (
     }
     categoria_types_1.ToggleInteresseSchema.parse({ categoria_id: categoriaId });
     await (0, categorias_service_1.seguirCategoria)(perfilId, categoriaId, req.requestId);
-    return res.status(201).json({ status: 'success', message: "Agora você segue esta categoria." });
+    return res.status(201).json({ status: 'success', message: "Agora você segue esta categoria.", data: null, meta: null });
 });
 exports.deixarDeSeguirCategoriaController = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const perfilId = req.perfil_id;
@@ -110,5 +119,5 @@ exports.deixarDeSeguirCategoriaController = (0, asyncHandler_1.tratarAssincrono)
     }
     categoria_types_1.ToggleInteresseSchema.parse({ categoria_id: categoriaId });
     await (0, categorias_service_1.deixarDeSeguirCategoria)(perfilId, categoriaId, req.requestId);
-    return res.status(204).send();
+    return res.status(200).json({ status: 'success', message: "Você deixou de seguir esta categoria.", data: null, meta: null });
 });

@@ -1,6 +1,6 @@
 //frontend/src/features/dashboard/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
-import { alertaDecisao } from '../../shared/utils/alerta';
+import { Notificacao } from '../../shared/utils/Notificacao';
 import { PerfilResumo } from '../../shared/types/perfil.types';
 import { PostResumo } from '../../shared/types/post.types';
 import { getMeuPerfil } from '../../shared/services/perfil.service';
@@ -93,10 +93,13 @@ function DenunciarButton({ postId }: { postId: number }) {
       className="text-sm rounded px-3 py-1 text-white"
       style={{ backgroundColor: 'var(--color-if-red)' }}
       onClick={async () => {
-        const res = await alertaDecisao('Denunciar Post', 'Confirmar envio de denúncia para análise?', 'Enviar denúncia', {
-          confirmButtonColor: 'var(--color-if-red)'
+        const res = await Notificacao.modal.confirmar({
+          titulo: 'Denunciar Post',
+          texto: 'Confirmar envio de denúncia para análise?',
+          textoConfirmar: 'Enviar denúncia',
+          isDestructive: true
         });
-        if (res.isConfirmed) {
+        if (res === true) {
         }
       }}
     >

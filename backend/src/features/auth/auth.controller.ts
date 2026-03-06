@@ -18,7 +18,8 @@ const registrar = tratarAssincrono(async (req: Request<{}, {}, RegistrarData>, r
     await authService.registrarUsuario({ email, senha, nome_completo, nome_campus, data_nascimento, nome_user }, req.requestId);
     return res.status(202).json({ 
         status: 'success',
-        message: 'Recebemos sua solicitação. Se os dados informados forem válidos e a conta ainda não estiver ativa, um link de confirmação será enviado em instantes. Caso não receba, verifique sua caixa de spam ou tente realizar o processo novamente garantindo que o e-mail foi digitado corretamente.'
+        message: 'Recebemos sua solicitação. Se os dados informados forem válidos e a conta ainda não estiver ativa, um link de confirmação será enviado em instantes. Caso não receba, verifique sua caixa de spam ou tente realizar o processo novamente garantindo que o e-mail foi digitado corretamente.',
+        meta: null
     });
 });
 
@@ -31,7 +32,8 @@ const logar = tratarAssincrono(async (req: Request<{}, {}, LoginData>, res: Resp
     return res.status(200).json({ 
         status: 'success',
         message: 'Login realizado com sucesso.', 
-        data: { token } 
+        data: { token },
+        meta: null
     });
 });
 
@@ -47,7 +49,9 @@ const confirmarEmail = tratarAssincrono(async (req: Request<{}, any, any, Confir
     
     return res.status(200).json({ 
         status: 'success',
-        message 
+        message,
+        data: null,
+        meta: null
     });
 });
 
@@ -59,7 +63,9 @@ const solicitarRecuperacao = tratarAssincrono(async (req: Request<{}, any, Solic
 
     return res.status(200).json({
         status: 'success',
-        message: 'Se este e-mail estiver cadastrado, um link de recuperação será enviado.'
+        message: 'Se este e-mail estiver cadastrado, um link de recuperação será enviado.',
+        data: null,
+        meta: null
     });
 });
 
@@ -71,7 +77,9 @@ const redefinirSenha = tratarAssincrono(async (req: Request<{}, any, RedefinirSe
 
     return res.status(200).json({
         status: 'success',
-        message: 'Senha alterada com sucesso! Você já pode fazer login.'
+        message: 'Senha alterada com sucesso! Você já pode fazer login.',
+        data: null,
+        meta: null
     });
 });
 
@@ -80,7 +88,9 @@ const logoutAll = tratarAssincrono(async (req: Request, res: Response) => {
     const message = await authService.logoutAll(usuarioId, req.requestId);
     return res.status(200).json({
         status: 'success',
-        message
+        message,
+        data: null,
+        meta: null
     });
 });
 

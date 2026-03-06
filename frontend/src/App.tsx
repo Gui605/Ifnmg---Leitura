@@ -7,7 +7,12 @@ import { useAuth } from './shared/utils/authContext';
 import ProtectedRoute from './shared/utils/ProtectedRoute';
 
 export default function App() {
-  const { autenticado } = useAuth();
+  const { autenticado, loading } = useAuth();
+
+  if (loading) {
+    return null; // Ou um splash screen global
+  }
+
   return (
     <BrowserRouter>
       <Routes>

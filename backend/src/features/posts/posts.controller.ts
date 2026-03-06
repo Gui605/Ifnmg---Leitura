@@ -28,7 +28,8 @@ const criarPost = tratarAssincrono(async (req: Request<{}, any, PostCreateBody>,
     return res.status(201).json({
         status: 'success',
         message: 'Post publicado com sucesso.',
-        data: novoPost
+        data: novoPost,
+        meta: null
     });
 });
 
@@ -59,7 +60,12 @@ const deletarPost = tratarAssincrono(async (req: Request<PostIdParams, any, Empt
 
     await postsService.deletarPost(postId, perfilId, req.requestId);
 
-    return res.status(204).send();
+    return res.status(200).json({
+        status: 'success',
+        message: 'Post excluído com sucesso.',
+        data: null,
+        meta: null
+    });
 });
 
 const votarPost = tratarAssincrono(async (req: Request<PostIdParams, any, PostVoteBody>, res: Response) => {
@@ -71,7 +77,7 @@ const votarPost = tratarAssincrono(async (req: Request<PostIdParams, any, PostVo
     }
     if (!perfilId) throw AppError.unauthorized('Acesso não autorizado.');
     const postAtualizado = await postsService.votarPost(perfilId, postId, tipo, req.requestId);
-    return res.status(200).json({ status: 'success', message: 'Voto registrado.', data: postAtualizado });
+    return res.status(200).json({ status: 'success', message: 'Voto registrado.', data: postAtualizado, meta: null });
 });
 
 const comentarPost = tratarAssincrono(async (req: Request<PostIdParams, any, PostCommentBody>, res: Response) => {
@@ -83,7 +89,7 @@ const comentarPost = tratarAssincrono(async (req: Request<PostIdParams, any, Pos
     }
     if (!perfilId) throw AppError.unauthorized('Acesso não autorizado.');
     const postAtualizado = await postsService.comentarPost(perfilId, postId, texto, req.requestId);
-    return res.status(201).json({ status: 'success', message: 'Comentário publicado.', data: postAtualizado });
+    return res.status(201).json({ status: 'success', message: 'Comentário publicado.', data: postAtualizado, meta: null });
 });
 
 export default { criarPost, listarPosts, deletarPost, votarPost, comentarPost };

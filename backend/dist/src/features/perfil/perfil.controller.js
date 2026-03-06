@@ -21,7 +21,8 @@ const getPerfilInfo = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     return res.status(200).json({
         status: 'success',
         message: 'Perfil recuperado com sucesso.',
-        data: perfil
+        data: perfil,
+        meta: null
     });
 });
 const updatePerfil = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
@@ -36,7 +37,8 @@ const updatePerfil = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     return res.status(200).json({
         status: 'success',
         message: 'Perfil atualizado com sucesso.',
-        data: perfilAtualizado
+        data: perfilAtualizado,
+        meta: null
     });
 });
 const alterarSenha = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
@@ -48,7 +50,7 @@ const alterarSenha = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
         throw AppError_1.AppError.unauthorized('Sessão inválida. Identificação do usuário não encontrada.');
     }
     const message = await seguranca_service_1.default.alterarSenha(usuarioId, senhaAntiga, novaSenha, req.requestId);
-    return res.status(200).json({ status: 'success', message });
+    return res.status(200).json({ status: 'success', message, data: null, meta: null });
 });
 const deletarPerfil = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const usuarioId = req.usuario_id;
@@ -57,6 +59,6 @@ const deletarPerfil = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
         throw AppError_1.AppError.unauthorized('Não autorizado. Sessão de usuário não identificada.');
     }
     const message = await seguranca_service_1.default.deletarConta(usuarioId, senhaAtual, req.requestId);
-    return res.status(200).json({ status: 'success', message });
+    return res.status(200).json({ status: 'success', message, data: null, meta: null });
 });
 exports.default = { getPerfilInfo, updatePerfil, alterarSenha, deletarPerfil };

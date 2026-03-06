@@ -22,7 +22,8 @@ const criarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     return res.status(201).json({
         status: 'success',
         message: 'Post publicado com sucesso.',
-        data: novoPost
+        data: novoPost,
+        meta: null
     });
 });
 const listarPosts = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
@@ -46,7 +47,12 @@ const deletarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     if (!perfilId)
         throw AppError_1.AppError.unauthorized('Acesso não autorizado.');
     await posts_service_1.default.deletarPost(postId, perfilId, req.requestId);
-    return res.status(204).send();
+    return res.status(200).json({
+        status: 'success',
+        message: 'Post excluído com sucesso.',
+        data: null,
+        meta: null
+    });
 });
 const votarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const postId = Number(req.params.id);
@@ -58,7 +64,7 @@ const votarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     if (!perfilId)
         throw AppError_1.AppError.unauthorized('Acesso não autorizado.');
     const postAtualizado = await posts_service_1.default.votarPost(perfilId, postId, tipo, req.requestId);
-    return res.status(200).json({ status: 'success', message: 'Voto registrado.', data: postAtualizado });
+    return res.status(200).json({ status: 'success', message: 'Voto registrado.', data: postAtualizado, meta: null });
 });
 const comentarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const postId = Number(req.params.id);
@@ -70,6 +76,6 @@ const comentarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     if (!perfilId)
         throw AppError_1.AppError.unauthorized('Acesso não autorizado.');
     const postAtualizado = await posts_service_1.default.comentarPost(perfilId, postId, texto, req.requestId);
-    return res.status(201).json({ status: 'success', message: 'Comentário publicado.', data: postAtualizado });
+    return res.status(201).json({ status: 'success', message: 'Comentário publicado.', data: postAtualizado, meta: null });
 });
 exports.default = { criarPost, listarPosts, deletarPost, votarPost, comentarPost };

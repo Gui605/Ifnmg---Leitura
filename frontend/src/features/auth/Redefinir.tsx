@@ -5,7 +5,7 @@ import { CenarioLogin } from '../../shared/utils/Cenario';
 import { useTema } from '../../shared/utils/themeHandler';
 import { redefinirSenha } from '../../shared/services/auth.service';
 import { CheckCircle, XCircle } from 'lucide-react';
-import { showToast } from '../../shared/utils/toast';
+import { Notificacao } from '../../shared/utils/Notificacao';
 
 export default function Redefinir() {
   const { modoEscuro } = useTema();
@@ -26,19 +26,10 @@ export default function Redefinir() {
   useEffect(() => {
     if (!token) {
       (async () => {
-        const Swal = await getSwal();
-        if (Swal) {
-          await Swal.fire({
-            title: 'Link inválido',
-            text: 'Token ausente ou inválido. Solicite um novo link de recuperação.',
-            icon: 'warning',
-            background: 'var(--bg-card)',
-            color: 'var(--text-primary)',
-            confirmButtonColor: 'var(--accent-primary)'
-          });
-        } else {
-          showToast('warning', 'Token ausente ou inválido. Solicite um novo link.');
-        }
+        await Notificacao.modal.aviso({
+          titulo: 'Link inválido',
+          texto: 'Token ausente ou inválido. Solicite um novo link de recuperação.'
+        });
         window.location.assign('/');
       })();
     }
@@ -48,13 +39,6 @@ export default function Redefinir() {
   const senhaLenOK = senhaTrim.length >= 8;
   const senhaForte = senhaLenOK && /[A-Z]/.test(senhaTrim) && /\d/.test(senhaTrim);
   const confirmarOk = confirmar.trim().length > 0 && confirmar.trim() === senhaTrim;
-
-  async function getSwal() {
-    try {
-      const mod = await import('sweetalert2');
-      return mod.default;
-    } catch { return null; }
-  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -74,21 +58,12 @@ export default function Redefinir() {
 
     setCarregando(true);
     try {
-      const resp = await redefinirSenha(token, senhaTrim);
-      const Swal = await getSwal();
-      if (Swal) {
-        await Swal.fire({
-          title: 'Senha alterada com sucesso!',
-          text: 'Agora você já pode acessar sua conta com a nova senha.',
-          icon: 'success',
-          background: 'var(--bg-card)',
-          color: 'var(--text-primary)',
-          confirmButtonText: 'Ir para o Login',
-          confirmButtonColor: 'var(--color-if-green)'
-        });
-      } else {
-        showToast('success', 'Senha alterada com sucesso.');
-      }
+      await redefinirSenha(token, senhaTrim);
+      await Notificacao.modal.sucesso({
+        titulo: 'Senha alterada com sucesso!',
+        texto: 'Agora você já pode acessar sua conta com a nova senha.',
+        textoConfirmar: 'Ir para o Login'
+      });
       window.location.assign('/');
     } catch (err: any) {
       setErroVisual(true); setTimeout(() => setErroVisual(false), 500);

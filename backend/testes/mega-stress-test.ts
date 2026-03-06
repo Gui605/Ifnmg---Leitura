@@ -263,8 +263,8 @@ async function suiteInteresses() {
 
   await runCase('Interesses: Deixar de Seguir', '/categorias/:id/interesse', 'DELETE', async () => {
     const res = await api.delete(`/categorias/${catId}/interesse`, { headers: authHeader('comum@teste.com'), data: {} });
-    ok(res.status === 204, 'Deve deixar de seguir (204 No Content)', {});
-    return { status: 204 };
+    ok(res.status === 200, 'Deve deixar de seguir (200 OK)', {});
+    return { status: 200 };
   });
 }
 
@@ -295,8 +295,8 @@ async function suiteCategoriasAdmin() {
 
     await runCase('Categorias: Delete (Admin)', '/categorias/:id', 'DELETE', async () => {
       const res = await api.delete(`/categorias/${catId}`, { headers: authHeader('senior@teste.com'), data: {} });
-      ok(res.status === 204, 'Admin deve deletar (204 No Content)', {});
-      return { status: 204 };
+      ok(res.status === 200, 'Admin deve deletar (200 OK)', {});
+      return { status: 200 };
     });
   }
 }
@@ -364,8 +364,8 @@ async function suitePosts() {
     await runCase('Posts: Deixar de Seguir (Cleanup)', '/posts/:id', 'DELETE', async () => {
        // Cleanup do post criado
        const res = await api.delete(`/posts/${postId}`, { headers: authHeader('senior@teste.com'), data: {} });
-       ok(res.status === 204, 'Deve deletar post (Cleanup) (204 No Content)', {});
-       return { status: 204 };
+       ok(res.status === 200, 'Deve deletar post (Cleanup) (200 OK)', {});
+       return { status: 200 };
     });
   }
 }

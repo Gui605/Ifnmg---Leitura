@@ -6,9 +6,10 @@ import { fazerLogin, registrarUsuario, solicitarRecuperacao } from '../../shared
 import { CenarioLogin } from '../../shared/utils/Cenario';
 import { useTema } from '../../shared/utils/themeHandler';
 import { useAuth } from '../../shared/utils/authContext';
+import { AppError } from '../../shared/utils/appError';
 import { ErrorCodes } from '../../shared/types/errors';
 import { CheckCircle, XCircle } from 'lucide-react';
-import { showToast } from '../../shared/utils/toast';
+import { Notificacao } from '../../shared/utils/Notificacao';
 import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
@@ -55,83 +56,21 @@ export default function Login() {
   const nascimentoOkNow = /^\d{4}-\d{2}-\d{2}$/.test(nascimento.trim());
   const podeMostrarSucesso = !erroEmail && !erroSenha && !erroNome && !erroApelido && !erroCampus && !erroNascimento && !erroConfirmar;
 
-  async function getSwal() {
-    try {
-      const mod = await import('sweetalert2');
-      return mod.default;
-    } catch { return null; }
-  }
-
   async function abrirRecuperacao(emailPreenchido?: string) {
-    const Swal = await getSwal();
-    if (!Swal) {
-      const emailPrompt = window.prompt('Informe seu e-mail para recuperação:', emailPreenchido || '');
-      if (emailPrompt && emailPrompt.trim().length > 3) {
-        const emailLocal = emailPrompt.trim();
-        try {
-          await solicitarRecuperacao(emailLocal);
-          showToast('success', `Solicitação recebida. Se o e-mail ${emailLocal} estiver cadastrado, enviaremos um link em instantes.`);
-        } catch (err: any) {
-          const status = err?.status;
-          if (status === 429) showToast('warning', 'Muitas tentativas. Aguarde alguns minutos.');
-          else if (status === 410) showToast('warning', 'Link expirado. Enviamos um novo para seu e-mail.');
-          else showToast('warning', 'Não foi possível solicitar a recuperação agora.');
-        }
-      }
-      return;
-    }
-    const { value: emailRec } = await Swal.fire({
-      title: 'Recuperar Acesso',
-      input: 'email',
-      inputLabel: 'Informe seu e-mail institucional',
-      inputPlaceholder: 'exemplo@aluno.ifnmg.edu.br',
-      inputValue: emailPreenchido || '',
-      showCancelButton: true,
-      confirmButtonText: 'Enviar',
-      cancelButtonText: 'Cancelar',
-      background: 'var(--bg-card)',
-      color: 'var(--text-primary)',
-      confirmButtonColor: 'var(--color-if-green)',
-      backdrop: 'rgba(0, 0, 0, 0.4) saturate(150%) backdrop-filter blur(8px)',
-      inputValidator: (val) => {
-        const v = (val || '').trim();
-        if (v.length < 5 || !v.includes('@')) return 'Informe um e-mail válido.';
-        return undefined as any;
-      }
+    const emailRec = await Notificacao.modal.promptEmail({
+      valorInicial: emailPreenchido || ''
     });
+
     if (emailRec) {
       const emailTyped = String(emailRec).trim();
       try {
-        const r = await solicitarRecuperacao(emailTyped);
-        await Swal.fire({
-          title: 'Solicitação Recebida!',
-          text: `Se o e-mail ${emailTyped} estiver cadastrado, um link de recuperação será enviado.`,
-          icon: 'success',
-          showDenyButton: true,
-          denyButtonText: 'Fechar',
-          confirmButtonText: 'Abrir Gmail',
-          background: 'var(--bg-card)',
-          color: 'var(--text-primary)',
-          confirmButtonColor: 'var(--color-if-green)',
-          denyButtonColor: 'var(--color-if-red)',
-          backdrop: 'rgba(0, 0, 0, 0.4) saturate(150%) backdrop-filter blur(8px)'
-        }).then((res) => {
-          if (res.isConfirmed) window.open('https://mail.google.com', '_blank');
-        });
+        await solicitarRecuperacao(emailTyped);
+        Notificacao.toast.sucesso(`Solicitação recebida. Se o e-mail ${emailTyped} estiver cadastrado, enviaremos um link em instantes.`);
       } catch (err: any) {
         const status = err?.status;
-        let msg = err?.message || 'Falha ao solicitar recuperação.';
-        if (status === 429) msg = 'Muitas tentativas. Aguarde alguns minutos.';
-        else if (status === 410) msg = 'Link expirado. Enviamos um novo link para seu e-mail agora mesmo!';
-        await Swal.fire({
-          title: status === 429 ? 'Limite de Tentativas' : 'Não foi possível enviar',
-          text: msg,
-          icon: 'warning',
-          background: 'var(--bg-card)',
-          color: 'var(--text-primary)',
-          confirmButtonColor: 'var(--accent-primary)',
-          backdrop: 'rgba(0, 0, 0, 0.4) saturate(150%) backdrop-filter blur(8px)'
-        });
+        if (status === 429) Notificacao.toast.aviso('Muitas tentativas. Aguarde alguns minutos.');
+        else if (status === 410) Notificacao.toast.aviso('Link expirado. Enviamos um novo para seu e-mail.');
+        else Notificacao.toast.aviso('Não foi possível solicitar a recuperação agora.');
       }
     }
   }
@@ -146,136 +85,65 @@ export default function Login() {
   }, []);
 
   async function alertaSucessoCadastro() {
-    const Swal = await getSwal();
-    if (!Swal) {
-      showToast('success', 'Cadastro realizado! Verifique seu e-mail institucional.');
-      resetFormulario();
-      return;
-    }
-    await Swal.fire({
-      title: 'Cadastro Realizado!',
-      text: 'Enviamos um link de ativação para seu e-mail institucional. Verifique seu Gmail para acessar.',
-      icon: 'success',
-      showDenyButton: true,
-      denyButtonText: 'Fechar',
-      confirmButtonText: 'Abrir Gmail',
-      background: 'var(--bg-card)',
-      color: 'var(--text-primary)',
-      confirmButtonColor: 'var(--color-if-green)',
-      denyButtonColor: 'var(--text-secondary)',
-      backdrop: 'rgba(0, 0, 0, 0.4) saturate(150%) backdrop-filter blur(8px)'
-    }).then((res) => {
-      if (res.isConfirmed) window.open('https://mail.google.com', '_blank');
-      resetFormulario();
+    await Notificacao.modal.sucesso({
+      titulo: 'Cadastro Realizado!',
+      texto: 'Enviamos um link de ativação para seu e-mail institucional. Verifique seu Gmail para acessar.',
+      textoConfirmar: 'Abrir Gmail',
+      textoCancelar: 'Fechar',
+      mostrarBotaoCancelar: true
     });
+    resetFormulario();
   }
 
   async function alertaCadastroPendente() {
-    const Swal = await getSwal();
-    if (!Swal) {
-      showToast('warning', 'Você já possui um cadastro pendente. Verifique seu e-mail.');
-      return;
-    }
-    await Swal.fire({
-      title: 'Cadastro Pendente',
-      text: 'Você já possui um cadastro pendente. Verifique seu Gmail para confirmar.',
-      iconHtml: '<svg width=\"36\" height=\"36\" viewBox=\"0 0 24 24\" fill=\"var(--accent-primary)\" stroke=\"var(--color-if-black)\" stroke-width=\"1.5\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 7v6\" stroke-linecap=\"round\"/><circle cx=\"12\" cy=\"16.5\" r=\"1\"/></svg>',
-      showDenyButton: true,
-      denyButtonText: 'Fechar',
-      confirmButtonText: 'Abrir Gmail',
-      background: 'var(--bg-card)',
-      color: 'var(--text-primary)',
-      confirmButtonColor: 'var(--accent-primary)',
-      denyButtonColor: 'var(--text-secondary)',
-      backdrop: 'rgba(0, 0, 0, 0.4) saturate(150%) backdrop-filter blur(8px)'
-    }).then((res) => {
-      if (res.isConfirmed) window.open('https://mail.google.com', '_blank');
+    await Notificacao.modal.aviso({
+      titulo: 'Cadastro Pendente',
+      texto: 'Você já possui um cadastro pendente. Verifique seu Gmail para confirmar.',
+      textoConfirmar: 'Abrir Gmail',
+      textoCancelar: 'Fechar',
+      mostrarBotaoCancelar: true
     });
   }
 
   async function alertaLinkReenviado() {
-    const Swal = await getSwal();
-    if (!Swal) {
-      showToast('success', 'Link expirado detectado. Enviamos um novo para sua caixa de entrada.');
-      return;
-    }
-    await Swal.fire({
-      title: 'Link Reenviado',
-      text: 'Vimos que seu link expirou. Um novo link foi enviado para sua caixa de entrada.',
-      iconHtml: '<svg width=\"36\" height=\"36\" viewBox=\"0 0 24 24\" fill=\"var(--color-if-green)\" stroke=\"var(--color-if-black)\" stroke-width=\"1.2\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12\"/><path d=\"M2 12l4-2m-4 2l4 2\"/><path d=\"M9 12l2 2 4-4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>',
-      showDenyButton: true,
-      denyButtonText: 'Fechar',
-      confirmButtonText: 'Abrir Gmail',
-      background: 'var(--bg-card)',
-      color: 'var(--text-primary)',
-      confirmButtonColor: 'var(--color-if-green)',
-      denyButtonColor: 'var(--text-secondary)',
-      backdrop: 'rgba(0, 0, 0, 0.4) saturate(150%) backdrop-filter blur(8px)'
-    }).then((res) => {
-      if (res.isConfirmed) window.open('https://mail.google.com', '_blank');
+    await Notificacao.modal.sucesso({
+      titulo: 'Link Reenviado',
+      texto: 'Vimos que seu link expirou. Um novo link foi enviado para sua caixa de entrada.',
+      textoConfirmar: 'Abrir Gmail',
+      textoCancelar: 'Fechar',
+      mostrarBotaoCancelar: true
     });
   }
 
   async function alertaContaPendenteLogin() {
-    const Swal = await getSwal();
-    if (!Swal) {
-      showToast('warning', 'Sua conta ainda não foi ativada. Verifique seu e-mail.');
-      return;
-    }
-    await Swal.fire({
-      title: 'Conta Não Ativada',
-      text: 'Sua conta ainda não foi ativada. Verifique seu e-mail.',
-      iconHtml: '<svg width=\"36\" height=\"36\" viewBox=\"0 0 24 24\" fill=\"var(--accent-primary)\" stroke=\"var(--color-if-black)\" stroke-width=\"1.5\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 7v6\" stroke-linecap=\"round\"/><circle cx=\"12\" cy=\"16.5\" r=\"1\"/></svg>',
-      background: 'var(--bg-card)',
-      color: 'var(--text-primary)',
-      confirmButtonText: 'Abrir Gmail',
-      confirmButtonColor: 'var(--accent-primary)',
-      backdrop: 'rgba(0, 0, 0, 0.4) saturate(150%) backdrop-filter blur(8px)'
-    }).then((res) => {
-      if (res.isConfirmed) window.open('https://mail.google.com', '_blank');
+    await Notificacao.modal.aviso({
+      titulo: 'Conta Não Ativada',
+      texto: 'Sua conta ainda não foi ativada. Verifique seu e-mail.',
+      textoConfirmar: 'Abrir Gmail',
+      textoCancelar: 'Fechar',
+      mostrarBotaoCancelar: true
     });
   }
 
   async function alertaEmailExistente() {
-    const Swal = await getSwal();
-    if (!Swal) {
-      showToast('warning', 'Este e-mail já possui conta. Faça login ou recupere o acesso.');
-      return;
-    }
-    const res = await Swal.fire({
-      title: 'Parece que você já é um de nós!',
-      text: 'Este e-mail institucional já possui uma conta ativa. Deseja entrar agora ou recuperar seu acesso?',
-      icon: 'warning',
-      showDenyButton: true,
-      showCancelButton: true,
-      confirmButtonText: 'Fazer Login',
-      denyButtonText: 'Recuperar Senha',
-      cancelButtonText: 'Fechar',
-      background: modoEscuro ? 'var(--bg-card)' : '#fff',
-      color: modoEscuro ? 'var(--text-primary)' : '#545454',
-      confirmButtonColor: 'var(--color-if-green)',
-      denyButtonColor: 'var(--accent-primary)',
-      cancelButtonColor: 'var(--color-if-red)',
-      backdrop: 'rgba(0, 0, 0, 0.4) saturate(150%) backdrop-filter blur(8px)',
-      customClass: {
-        actions: 'flex-col sm:flex-row gap-2 w-full px-4',
-        confirmButton: 'w-full sm:w-auto order-1',
-        denyButton: 'w-full sm:w-auto order-2',
-        cancelButton: 'w-full sm:w-auto order-3'
-      }
+    const res = await Notificacao.modal.confirmar({
+      titulo: 'Parece que você já é um de nós!',
+      texto: 'Este e-mail institucional já possui uma conta ativa. Deseja entrar agora ou recuperar seu acesso?',
+      textoConfirmar: 'Fazer Login',
+      textoCancelar: 'Recuperar Senha',
+      mostrarBotaoCancelar: true
     });
-    if (res.isConfirmed) {
+
+    if (res === true) {
       const emailAtual = emailTrimNow;
       resetFormulario(false);
       setEmail(emailAtual);
       setEhLogin(true);
-    } else if (res.isDenied) {
+    } else if (res === false) {
       const emailAtual = emailTrimNow;
       resetFormulario(false);
       setEhLogin(true);
       await abrirRecuperacao(emailAtual);
-    } else {
-      // cancelado: não faz nada, preserva os dados atuais
     }
   }
 
@@ -314,6 +182,15 @@ export default function Login() {
         const { token } = await fazerLogin({ email, senha });
         setSession(token);
         navigate('/dashboard', { replace: true });
+      } catch (err: unknown) {
+        if (err instanceof AppError) {
+          if (err.status === 401) {
+            Notificacao.toast.show('warning', 'E-mail ou senha incorretos.');
+          } else {
+            await Notificacao.modal.erro({ titulo: 'Erro no Acesso', texto: err.message });
+          }
+        }
+        setErroVisual(true); setTimeout(() => setErroVisual(false), 500);
       } finally { setEstaCarregando(false); }
     } else {
       // Cadastro
@@ -374,9 +251,13 @@ export default function Login() {
         } else {
           await alertaSucessoCadastro();
         }
-      } catch (err: any) {
-        if (err?.status === 400 || err?.status === 409) {
-          await alertaEmailExistente();
+      } catch (err: unknown) {
+        if (err instanceof AppError) {
+          if (err.status === 400 || err.status === 409) {
+            await alertaEmailExistente();
+          } else {
+            await Notificacao.modal.erro({ titulo: 'Erro no Cadastro', texto: err.message });
+          }
         }
         setErroVisual(true); setTimeout(() => setErroVisual(false), 500);
       } finally { setEstaCarregando(false); }

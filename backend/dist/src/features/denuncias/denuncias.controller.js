@@ -15,7 +15,7 @@ const criar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
         throw AppError_1.AppError.badRequest('ID inválido.');
     }
     const payload = 'motivo' in req.body ? { denuncia_tipo: 1, descricao: req.body.motivo } : req.body;
-    await denuncias_service_1.default.registrarDenuncia(perfilId, postId, payload, req.requestId);
-    return res.status(201).json({ status: 'success', message: 'Denúncia registrada.' });
+    const created = await denuncias_service_1.default.registrarDenuncia(perfilId, postId, payload, req.requestId);
+    return res.status(201).json({ status: 'success', message: 'Denúncia registrado com sucesso.', data: created, meta: null });
 });
 exports.default = { criar };

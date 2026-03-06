@@ -27,7 +27,8 @@ const getPerfilInfo = tratarAssincrono(async (req: Request, res: Response) => {
     return res.status(200).json({
         status: 'success',
         message: 'Perfil recuperado com sucesso.',
-        data: perfil
+        data: perfil,
+        meta: null
     });
 });
 
@@ -46,7 +47,8 @@ const updatePerfil = tratarAssincrono(async (req: Request<{}, {}, PerfilPatchBod
     return res.status(200).json({
         status: 'success',
         message: 'Perfil atualizado com sucesso.',
-        data: perfilAtualizado
+        data: perfilAtualizado,
+        meta: null
     });
 });
 
@@ -62,7 +64,7 @@ const alterarSenha = tratarAssincrono(async (req: Request<{}, any, SenhaPatchBod
 
     const message = await segurancaService.alterarSenha(usuarioId, senhaAntiga, novaSenha, req.requestId);
     
-    return res.status(200).json({ status: 'success', message });
+    return res.status(200).json({ status: 'success', message, data: null, meta: null });
 });
 
 const deletarPerfil = tratarAssincrono(async (req: Request<{}, {}, DeletarContaBody>, res: Response) => {
@@ -75,7 +77,7 @@ const deletarPerfil = tratarAssincrono(async (req: Request<{}, {}, DeletarContaB
 
     const message = await segurancaService.deletarConta(usuarioId, senhaAtual, req.requestId);
     
-    return res.status(200).json({ status: 'success', message });
+    return res.status(200).json({ status: 'success', message, data: null, meta: null });
 });
 
 export default { getPerfilInfo, updatePerfil, alterarSenha, deletarPerfil };

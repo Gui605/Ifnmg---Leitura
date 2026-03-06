@@ -22,7 +22,7 @@ import denunciasRoutes from './features/denuncias/denuncias.routes';
 
 // Utils
 import { logger } from './shared/utils/logger';
-import { verificarConexaoSMTP } from './shared/utils/serviceEmail';
+import { iniciarMonitoramentoSMTP } from './shared/utils/serviceEmail';
 import { limparContasExpiradas } from './shared/agendador/limpezaContas';
 import { AppError } from './shared/utils/AppError';
 
@@ -72,7 +72,7 @@ const iniciarServidor = async () => {
         });
 
         // Background Services
-        verificarConexaoSMTP();
+        await iniciarMonitoramentoSMTP();
         
         // Agendador com Log de Observabilidade
         cron.schedule('0 * * * *', () => {
