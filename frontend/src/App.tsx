@@ -4,7 +4,7 @@ import Login from './features/auth/Login';
 import Redefinir from './features/auth/Redefinir';
 import Dashboard from './features/dashboard/Dashboard';
 import { useAuth } from './shared/utils/authContext';
-import ProtectedRoute from './shared/utils/ProtectedRoute';
+import { ProtectedRoute, PublicOnlyRoute } from './shared/guards';
 
 export default function App() {
   const { autenticado, loading } = useAuth();
@@ -17,8 +17,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to={autenticado ? '/dashboard' : '/login'} replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/redefinir-senha" element={<Redefinir />} />
+        
+        {/* Rotas Públicas (Somente para não autenticados) */}
+        <Route element={<PublicOnlyRoute />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/redefinir-senha" element={<Redefinir />} />
+        </Route>
+
+        {/* Rotas Protegidas */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
         </Route>

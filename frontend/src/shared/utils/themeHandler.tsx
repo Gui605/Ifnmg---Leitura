@@ -87,10 +87,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const alternarTema = useCallback(() => {
-    const atual = getTema();
-    const proximo = atual === 'dark' ? 'light' : atual === 'light' ? 'dark' : (getSystemPrefersDark() ? 'light' : 'dark');
-    atualizar(proximo);
-  }, [atualizar]);
+  const proximo = modoGeral === 'dark' ? 'light' : 'dark';
+  atualizar(proximo);
+  }, [modoGeral, atualizar]);
 
   useLayoutEffect(() => {
     applyThemeClass(currentEffectiveDark(modoGeral));

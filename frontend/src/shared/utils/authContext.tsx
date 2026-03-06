@@ -110,14 +110,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    return {
-      token: storageGet<string>(TOKEN_KEY),
-      autenticado: !!storageGet<string>(TOKEN_KEY),
-      loading: false,
-      setSession: (t: string, ttl?: number) => storageSet(TOKEN_KEY, t, ttl),
-      logout: () => storageRemove(TOKEN_KEY)
-    } as AuthContextValue;
-  }
+  if (!ctx) throw new Error('useAuth deve ser usado dentro de AuthProvider');
   return ctx;
+}
+
+/**
+ * Componente utilitário para renderizar um estado de carregamento padrão
+ */
+export function AuthLoadingScreen() {
+  return (
+    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex items-center justify-center">
+      <div className="card px-6 py-4">Carregando...</div>
+    </div>
+  );
 }

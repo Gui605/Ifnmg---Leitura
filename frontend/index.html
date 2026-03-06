@@ -4,9 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>IFNMG</title>
+    
+    <script>
+      (function() {
+        try {
+          const stored = localStorage.getItem('theme-preference');
+          const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const isDark = stored === 'dark' || (stored !== 'light' && systemDark);
+          
+          // Aplica a classe de tema no HTML
+          document.documentElement.classList.add(isDark ? 'dark-mode' : 'light-mode');
+          
+          // Libera a renderização do body (que estava escondido via CSS)
+          document.documentElement.classList.add('theme-ready');
+        } catch (e) {
+          // Fallback seguro caso ocorra erro no localStorage
+          document.documentElement.classList.add('light-mode', 'theme-ready');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
-  </html>
+</html>
