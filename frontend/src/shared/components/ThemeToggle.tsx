@@ -12,7 +12,7 @@ export default function ThemeToggle() {
       aria-pressed={modoEscuro}
       aria-label="Alternar tema"
       title={modoEscuro ? 'Modo escuro' : 'Modo claro'}
-      className="fixed top-4 right-4 z-50 p-2 rounded-full border border-[color:var(--border-color)] bg-[var(--bg-card)] transition-colors"
+      className={`relative p-2 rounded-full bg-[var(--bg-card)] transition-colors border-2 ${modoEscuro ? 'border-[var(--accent-primary)]' : 'border-black'}`}
       whileTap={{ scale: 0.9 }}
       style={
         modoEscuro
@@ -22,7 +22,7 @@ export default function ThemeToggle() {
             }
           : {
               color: 'var(--text-secondary)',
-              boxShadow: 'none',
+              boxShadow: '0 0 8px rgba(0, 0, 0, 0.6)',
             }
       }
     >

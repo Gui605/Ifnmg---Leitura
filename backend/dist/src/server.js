@@ -46,6 +46,7 @@ const cron = __importStar(require("node-cron"));
 const requestId_middleware_1 = require("./shared/middlewares/requestId.middleware");
 const jsonDepth_middleware_1 = require("./shared/middlewares/jsonDepth.middleware");
 const security_middleware_1 = require("./shared/middlewares/security.middleware");
+const responseEnveloper_middleware_1 = require("./shared/middlewares/responseEnveloper.middleware");
 const errorHandler_middleware_1 = require("./shared/middlewares/errorHandler.middleware");
 // Routes
 const auth_routes_1 = __importDefault(require("./features/auth/auth.routes"));
@@ -64,18 +65,24 @@ const PORT = process.env.PORT || 3000;
 // --- 1. INFRAESTRUTURA ---
 app.set('trust proxy', 1);
 // --- 2. MIDDLEWARES DE SEGURANÇA E PARSING ---
+// 1. Rastreamento deve ser o primeiro para logar tudo
 app.use(requestId_middleware_1.middlewareRequestId);
-app.use((0, helmet_1.default)());
-app.use(helmet_1.default.hsts({ maxAge: 31536000, includeSubDomains: true, preload: true })); // Restaurado
+// 2. CORS deve vir antes de qualquer middleware que possa bloquear a requisição (como Helmet ou Security)
 app.use((0, cors_1.default)({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
+// 3. Tratamento explícito de Preflight para evitar 401/403 antes de chegar no CORS
+app.options('*', (0, cors_1.default)());
+// 4. Segurança e Parsers (Agora em ambiente seguro pois o CORS já passou)
+app.use((0, helmet_1.default)());
+app.use(helmet_1.default.hsts({ maxAge: 31536000, includeSubDomains: true, preload: true }));
 app.use(express_1.default.json({ limit: '100kb' }));
 app.use((0, jsonDepth_middleware_1.jsonDepthMiddleware)(7));
-app.use(security_middleware_1.enforceSecurity); // Proteção HTTPS e Host
+app.use(security_middleware_1.enforceSecurity); // Proteção contra requisições maliciosas
+app.use(responseEnveloper_middleware_1.responseEnveloper);
 // --- 3. VALIDAÇÃO DE SEGURANÇA DE PRODUÇÃO ---
 if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
     throw new Error('CONFIGURAÇÃO FATAL: JWT_SECRET não configurado em produção.');
@@ -96,9 +103,7 @@ const iniciarServidor = async () => {
         app.listen(Number(PORT), '0.0.0.0', () => {
             logger_1.logger.info(`Servidor rodando na porta ${PORT}`, { evento: 'SERVER_STARTED' });
         });
-        // Background Services
         await (0, serviceEmail_1.iniciarMonitoramentoSMTP)();
-        // Agendador com Log de Observabilidade
         cron.schedule('0 * * * *', () => {
             logger_1.logger.info("Executando tarefa agendada: Limpeza de Contas Expiradas", { evento: 'JOB_CLEAN_EXPIRED_ACCOUNTS_STARTED' });
             (0, limpezaContas_1.limparContasExpiradas)();

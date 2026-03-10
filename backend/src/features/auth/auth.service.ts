@@ -8,6 +8,7 @@ import { AppError } from '../../shared/utils/AppError';
 import { ErrorCodes } from '../../errors/ErrorCodes'; // Importação necessária para códigos manuais
 import * as crypto from 'crypto'; 
 import { registrar as registrarLog } from '../../shared/utils/logService';
+import { logger } from '../../shared/utils/logger';
 
 /**
  * 🛡️ PADRÃO ENTERPRISE: Camada de Serviço de Autenticação
@@ -36,19 +37,29 @@ async function registrarUsuario(data: RegistrarData, requestId?: string): Promis
             }
         });
 
+        const perfilExistente = await prisma.perfis.findUnique({
+            where: { nome_user: nome_user.trim() }
+        });
+
+        if (perfilExistente) {
+            throw AppError.conflict('Este nome de usuário já está em uso.');
+        }
+
         if (existente) {
-            // CASO A: Usuário já é ativo (Segurança: Mensagem genérica para evitar enumeração)
+            // CASO A: Usuário já é ativo (Segurança: Lança 409 para evitar duplicação)
             if (existente.cadastro_confirmado) {
-                // Mantém lógica original de proteção contra timing attacks
+                logger.warn('Tentativa de cadastro com e-mail já confirmado', { evento: 'AUTH_REGISTRATION_ATTEMPT_DUPLICATE', email: emailNormalizado, requestId });
+                // Timing attack protection
                 await gerarHashSenha(senha);
                 await new Promise((r) => setTimeout(r, 300));
-                return 'Solicitação recebida.';
+                throw AppError.conflict('Este e-mail já possui uma conta ativa.');
             }
 
             // CASO B: Cadastro Pendente e link ainda válido (UX: Orienta ir ao e-mail)
             const agora = new Date();
             if (existente.expiracao_pendente && existente.expiracao_pendente > agora) {
-                return `Você já possui um cadastro pendente. Verifique sua caixa de entrada e spam para ativar sua conta.`;
+                logger.info('Tentativa de cadastro com conta pendente válida', { evento: 'AUTH_REGISTRATION_PENDING_VALID', email: emailNormalizado, requestId });
+                throw AppError.badRequest('Você já possui um cadastro pendente. Verifique seu e-mail.');
             }
 
             // CASO C: Link Expirado (Renovação automática e reenvio de e-mail)
@@ -64,7 +75,8 @@ async function registrarUsuario(data: RegistrarData, requestId?: string): Promis
                 enviarEmailComToken(emailNormalizado, tokenVerificacao, 'verificacao').catch(() => {});
             });
 
-            return `Vimos que seu link expirou. Enviamos uma nova chave de ativação para ${emailNormalizado}.`;
+            logger.info('Link de ativação expirado, reenviando e-mail', { evento: 'AUTH_REGISTRATION_LINK_RENEWED', email: emailNormalizado, requestId });
+            throw AppError.gone('Vimos que seu link expirou. Enviamos uma nova chave de ativação.');
         }
 
         // 🛡️ LÓGICA ORIGINAL: Transação para novos registros
@@ -102,14 +114,15 @@ async function registrarUsuario(data: RegistrarData, requestId?: string): Promis
         
 
     } catch (error: any) {
-        // Preserva o tratamento de erro original para restrições de banco (P2002)
-        if (error.code === 'P2002') {
-            await gerarHashSenha(senha);
-            await new Promise((r) => setTimeout(r, 300));
-            return 'Solicitação recebida.';
+            // Preserva o tratamento de erro original para restrições de banco (P2002)
+            if (error.code === 'P2002') {
+                logger.warn('Tentativa de cadastro com dados duplicados (P2002)', { evento: 'AUTH_REGISTRATION_ATTEMPT_DUPLICATE_P2002', requestId });
+                await gerarHashSenha(senha);
+                await new Promise((r) => setTimeout(r, 300));
+                throw AppError.conflict('Solicitação recebida.');
+            }
+            throw error; 
         }
-        throw error; 
-    }
 
     // Disparo de e-mail para NOVOS cadastros (fora do bloco catch/if)
     setImmediate(() => { enviarEmailComToken(email, tokenVerificacao, 'verificacao').catch(() => {}); });

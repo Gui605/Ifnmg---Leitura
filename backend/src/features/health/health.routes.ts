@@ -22,4 +22,12 @@ healthRoutes.get(
  */
 healthRoutes.get('/live', healthController.checkLiveness);
 
+/**
+ * 🧪 TESTE DE CONEXÃO (Diagnóstico Isolado):
+ * Serve para confirmar se o CORS e a rede estão OK sem interferência de auth.
+ */
+healthRoutes.get('/ping', (req, res) => {
+    res.status(200).json({ message: 'Conexão OK!' });
+});
+
 export default healthRoutes;

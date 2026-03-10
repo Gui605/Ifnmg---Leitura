@@ -6,6 +6,7 @@ import { verificarToken } from '../utils/jwtUtils';
 import prisma from '../prisma/prisma.client';
 
 export const middlewareAutenticacao = async (req: Request, res: Response, next: NextFunction) => {
+    
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

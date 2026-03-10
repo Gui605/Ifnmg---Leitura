@@ -1,3 +1,4 @@
+//frontend/src/shared/guards/ProtectedRoute.tsx
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth, AuthLoadingScreen } from '../utils/authContext';

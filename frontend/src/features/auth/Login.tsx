@@ -8,9 +8,10 @@ import { useTema } from '../../shared/utils/themeHandler';
 import { useAuth } from '../../shared/utils/authContext';
 import { AppError } from '../../shared/utils/appError';
 import { ErrorCodes } from '../../shared/types/errors';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Mail, Lock, BookOpen, AlertCircle, User, AtSign, Home, Calendar } from 'lucide-react';
 import { Notificacao } from '../../shared/utils/Notificacao';
 import { useNavigate } from 'react-router-dom';
+import InputMask from 'react-input-mask';
 
 export default function Login() {
   const { modoEscuro } = useTema();
@@ -40,6 +41,8 @@ export default function Login() {
   const [mostraErroCampus, setMostraErroCampus] = useState(false);
   const [mostraErroNascimento, setMostraErroNascimento] = useState(false);
   const [mostraErroConfirmar, setMostraErroConfirmar] = useState(false);
+  const [lembrarMe, setLembrarMe] = useState(false);
+  const [aceitouTermos, setAceitouTermos] = useState(false);
 
   // Derivados visuais (Calculados em tempo real)
   const emailTrimNow = email.trim();
@@ -49,11 +52,14 @@ export default function Login() {
   const senhaTrimNow = senha.trim();
   const senhaLenOKNow = senhaTrimNow.length >= 8;
   const senhaForteNow = senhaLenOKNow && /[A-Z]/.test(senhaTrimNow) && /\d/.test(senhaTrimNow);
+  const lenOK = senhaTrimNow.length >= 8;
+  const upperOK = /[A-Z]/.test(senhaTrimNow);
+  const digitOK = /\d/.test(senhaTrimNow);
   const confirmarOkNow = confirmarSenha.trim().length > 0 && confirmarSenha.trim() === senhaTrimNow;
   const nomeOkNow = (nome.trim().split(/\s+/).filter(Boolean)).length >= 2;
   const apelidoOkNow = apelido.trim().length >= 2 && apelido.trim().length <= 100;
   const campusOkNow = campus.trim().length >= 2 && campus.trim().length <= 100;
-  const nascimentoOkNow = /^\d{4}-\d{2}-\d{2}$/.test(nascimento.trim());
+  const nascimentoOkNow = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(nascimento.trim());
   const podeMostrarSucesso = !erroEmail && !erroSenha && !erroNome && !erroApelido && !erroCampus && !erroNascimento && !erroConfirmar;
 
   async function abrirRecuperacao(emailPreenchido?: string) {
@@ -81,6 +87,11 @@ export default function Login() {
       if ((params.get('acao') || '').toLowerCase() === 'recuperar') {
         abrirRecuperacao();
       }
+      const savedEmail = localStorage.getItem('portal_ifnmg_email');
+      if (savedEmail) {
+        setEmail(savedEmail);
+        setLembrarMe(true);
+      }
     } catch {}
   }, []);
 
@@ -98,7 +109,7 @@ export default function Login() {
   async function alertaCadastroPendente() {
     await Notificacao.modal.aviso({
       titulo: 'Cadastro Pendente',
-      texto: 'Você já possui um cadastro pendente. Verifique seu Gmail para confirmar.',
+      texto: 'Você possui um cadastro pendente. Verifique seu Gmail para confirmar.',
       textoConfirmar: 'Abrir Gmail',
       textoCancelar: 'Fechar',
       mostrarBotaoCancelar: true
@@ -181,164 +192,244 @@ export default function Login() {
       try {
         const { token } = await fazerLogin({ email, senha });
         setSession(token);
+        if (lembrarMe) {
+          localStorage.setItem('portal_ifnmg_email', emailTrimNow);
+        } else {
+          localStorage.removeItem('portal_ifnmg_email');
+        }
         navigate('/dashboard', { replace: true });
       } catch (err: unknown) {
         if (err instanceof AppError) {
-          if (err.status === 401) {
-            Notificacao.toast.show('warning', 'E-mail ou senha incorretos.');
-          } else {
-            await Notificacao.modal.erro({ titulo: 'Erro no Acesso', texto: err.message });
+          switch (err.errorCode) {
+            case ErrorCodes.UNAUTHENTICATED:
+            case ErrorCodes.INVALID_CREDENTIALS:
+              Notificacao.toast.show('warning', 'E-mail ou senha incorretos.');
+              break;
+            case ErrorCodes.FORBIDDEN:
+              await alertaContaPendenteLogin();
+              break;
+            case ErrorCodes.RATE_LIMIT_EXCEEDED:
+              Notificacao.toast.aviso('Muitas tentativas. Aguarde alguns minutos.');
+              break;
+            default:
+              await Notificacao.modal.erro({ titulo: 'Erro no Acesso', texto: err.message });
           }
+        } else {
+          Notificacao.toast.show('error', 'Ocorreu um erro inesperado ao entrar.');
         }
-        setErroVisual(true); setTimeout(() => setErroVisual(false), 500);
-      } finally { setEstaCarregando(false); }
+        setErroVisual(true);
+        setTimeout(() => setErroVisual(false), 500);
+      } finally {
+        setEstaCarregando(false);
+      }
     } else {
-      // Cadastro
-      if (!nomeOkNow) {
-        setErroNome('Informe nome completo (nome e sobrenome).');
-        setMostraErroNome(true); setErroVisual(true);
+      // Cadastro - Validação Unificada
+      if (!nomeOkNow || !apelidoOkNow || !campusOkNow || !nascimentoOkNow || !senhaForteNow || !confirmarOkNow || !aceitouTermos) {
+        setErroVisual(true);
         setTimeout(() => setErroVisual(false), 500);
-        return;
-      }
-      if (!apelidoOkNow) {
-        setErroApelido('Informe um apelido entre 2 e 100 caracteres.');
-        setMostraErroApelido(true); setErroVisual(true);
-        setTimeout(() => setErroVisual(false), 500);
-        return;
-      }
-      if (!campusOkNow) {
-        setErroCampus('Informe o nome do campus (mín. 2 caracteres).');
-        setMostraErroCampus(true); setErroVisual(true);
-        setTimeout(() => setErroVisual(false), 500);
-        return;
-      }
-      if (!nascimentoOkNow) {
-        setErroNascimento('Informe a data de nascimento no formato YYYY-MM-DD.');
-        setMostraErroNascimento(true); setErroVisual(true);
-        setTimeout(() => setErroVisual(false), 500);
-        return;
-      }
-      if (!senhaForteNow) {
-        setErroSenha('A senha deve ter 8+ caracteres, 1 maiúscula e 1 número.');
-        setMostraErroSenha(true); setErroVisual(true);
-        setTimeout(() => setErroVisual(false), 500);
-        return;
-      }
-      if (!confirmarOkNow) {
-        setErroConfirmar('As senhas não coincidem.');
-        setMostraErroConfirmar(true); setErroVisual(true);
-        setTimeout(() => setErroVisual(false), 500);
+
+        if (!nomeOkNow) Notificacao.toast.aviso('Informe nome completo (nome e sobrenome).');
+        else if (!apelidoOkNow) Notificacao.toast.aviso('Informe um apelido entre 2 e 100 caracteres.');
+        else if (!campusOkNow) Notificacao.toast.aviso('Informe o nome do campus (mín. 2 caracteres).');
+        else if (!nascimentoOkNow) Notificacao.toast.aviso('Informe a data de nascimento válida (DD/MM/YYYY).');
+        else if (!senhaForteNow) Notificacao.toast.aviso('A senha deve ter 8+ caracteres, 1 maiúscula e 1 número.');
+        else if (!confirmarOkNow) Notificacao.toast.aviso('As senhas não coincidem.');
+        else if (!aceitouTermos) Notificacao.toast.aviso('Você precisa aceitar os Termos de Uso e a Política de Privacidade.');
+        
         return;
       }
 
       setEstaCarregando(true);
       try {
-        const resp = await registrarUsuario({
+        const nascimentoISO = (() => {
+          const [dd, mm, yyyy] = nascimento.trim().split('/');
+          return `${yyyy}-${mm}-${dd}`;
+        })();
+        await registrarUsuario({
           nome_completo: nome,
           nome_user: apelido,
           nome_campus: campus,
-          data_nascimento: nascimento,
+          data_nascimento: nascimentoISO,
           email,
           senha
         });
-        const msg = (resp?.message || '').toLowerCase();
-        if (msg.includes('pendente')) {
-          await alertaCadastroPendente();
-        } else if (msg.includes('expirou')) {
-          await alertaLinkReenviado();
-        } else if (resp?.message === 'Solicitação recebida.') {
-          await alertaEmailExistente();
-        } else {
-          await alertaSucessoCadastro();
-        }
+
+        // Fluxo de Sucesso do Cadastro (Genuíno 201/200)
+        await alertaSucessoCadastro();
       } catch (err: unknown) {
         if (err instanceof AppError) {
-          if (err.status === 400 || err.status === 409) {
-            await alertaEmailExistente();
-          } else {
-            await Notificacao.modal.erro({ titulo: 'Erro no Cadastro', texto: err.message });
+          switch (err.errorCode) {
+            case ErrorCodes.EMAIL_ALREADY_EXISTS:
+            case ErrorCodes.CONFLICT:
+              await alertaEmailExistente();
+              break;
+            case ErrorCodes.BAD_REQUEST:
+              if (err.message.toLowerCase().includes('pendente')) {
+                await alertaCadastroPendente();
+              } else {
+                await Notificacao.modal.erro({ titulo: 'Dados Inválidos', texto: err.message });
+              }
+              break;
+            case ErrorCodes.TOKEN_EXPIRED:
+              await alertaLinkReenviado();
+              break;
+            case ErrorCodes.VALIDATION_ERROR:
+              Notificacao.toast.aviso('Verifique os campos destacados e tente novamente.');
+              break;
+            case ErrorCodes.RATE_LIMIT_EXCEEDED:
+              Notificacao.toast.aviso('Muitas tentativas. Aguarde alguns minutos.');
+              break;
+            default:
+              await Notificacao.modal.erro({ titulo: 'Erro no Cadastro', texto: err.message });
           }
+        } else {
+          Notificacao.toast.show('error', 'Ocorreu um erro inesperado ao realizar o cadastro.');
         }
-        setErroVisual(true); setTimeout(() => setErroVisual(false), 500);
-      } finally { setEstaCarregando(false); }
+        setErroVisual(true);
+        setTimeout(() => setErroVisual(false), 500);
+      } finally {
+        setEstaCarregando(false);
+      }
     }
   }
 
   return (
-    <div className="relative min-h-screen login-page-container bg-transparent text-[var(--text-primary)]">
-      <ThemeToggle />
+    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex flex-col">
       <CenarioLogin />
-      <main className="relative z-30 flex items-center justify-center min-h-screen p-4">
-        <section className="card w-full max-w-md px-8 py-6 backdrop-blur">
-          <div className="flex flex-col items-center gap-2 mb-4">
+      <header className="relative z-30 flex items-center justify-between px-6 md:px-20 py-4 border-b border-[var(--border-color)] bg-[var(--bg-card)]">
+        <div className="flex items-center gap-3">
+          <div className="text-[var(--accent-primary)]"><BookOpen size={28} /></div>
+          <h2 className="text-xl font-bold tracking-tight">Portal IFNMG</h2>
+        </div>
+        <div className="flex items-center gap-6 justify-end">
+          {!ehLogin && (
+            <button
+              type="button"
+              onClick={() => { resetFormulario(false); setEhLogin(true); }}
+              className="bg-[var(--accent-primary)] text-white font-bold py-2 px-6 rounded-lg hover:brightness-110 transition-all"
+            >
+              Entrar
+            </button>
+          )}
+          <ThemeToggle />
+        </div>
+      </header>
+
+      <main className="relative z-30 flex-1 flex items-center justify-center p-4">
+        <section className="card w-full max-w-[520px] p-8 md:p-10 shadow-xl">
+          <div className="flex flex-col items-center gap-2 mb-8">
             <img src={logo} alt="IFNMG" className="h-16 w-auto" style={{ filter: modoEscuro ? 'brightness(0) invert(1)' : 'none' }} />
-            <h1 className="text-2xl font-semibold">{ehLogin ? 'Acesso' : 'Criar Conta'}</h1>
-            <p className="text-[var(--text-secondary)] text-sm">{ehLogin ? 'Entre com seu e-mail e senha.' : 'Preencha os dados abaixo.'}</p>
+            <h1 className="text-3xl font-bold">{ehLogin ? 'Bem-vindo' : 'Criar Conta'}</h1>
+            <p className="text-[var(--text-secondary)]">{ehLogin ? 'Acesse sua conta para continuar' : 'Preencha os dados abaixo'}</p>
           </div>
 
-          <form noValidate className="space-y-3 w-full" onSubmit={enviarFormulario}>
+          <form noValidate className="space-y-6 w-full" onSubmit={enviarFormulario}>
             {!ehLogin && (
               <>
                 <div className="flex flex-col gap-1 min-h-[95px]">
-                  <label className="font-semibold">Nome Completo</label>
+                  <label className="text-sm font-semibold flex items-center gap-2">
+                    <User size={16} className="text-[var(--accent-primary)]" />
+                    Nome Completo
+                  </label>
                   <div className="relative">
-                    <input type="text" placeholder="Nome Sobrenome" value={nome} onChange={(e) => setNome(e.target.value)} className={`rounded-md px-3 h-11 w-full ${erroNome ? 'input-erro' : ''}`} />
+                    <input type="text" placeholder="Nome Sobrenome" value={nome} onChange={(e) => setNome(e.target.value)} className={`w-full px-4 py-3 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] focus:ring-2 focus:ring-[var(--accent-primary)] outline-none transition-all ${erroNome ? 'input-erro' : ''}`} />
                     {nome.length > 0 && nomeOkNow && podeMostrarSucesso && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-green)]" size={18} />}
                     {mostraErroNome && !nomeOkNow && <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-red)]" size={18} />}
                   </div>
-                  {erroNome && <span className="text-[var(--color-if-red)] text-xs font-bold">{erroNome}</span>}
+                  {erroNome && <span className="text-[var(--color-if-red)] text-xs font-bold flex items-center gap-1"><AlertCircle size={14} />{erroNome}</span>}
                 </div>
 
                 <div className="flex flex-col gap-1 min-h-[95px]">
-                  <label className="font-semibold">Nome de Usuário</label>
+                  <label className="text-sm font-semibold flex items-center gap-2">
+                    <AtSign size={16} className="text-[var(--accent-primary)]" />
+                    Nome de Usuário
+                  </label>
                   <div className="relative">
-                    <input type="text" placeholder="ex: Joao_2" value={apelido} onChange={(e) => setApelido(e.target.value)} className={`rounded-md px-3 h-11 w-full ${erroApelido ? 'input-erro' : ''}`} />
+                    <input type="text" placeholder="ex: Joao_2" value={apelido} onChange={(e) => setApelido(e.target.value)} className={`w-full px-4 py-3 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] focus:ring-2 focus:ring-[var(--accent-primary)] outline-none transition-all ${erroApelido ? 'input-erro' : ''}`} />
                     {apelido.length > 0 && apelidoOkNow && podeMostrarSucesso && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-green)]" size={18} />}
                     {mostraErroApelido && !apelidoOkNow && <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-red)]" size={18} />}
                   </div>
-                  {erroApelido && <span className="text-[var(--color-if-red)] text-xs font-bold">{erroApelido}</span>}
+                  {erroApelido && <span className="text-[var(--color-if-red)] text-xs font-bold flex items-center gap-1"><AlertCircle size={14} />{erroApelido}</span>}
                 </div>
 
                 <div className="flex flex-col gap-1 min-h-[95px]">
-                  <label className="font-semibold">Campus</label>
+                  <label className="text-sm font-semibold flex items-center gap-2">
+                    <Home size={16} className="text-[var(--accent-primary)]" />
+                    Campus
+                  </label>
                   <div className="relative">
-                    <input type="text" placeholder="ex: IFNMG - Campus Araçaí" value={campus} onChange={(e) => setCampus(e.target.value)} className={`rounded-md px-3 h-11 w-full ${erroCampus ? 'input-erro' : ''}`} />
+                    <input type="text" placeholder="ex: IFNMG - Campus Araçuaí" value={campus} onChange={(e) => setCampus(e.target.value)} className={`w-full px-4 py-3 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] focus:ring-2 focus:ring-[var(--accent-primary)] outline-none transition-all ${erroCampus ? 'input-erro' : ''}`} />
                     {campus.length > 0 && campusOkNow && podeMostrarSucesso && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-green)]" size={18} />}
                     {mostraErroCampus && !campusOkNow && <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-red)]" size={18} />}
                   </div>
-                  {erroCampus && <span className="text-[var(--color-if-red)] text-xs font-bold">{erroCampus}</span>}
+                  {erroCampus && <span className="text-[var(--color-if-red)] text-xs font-bold flex items-center gap-1"><AlertCircle size={14} />{erroCampus}</span>}
                 </div>
 
                 <div className="flex flex-col gap-1 min-h-[95px]">
-                  <label className="font-semibold">Data de Nascimento</label>
+                  <label className="text-sm font-semibold flex items-center gap-2">
+                    <Calendar size={16} className="text-[var(--accent-primary)]" />
+                    Data de Nascimento
+                  </label>
                   <div className="relative">
-                    <input type="date" placeholder="YYYY-MM-DD" value={nascimento} onChange={(e) => setNascimento(e.target.value)} className={`rounded-md px-3 h-11 w-full ${erroNascimento ? 'input-erro' : ''}`} />
+                    <InputMask
+                      mask="99/99/9999"
+                      value={nascimento}
+                      onChange={(e) => setNascimento(e.target.value)}
+                      maskPlaceholder=""
+                    >
+                      {(inputProps: any) => (
+                        <input
+                          {...inputProps}
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="DD/MM/YYYY"
+                          className={`w-full px-4 py-3 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] focus:ring-2 focus:ring-[var(--accent-primary)] outline-none transition-all cursor-pointer ${erroNascimento ? 'input-erro' : ''}`}
+                        />
+                      )}
+                    </InputMask>
                     {nascimento.length > 0 && nascimentoOkNow && podeMostrarSucesso && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-green)]" size={18} />}
                     {mostraErroNascimento && !nascimentoOkNow && <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-red)]" size={18} />}
                   </div>
-                  {erroNascimento && <span className="text-[var(--color-if-red)] text-xs font-bold">{erroNascimento}</span>}
+                  {erroNascimento && <span className="text-[var(--color-if-red)] text-xs font-bold flex items-center gap-1"><AlertCircle size={14} />{erroNascimento}</span>}
                 </div>
               </>
             )}
 
             <div className="flex flex-col gap-1 min-h-[95px]">
-              <label className="font-semibold">E-mail</label>
+              <label className="text-sm font-semibold flex items-center gap-2">
+                <Mail size={16} className="text-[var(--accent-primary)]" />
+                E-mail Institucional
+              </label>
               <div className="relative">
-                <input type="email" placeholder="exemplo@aluno.ifnmg.edu.br" value={email} onChange={(e) => setEmail(e.target.value)} className={`rounded-md px-3 h-11 w-full ${erroEmail ? 'input-erro' : ''}`} />
+                <input type="email" placeholder="exemplo@aluno.ifnmg.edu.br" value={email} onChange={(e) => setEmail(e.target.value)} className={`w-full px-4 py-3 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] focus:ring-2 focus:ring-[var(--accent-primary)] outline-none transition-all ${erroEmail ? 'input-erro' : ''}`} />
                 {emailTrimNow.length > 0 && emailOkNow && podeMostrarSucesso && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-green)]" size={18} />}
                 {mostraErroEmail && !emailOkNow && <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-red)]" size={18} />}
               </div>
-              {erroEmail && <span className="text-[var(--color-if-red)] text-xs font-bold">{erroEmail}</span>}
+              {erroEmail && <span className="text-[var(--color-if-red)] text-xs font-bold flex items-center gap-1"><AlertCircle size={14} />{erroEmail}</span>}
             </div>
 
             <div className="flex flex-col gap-1 min-h-[95px]">
-              <label className="font-semibold">Senha</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold flex items-center gap-2">
+                  <Lock size={16} className="text-[var(--accent-primary)]" />
+                  Senha
+                </label>
+                {ehLogin && (
+                  <button
+                    type="button"
+                    onClick={() => abrirRecuperacao(emailTrimNow)}
+                    className="text-xs font-semibold text-[var(--accent-primary)] hover:underline"
+                  >
+                    Esqueceu a senha?
+                  </button>
+                )}
+              </div>
               <div className="relative">
-                <input type="password" placeholder="Mínimo 8 caracteres" value={senha} onChange={(e) => setSenha(e.target.value)} className={`rounded-md px-3 h-11 w-full ${erroSenha ? 'input-erro' : ''}`} />
+                <input type="password" placeholder="Mínimo 8 caracteres" value={senha} onChange={(e) => setSenha(e.target.value)} className={`w-full px-4 py-3 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] focus:ring-2 focus:ring-[var(--accent-primary)] outline-none transition-all ${erroSenha ? 'input-erro' : ''}`} />
                 {senhaLenOKNow && podeMostrarSucesso && (ehLogin || senhaForteNow) && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-green)]" size={18} />}
                 {mostraErroSenha && !senhaLenOKNow && <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-red)]" size={18} />}
               </div>
-              {erroSenha && <span className="text-[var(--color-if-red)] text-xs font-bold">{erroSenha}</span>}
+              {erroSenha && <span className="text-[var(--color-if-red)] text-xs font-bold flex items-center gap-1"><AlertCircle size={14} />{erroSenha}</span>}
               
               {!ehLogin && (
                 <div className="mt-2 w-full h-[6px] rounded bg-[var(--input-bg)] overflow-hidden">
@@ -351,42 +442,89 @@ export default function Login() {
                   />
                 </div>
               )}
+              
+              {ehLogin && (
+                <div className="mt-3">
+                  <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                    <input type="checkbox" checked={lembrarMe} onChange={(e) => setLembrarMe(e.target.checked)} />
+                    Lembrar de mim
+                  </label>
+                </div>
+              )}
+              
+              {!ehLogin && !senhaForteNow && (
+                <div className="mt-3 rounded-md bg-[var(--bg-card)] border border-[var(--border-color)] p-3 text-xs text-[var(--text-secondary)] transition-all">
+                  <div className="flex items-center gap-2">
+                    {lenOK ? <CheckCircle size={14} className="text-[var(--color-if-green)]" /> : <XCircle size={14} className="text-[var(--color-if-red)]" />}
+                    <span>Mínimo 8 caracteres</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    {upperOK ? <CheckCircle size={14} className="text-[var(--color-if-green)]" /> : <XCircle size={14} className="text-[var(--color-if-red)]" />}
+                    <span>Pelo menos 1 letra maiúscula</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    {digitOK ? <CheckCircle size={14} className="text-[var(--color-if-green)]" /> : <XCircle size={14} className="text-[var(--color-if-red)]" />}
+                    <span>Pelo menos 1 número</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {!ehLogin && senhaForteNow && (
               <div className="flex flex-col gap-1 min-h-[95px] animate-fade-in">
-                <label className="font-semibold">Confirmar Senha</label>
+                <label className="text-sm font-semibold flex items-center gap-2">
+                  <Lock size={16} className="text-[var(--accent-primary)]" />
+                  Confirmar Senha
+                </label>
                 <div className="relative">
                   <input type="password" placeholder="Repita a senha" value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} className={`rounded-md px-3 h-11 w-full ${erroConfirmar ? 'input-erro' : ''}`} />
                   {confirmarSenha.length > 0 && confirmarOkNow && podeMostrarSucesso && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-green)]" size={18} />}
                   {mostraErroConfirmar && !confirmarOkNow && <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-red)]" size={18} />}
                 </div>
-                {erroConfirmar && <span className="text-[var(--color-if-red)] text-xs font-bold">{erroConfirmar}</span>}
+                {erroConfirmar && <span className="text-[var(--color-if-red)] text-xs font-bold flex items-center gap-1"><AlertCircle size={14} />{erroConfirmar}</span>}
+              </div>
+            )}
+            
+            {!ehLogin && (
+              <div className="mt-4 text-xs text-[var(--text-secondary)]">
+                <label className="flex items-start gap-2">
+                  <input type="checkbox" checked={aceitouTermos} onChange={(e) => setAceitouTermos(e.target.checked)} />
+                  <span>
+                    Eu concordo com os <a href="#" className="text-[var(--accent-primary)] hover:underline">Termos de Uso</a> e a <a href="#" className="text-[var(--accent-primary)] hover:underline">Política de Privacidade</a> da comunidade IFNMG
+                  </span>
+                </label>
               </div>
             )}
 
-            <button type="submit" disabled={estaCarregando} className={`w-full rounded-md px-3 py-2 btn-entrar ${estaCarregando ? 'btn-sucesso' : erroVisual ? 'btn-erro' : ''}`}>
+            <button
+              type="submit"
+              disabled={estaCarregando}
+              className="w-full bg-[var(--accent-primary)] text-white font-bold py-4 rounded-lg hover:brightness-110 transition-all active:scale-[0.98]"
+            >
               {estaCarregando ? (ehLogin ? 'Entrando...' : 'Enviando...') : (ehLogin ? 'Entrar' : 'Criar Conta')}
             </button>
 
-            <div className="mt-6 flex flex-col items-center gap-3 text-sm">
-              <button
-                type="button"
-                className="text-[var(--text-secondary)] hover:text-[var(--color-if-green)] transition-colors"
-                onClick={() => abrirRecuperacao(emailTrimNow)}
-              >
-                Esqueci minha senha
-              </button>
-              <div className="flex gap-2 text-[var(--text-secondary)]">
-                <span>{ehLogin ? 'Não possui conta?' : 'Já possui conta?'}</span>
-                <button type="button" className="font-bold text-[var(--color-if-green)] hover:underline" onClick={() => { resetFormulario(false); setEhLogin(!ehLogin); }}>
+            <div className="mt-8 text-center">
+              <p className="text-[var(--text-secondary)] text-sm">
+                {ehLogin ? 'Não possui conta?' : 'Já possui conta?'}{' '}
+                <button type="button" className="text-[var(--accent-primary)] font-bold hover:underline" onClick={() => { resetFormulario(false); setEhLogin(!ehLogin); }}>
                   {ehLogin ? 'Cadastre-se' : 'Entre'}
                 </button>
-              </div>
+              </p>
             </div>
           </form>
         </section>
       </main>
+      <footer className="relative z-30 px-6 md:px-20 py-3 border-t border-[var(--border-color)] bg-[var(--bg-card)]">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+          <span>© 2026 Portal IFNMG. Todos os direitos reservados.</span>
+          <div className="flex items-center gap-4">
+            <a href="#" className="hover:underline">Termos de Uso</a>
+            <a href="#" className="hover:underline">Privacidade</a>
+            <a href="#" className="hover:underline">Suporte</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

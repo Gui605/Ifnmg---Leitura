@@ -19,6 +19,11 @@ const tratadorDeErros = (err, req, res, _) => {
     let statusCode = 500;
     let errorCode = ErrorCodes_1.ErrorCodes.INTERNAL_ERROR;
     let message = 'Erro interno do servidor.';
+    const setResponse = (status, code, msg) => {
+        statusCode = status;
+        errorCode = code;
+        message = msg;
+    };
     const baseError = isExpressErrorLike(err) ? err : null;
     if (baseError) {
         statusCode = baseError.statusCode || baseError.status || 500;
@@ -154,7 +159,7 @@ const tratadorDeErros = (err, req, res, _) => {
             timestamp,
             status: 400,
             error: 'Bad Request',
-            errorCode: ErrorCodes_1.ErrorCodes.FIELD_VALIDATION,
+            errorCode: ErrorCodes_1.ErrorCodes.VALIDATION_ERROR,
             message: 'Falha na validação dos campos.',
             path: req.originalUrl,
             requestId,
@@ -168,26 +173,25 @@ const tratadorDeErros = (err, req, res, _) => {
      */
     if (baseError) {
         if (baseError.code === 'P2002') {
-            statusCode = 409;
-            errorCode = ErrorCodes_1.ErrorCodes.EMAIL_ALREADY_EXISTS;
+            setResponse(409, ErrorCodes_1.ErrorCodes.EMAIL_ALREADY_EXISTS, 'Este e-mail já está em uso.');
         }
         if (baseError.code === 'P2025') {
-            statusCode = 404;
-            errorCode = ErrorCodes_1.ErrorCodes.RESOURCE_NOT_FOUND;
+            setResponse(404, ErrorCodes_1.ErrorCodes.RESOURCE_NOT_FOUND, 'Recurso não encontrado.');
         }
         /**
          * JWT
          */
         if (baseError.name === 'JsonWebTokenError') {
-            statusCode = 401;
-            errorCode = ErrorCodes_1.ErrorCodes.UNAUTHENTICATED;
+            setResponse(401, ErrorCodes_1.ErrorCodes.UNAUTHENTICATED, 'Token inválido.');
         }
         if (baseError.name === 'TokenExpiredError') {
-            statusCode = 401;
-            errorCode = ErrorCodes_1.ErrorCodes.TOKEN_EXPIRED;
+            setResponse(401, ErrorCodes_1.ErrorCodes.TOKEN_EXPIRED, 'Token expirado.');
         }
     }
     logByStatus(statusCode, req, requestId, errorCode);
+    if (statusCode >= 500) {
+        message = 'Erro interno do servidor. Tente novamente mais tarde.';
+    }
     return res.status(statusCode).json({
         timestamp,
         status: statusCode,

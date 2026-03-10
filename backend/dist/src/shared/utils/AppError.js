@@ -30,9 +30,9 @@ class AppError extends Error {
     static notFound(msg) {
         return new AppError(msg, 404, ErrorCodes_1.ErrorCodes.RESOURCE_NOT_FOUND);
     }
-    /** ⚔️ Erro 409: EMAIL_JA_CADASTRADO (Conflito) */
+    /** ⚔️ Erro 409: CONFLITO_DE_NEGOCIO */
     static conflict(msg) {
-        return new AppError(msg, 409, ErrorCodes_1.ErrorCodes.EMAIL_ALREADY_EXISTS);
+        return new AppError(msg, 409, ErrorCodes_1.ErrorCodes.CONFLICT);
     }
     /** 📝 Erro 422: ERRO_DE_VALIDACAO */
     static validation(msg) {
@@ -41,6 +41,22 @@ class AppError extends Error {
     /** ⏳ Erro 429: LIMITE_DE_REQUISICOES_EXCEDIDO */
     static rateLimit(msg) {
         return new AppError(msg, 429, ErrorCodes_1.ErrorCodes.RATE_LIMIT_EXCEEDED);
+    }
+    /** 🛡️ Erro 403: ACESSO_NEGADO */
+    static forbidden(msg) {
+        return new AppError(msg, 403, ErrorCodes_1.ErrorCodes.FORBIDDEN);
+    }
+    /** 🕒 Erro 410: RECURSO_EXPIRADO (Gone) */
+    static gone(msg) {
+        return new AppError(msg, 410, ErrorCodes_1.ErrorCodes.TOKEN_EXPIRED);
+    }
+    /** 🛠️ Erro 503: SERVICO_INDISPONIVEL */
+    static serviceUnavailable(msg) {
+        return new AppError(msg, 503, ErrorCodes_1.ErrorCodes.SERVICE_UNAVAILABLE);
+    }
+    /** ⚙️ Erro 500: ERRO_DE_CONFIGURACAO */
+    static config(msg) {
+        return new AppError(msg, 500, ErrorCodes_1.ErrorCodes.CONFIG_ERROR);
     }
 }
 exports.AppError = AppError;

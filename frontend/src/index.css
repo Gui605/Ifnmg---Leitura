@@ -6,7 +6,7 @@
 
 :root {
   --color-if-green: #2f9e41;
-  --color-if-red: #cd191e;
+  --color-if-red: #c53030;
   --color-if-black: #000000;
 
   --bg-primary:  #f7f8fa; /* Fundo off-white suave */
@@ -25,6 +25,7 @@
 .dark-mode {
   --bg-primary: #28292a;
   --bg-card: #3c3c3c;
+  --color-if-red: #f87171;
   --text-primary: #f3f4f6;
   --text-secondary: #d4d4d4;
   --accent-primary: #2f9e41;
@@ -106,6 +107,17 @@
   :focus-visible {
     outline: 3px solid var(--color-if-green);
     outline-offset: 2px;
+  }
+  
+  input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0 !important;
+    display: none !important;
+    -webkit-appearance: none !important;
+    pointer-events: none !important;
   }
 
   /* Overlay da biblioteca */

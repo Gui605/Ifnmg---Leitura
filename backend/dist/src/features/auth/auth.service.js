@@ -44,6 +44,7 @@ const AppError_1 = require("../../shared/utils/AppError");
 const ErrorCodes_1 = require("../../errors/ErrorCodes"); // Importação necessária para códigos manuais
 const crypto = __importStar(require("crypto"));
 const logService_1 = require("../../shared/utils/logService");
+const logger_1 = require("../../shared/utils/logger");
 /**
  * 🛡️ PADRÃO ENTERPRISE: Camada de Serviço de Autenticação
  * Sincronizado com ErrorCodes e Factory Methods.
@@ -66,18 +67,26 @@ async function registrarUsuario(data, requestId) {
                 expiracao_pendente: true
             }
         });
+        const perfilExistente = await prisma_client_1.default.perfis.findUnique({
+            where: { nome_user: nome_user.trim() }
+        });
+        if (perfilExistente) {
+            throw AppError_1.AppError.conflict('Este nome de usuário já está em uso.');
+        }
         if (existente) {
-            // CASO A: Usuário já é ativo (Segurança: Mensagem genérica para evitar enumeração)
+            // CASO A: Usuário já é ativo (Segurança: Lança 409 para evitar duplicação)
             if (existente.cadastro_confirmado) {
-                // Mantém lógica original de proteção contra timing attacks
+                logger_1.logger.warn('Tentativa de cadastro com e-mail já confirmado', { evento: 'AUTH_REGISTRATION_ATTEMPT_DUPLICATE', email: emailNormalizado, requestId });
+                // Timing attack protection
                 await (0, hashing_1.gerarHashSenha)(senha);
                 await new Promise((r) => setTimeout(r, 300));
-                return 'Solicitação recebida.';
+                throw AppError_1.AppError.conflict('Este e-mail já possui uma conta ativa.');
             }
             // CASO B: Cadastro Pendente e link ainda válido (UX: Orienta ir ao e-mail)
             const agora = new Date();
             if (existente.expiracao_pendente && existente.expiracao_pendente > agora) {
-                return `Você já possui um cadastro pendente. Verifique sua caixa de entrada e spam para ativar sua conta.`;
+                logger_1.logger.info('Tentativa de cadastro com conta pendente válida', { evento: 'AUTH_REGISTRATION_PENDING_VALID', email: emailNormalizado, requestId });
+                throw AppError_1.AppError.badRequest('Você já possui um cadastro pendente. Verifique seu e-mail.');
             }
             // CASO C: Link Expirado (Renovação automática e reenvio de e-mail)
             await prisma_client_1.default.usuarios.update({
@@ -90,7 +99,8 @@ async function registrarUsuario(data, requestId) {
             setImmediate(() => {
                 (0, serviceEmail_1.enviarEmailComToken)(emailNormalizado, tokenVerificacao, 'verificacao').catch(() => { });
             });
-            return `Vimos que seu link expirou. Enviamos uma nova chave de ativação para ${emailNormalizado}.`;
+            logger_1.logger.info('Link de ativação expirado, reenviando e-mail', { evento: 'AUTH_REGISTRATION_LINK_RENEWED', email: emailNormalizado, requestId });
+            throw AppError_1.AppError.gone('Vimos que seu link expirou. Enviamos uma nova chave de ativação.');
         }
         // 🛡️ LÓGICA ORIGINAL: Transação para novos registros
         await prisma_client_1.default.$transaction(async (tx) => {
@@ -125,9 +135,10 @@ async function registrarUsuario(data, requestId) {
     catch (error) {
         // Preserva o tratamento de erro original para restrições de banco (P2002)
         if (error.code === 'P2002') {
+            logger_1.logger.warn('Tentativa de cadastro com dados duplicados (P2002)', { evento: 'AUTH_REGISTRATION_ATTEMPT_DUPLICATE_P2002', requestId });
             await (0, hashing_1.gerarHashSenha)(senha);
             await new Promise((r) => setTimeout(r, 300));
-            return 'Solicitação recebida.';
+            throw AppError_1.AppError.conflict('Solicitação recebida.');
         }
         throw error;
     }

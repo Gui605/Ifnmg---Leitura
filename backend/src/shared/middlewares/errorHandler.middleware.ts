@@ -26,6 +26,12 @@ export const tratadorDeErros = (
   let errorCode = ErrorCodes.INTERNAL_ERROR;
   let message = 'Erro interno do servidor.';
 
+  const setResponse = (status: number, code: ErrorCodes, msg: string) => {
+    statusCode = status;
+    errorCode = code;
+    message = msg;
+  };
+
   const baseError = isExpressErrorLike(err) ? err : null;
 
   if (baseError) {
@@ -213,7 +219,7 @@ export const tratadorDeErros = (
       timestamp,
       status: 400,
       error: 'Bad Request',
-      errorCode: ErrorCodes.FIELD_VALIDATION,
+      errorCode: ErrorCodes.VALIDATION_ERROR,
       message: 'Falha na validação dos campos.',
       path: req.originalUrl,
       requestId,
@@ -231,17 +237,11 @@ export const tratadorDeErros = (
   if (baseError) {
 
     if (baseError.code === 'P2002') {
-
-      statusCode = 409;
-      errorCode = ErrorCodes.EMAIL_ALREADY_EXISTS;
-
+      setResponse(409, ErrorCodes.EMAIL_ALREADY_EXISTS, 'Este e-mail já está em uso.');
     }
 
     if (baseError.code === 'P2025') {
-
-      statusCode = 404;
-      errorCode = ErrorCodes.RESOURCE_NOT_FOUND;
-
+      setResponse(404, ErrorCodes.RESOURCE_NOT_FOUND, 'Recurso não encontrado.');
     }
 
     /**
@@ -249,22 +249,20 @@ export const tratadorDeErros = (
      */
 
     if (baseError.name === 'JsonWebTokenError') {
-
-      statusCode = 401;
-      errorCode = ErrorCodes.UNAUTHENTICATED;
-
+      setResponse(401, ErrorCodes.UNAUTHENTICATED, 'Token inválido.');
     }
 
     if (baseError.name === 'TokenExpiredError') {
-
-      statusCode = 401;
-      errorCode = ErrorCodes.TOKEN_EXPIRED;
-
+      setResponse(401, ErrorCodes.TOKEN_EXPIRED, 'Token expirado.');
     }
 
   }
 
   logByStatus(statusCode, req, requestId, errorCode);
+
+  if (statusCode >= 500) {
+    message = 'Erro interno do servidor. Tente novamente mais tarde.';
+  }
 
   return res.status(statusCode).json({
     timestamp,
