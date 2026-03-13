@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+//backend/src/features/perfil/perfil.routes.ts
 const express_1 = require("express");
 const perfil_controller_1 = __importDefault(require("./perfil.controller"));
 const authMiddleware_1 = require("../../shared/middlewares/authMiddleware");
@@ -33,4 +34,8 @@ perfilRoutes.patch('/seguranca/senha', (0, validate_middleware_1.validate)({ bod
  * 🛡️ Camada 2: Exige apenas a senha atual para confirmação.
  */
 perfilRoutes.delete('/seguranca/conta', (0, validate_middleware_1.validate)({ body: perfil_types_1.DeletarContaSchema }), perfil_controller_1.default.deletarPerfil);
+// --- 🤝 Sistema de Seguidores ---
+/** * POST /:id/seguir -> Toggle follow/unfollow
+ */
+perfilRoutes.post('/:id/seguir', perfil_controller_1.default.toggleFollow);
 exports.default = perfilRoutes;

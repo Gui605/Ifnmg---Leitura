@@ -3,17 +3,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+//backend/src/features/posts/posts.service.ts
 const prisma_client_1 = __importDefault(require("../../shared/prisma/prisma.client"));
 const AppError_1 = require("../../shared/utils/AppError");
 const logService_1 = require("../../shared/utils/logService");
 const ErrorCodes_1 = require("../../errors/ErrorCodes");
 async function criarPost(perfilId, data, requestId) {
+    // 🛡️ Denormalização: Busca o nome do autor e o campus antes de criar o post
+    const perfil = await prisma_client_1.default.perfis.findUnique({
+        where: { perfil_id: perfilId },
+        select: {
+            nome_user: true,
+            usuario: {
+                select: { nome_campus: true }
+            }
+        }
+    });
+    if (!perfil)
+        throw AppError_1.AppError.notFound('Perfil do autor não encontrado.');
     const post = await prisma_client_1.default.$transaction(async (tx) => {
         const novo = await tx.posts.create({
             data: {
                 titulo: data.titulo,
                 conteudo: data.conteudo,
-                autor_id: perfilId
+                autor_id: perfilId,
+                autor_nome_user: perfil.nome_user, // Campo denormalizado
+                nome_campus: perfil.usuario?.nome_campus // Campo denormalizado
             }
         });
         if (data.categoriasIds?.length) {
@@ -54,7 +69,16 @@ async function listarPosts(q, perfilId, requestId) {
             skip,
             take: limit,
             include: {
-                autor: { select: { nome_user: true } }
+                categorias: {
+                    include: {
+                        categoria: {
+                            select: {
+                                nome: true,
+                                categoria_id: true
+                            }
+                        }
+                    }
+                }
             }
         })
     ]);
@@ -62,8 +86,9 @@ async function listarPosts(q, perfilId, requestId) {
     // Mantenha os contadores (stats) que o seu backend já calcula!
     // O Frontend precisa deles para exibir o contador na tela.
     const postsComDados = posts.map((p) => ({
-        ...p, // Espalha os dados brutos (inclui stats)
-        autor_nome_user: p.autor?.nome_user ?? 'Anônimo' // Fallback para não quebrar UI
+        ...p, // Espalha os dados brutos (inclui stats e autor_nome_user denormalizado)
+        autor_nome_user: p.autor_nome_user ?? 'Anônimo', // Fallback caso o campo denormalizado esteja nulo (posts antigos)
+        tags: p.categorias.map(c => c.categoria.nome) // Flatten tags para o frontend
     }));
     return {
         data: postsComDados,

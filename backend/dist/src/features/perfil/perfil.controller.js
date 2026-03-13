@@ -61,4 +61,38 @@ const deletarPerfil = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const message = await seguranca_service_1.default.deletarConta(usuarioId, senhaAtual, req.requestId);
     return res.status(200).json({ status: 'success', message, data: null, meta: null });
 });
-exports.default = { getPerfilInfo, updatePerfil, alterarSenha, deletarPerfil };
+const toggleFollow = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
+    const seguidorId = req.perfil_id;
+    const seguidoId = Number(req.params.id);
+    if (!seguidorId) {
+        throw AppError_1.AppError.unauthorized('Sessão inválida.');
+    }
+    if (isNaN(seguidoId) || seguidoId <= 0) {
+        throw AppError_1.AppError.badRequest('ID de perfil inválido.');
+    }
+    // Lógica de Toggle: Tenta deletar primeiro, se falhar (não segue), tenta seguir.
+    // Isso economiza uma query de 'find' e mantém a atomicidade.
+    try {
+        await perfil_service_1.default.deixarDeSeguirPerfil(seguidorId, seguidoId, req.requestId);
+        return res.status(200).json({
+            status: 'success',
+            message: 'Você deixou de seguir este perfil.',
+            data: { seguindo: false },
+            meta: null
+        });
+    }
+    catch (error) {
+        // Se o erro for que o registro não existe, então vamos seguir.
+        if (error instanceof AppError_1.AppError && error.message === 'Você não segue este perfil.') {
+            await perfil_service_1.default.seguirPerfil(seguidorId, seguidoId, req.requestId);
+            return res.status(201).json({
+                status: 'success',
+                message: 'Agora você segue este perfil.',
+                data: { seguindo: true },
+                meta: null
+            });
+        }
+        throw error;
+    }
+});
+exports.default = { getPerfilInfo, updatePerfil, alterarSenha, deletarPerfil, toggleFollow };

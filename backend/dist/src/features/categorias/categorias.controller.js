@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deixarDeSeguirCategoriaController = exports.seguirCategoriaController = exports.listarInteressesCategoria = void 0;
+exports.getTrending = exports.deixarDeSeguirCategoriaController = exports.seguirCategoriaController = exports.listarInteressesCategoria = void 0;
 const asyncHandler_1 = require("../../shared/utils/asyncHandler");
 const categorias_service_1 = __importStar(require("./categorias.service"));
 const categoria_types_1 = require("../../shared/types/categoria.types");
@@ -120,4 +120,14 @@ exports.deixarDeSeguirCategoriaController = (0, asyncHandler_1.tratarAssincrono)
     categoria_types_1.ToggleInteresseSchema.parse({ categoria_id: categoriaId });
     await (0, categorias_service_1.deixarDeSeguirCategoria)(perfilId, categoriaId, req.requestId);
     return res.status(200).json({ status: 'success', message: "Você deixou de seguir esta categoria.", data: null, meta: null });
+});
+exports.getTrending = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
+    const limit = req.query.limit ? Number(req.query.limit) : 5;
+    const data = await (0, categorias_service_1.buscarCategoriasEmAlta)(limit, req.requestId);
+    return res.status(200).json({
+        status: 'success',
+        message: "Trending tags recuperadas.",
+        data,
+        meta: null
+    });
 });

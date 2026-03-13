@@ -1,3 +1,4 @@
+//backend/src/features/posts/posts.service.ts
 import prisma from '../../shared/prisma/prisma.client';
 import { AppError } from '../../shared/utils/AppError';
 import { registrar as registrarLog } from '../../shared/utils/logService';
@@ -8,12 +9,27 @@ type CriarPostData = { titulo: string; conteudo: string; categoriasIds: number[]
 type ListarFiltro = PostsQuery & { ordenarPor?: 'score' | 'data'; categoria?: number };
 
 async function criarPost(perfilId: number, data: CriarPostData, requestId?: string) {
+  // 🛡️ Denormalização: Busca o nome do autor e o campus antes de criar o post
+  const perfil = await prisma.perfis.findUnique({
+    where: { perfil_id: perfilId },
+    select: { 
+      nome_user: true,
+      usuario: {
+        select: { nome_campus: true }
+      }
+    }
+  });
+
+  if (!perfil) throw AppError.notFound('Perfil do autor não encontrado.');
+
   const post = await prisma.$transaction(async (tx) => {
     const novo = await tx.posts.create({
       data: {
         titulo: data.titulo,
         conteudo: data.conteudo,
-        autor_id: perfilId
+        autor_id: perfilId,
+        autor_nome_user: perfil.nome_user, // Campo denormalizado
+        nome_campus: perfil.usuario?.nome_campus // Campo denormalizado
       }
     });
     if (data.categoriasIds?.length) {
@@ -57,7 +73,16 @@ async function listarPosts(q: PostsQuery, perfilId?: number, requestId?: string)
       skip,
       take: limit,
       include: {
-        autor: { select: { nome_user: true } }
+        categorias: {
+          include: {
+            categoria: {
+              select: {
+                nome: true,
+                categoria_id: true
+              }
+            }
+          }
+        }
       }
     })
   ]);
@@ -67,8 +92,9 @@ async function listarPosts(q: PostsQuery, perfilId?: number, requestId?: string)
   // Mantenha os contadores (stats) que o seu backend já calcula!
   // O Frontend precisa deles para exibir o contador na tela.
   const postsComDados = posts.map((p) => ({
-    ...p, // Espalha os dados brutos (inclui stats)
-    autor_nome_user: p.autor?.nome_user ?? 'Anônimo' // Fallback para não quebrar UI
+    ...p, // Espalha os dados brutos (inclui stats e autor_nome_user denormalizado)
+    autor_nome_user: p.autor_nome_user ?? 'Anônimo', // Fallback caso o campo denormalizado esteja nulo (posts antigos)
+    tags: p.categorias.map(c => c.categoria.nome) // Flatten tags para o frontend
   }));
 
   return { 

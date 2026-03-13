@@ -1,23 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300..800&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --color-if-green: #2f9e41;
+  --color-if-green: #1a8039; /* Verde IFNMG Leitura */
   --color-if-red: #c53030;
-  --color-if-black: #000000;
+  --color-if-black: #0f172a; /* Slate-900 */
 
-  --bg-primary:  #f7f8fa; /* Fundo off-white suave */
+  --bg-primary: #f6f8f6; /* Off-white suave EscrevAí */
   --bg-card: #FFFFFF;    /* Card branco puro para elevação */
-  --text-primary: #1F2937; /* Cinza escuro profissional (substitui preto puro) */
-  --text-secondary: #6B7280; /* Cinza médio para textos secundários */
-  --accent-primary: #1a8039; /* Verde Florestal Vibrante */
-  --input-bg: #F3F4F6;   /* Fundo de input levemente acinzentado */
-  --border-color: #E5E7EB; /* Borda mais sutil */
-
-  --shadow-elevation-1: 0 4px 6px -1px rgba(0, 0, 0, 0.12), 0 2px 4px -2px rgba(0, 0, 0, 0.08);
+  --text-primary: #0f172a; /* Slate-900 EscrevAí */
+  --text-secondary: #64748b; /* Slate-500 EscrevAí */
+  --accent-primary: #1a8039; /* Verde IFNMG */
+  --input-bg: rgba(26, 128, 57, 0.05); /* bg-primary/5 EscrevAí */
+  --border-color: rgba(26, 128, 57, 0.1); /* Borda primária sutil */
+  --border-camp: #0f172a;
+  --shadow-elevation-1: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
   color-scheme: light;
   --overlay-bg: rgba(0, 0, 0, 0.2);
 }
@@ -34,23 +33,15 @@
   --shadow-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4);
   color-scheme: dark;
   --overlay-bg: rgba(0, 0, 0, 0.3);
+  --border-camp: #d4d4d4;
 }
 
 @layer base {
-  /* Evitar flash de tema: oculta até aplicar classe inicial */
-  html:not(.theme-ready) body {
-    visibility: hidden;
-  }
-
-  .light-mode {
-    color-scheme: light;
-  }
-
   body {
     @apply transition-colors duration-300;
     background-color: var(--bg-primary);
     color: var(--text-primary);
-    font-family: "Open Sans", ui-sans-serif, system-ui, sans-serif;
+    font-family: "Lexend", ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -155,5 +146,15 @@
 
   .input-erro {
     border-color: var(--color-if-red) !important;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

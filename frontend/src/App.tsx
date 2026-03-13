@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './features/auth/Login';
 import Redefinir from './features/auth/Redefinir';
-import Dashboard from './features/dashboard/Dashboard';
+import Feed from './features/feed/Feed';
 import { useAuth } from './shared/utils/authContext';
 import { ProtectedRoute, PublicOnlyRoute } from './shared/guards';
 
@@ -26,7 +26,7 @@ export default function App() {
 
         {/* Rotas Protegidas */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Feed />} />
         </Route>
       </Routes>
     </BrowserRouter>

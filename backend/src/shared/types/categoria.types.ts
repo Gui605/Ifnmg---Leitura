@@ -40,3 +40,9 @@ export type InteresseResponse = {
         nome: string;
     };
 };
+
+export type TrendingCategoriaResponse = {
+    categoria_id: number;
+    nome: string;
+    contagem: number;
+};

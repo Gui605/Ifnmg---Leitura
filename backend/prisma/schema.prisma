@@ -22,7 +22,23 @@ model Perfis {
   denuncias   Denuncias[]
   logs        LogAtividade[]
 
+  seguidores Seguidores[] @relation("quem_segue")
+  seguidos   Seguidores[] @relation("sendo_seguido")
+
   @@map("perfis")
+}
+
+model Seguidores {
+  seguidor_id  Int
+  seguido_id   Int
+  data_criacao DateTime @default(now())
+
+  seguidor Perfis @relation("quem_segue", fields: [seguidor_id], references: [perfil_id], onDelete: Cascade)
+  seguido  Perfis @relation("sendo_seguido", fields: [seguido_id], references: [perfil_id], onDelete: Cascade)
+
+  @@id([seguidor_id, seguido_id])
+  @@index([seguido_id])
+  @@map("seguidores")
 }
 
 model Usuarios {
@@ -95,8 +111,10 @@ model Posts {
   total_downvotes   Int @default(0)
   total_comentarios Int @default(0)
 
-  autor_id Int?
-  autor    Perfis? @relation(fields: [autor_id], references: [perfil_id], onDelete: SetNull)
+  autor_id        Int?
+  autor_nome_user String? @db.VarChar(100)
+  nome_campus     String? @db.VarChar(100)
+  autor           Perfis? @relation(fields: [autor_id], references: [perfil_id], onDelete: SetNull)
 
   categorias  PostsCategorias[]
   votos       Votos[]
@@ -106,6 +124,7 @@ model Posts {
   @@index([autor_id])
   @@index([data_criacao])
   @@index([total_upvotes])
+  @@index([data_criacao, total_upvotes])
   @@map("posts")
 }
 
@@ -128,6 +147,7 @@ model Votos {
   @@index([post_id])
   @@index([perfil_id])
   @@index([post_id, tipo])
+  @@index([data])
   @@map("votos")
 }
 

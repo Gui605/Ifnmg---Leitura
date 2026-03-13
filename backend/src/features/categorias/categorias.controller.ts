@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { tratarAssincrono } from '../../shared/utils/asyncHandler';
-import categoriasService, { deixarDeSeguirCategoria, listarInteresses, seguirCategoria } from './categorias.service';
+import categoriasService, { deixarDeSeguirCategoria, listarInteresses, seguirCategoria, buscarCategoriasEmAlta } from './categorias.service';
 import { CategoriaCreateBody, CategoriaUpdateBody, ToggleInteresseSchema } from '../../shared/types/categoria.types';
 import { AppError } from '../../shared/utils/AppError';
 
@@ -104,4 +104,16 @@ export const deixarDeSeguirCategoriaController = tratarAssincrono(async (req: Re
     ToggleInteresseSchema.parse({ categoria_id: categoriaId });
     await deixarDeSeguirCategoria(perfilId, categoriaId, req.requestId);
     return res.status(200).json({ status: 'success', message: "Você deixou de seguir esta categoria.", data: null, meta: null });
+});
+
+export const getTrending = tratarAssincrono(async (req: Request, res: Response) => {
+    const limit = req.query.limit ? Number(req.query.limit) : 5;
+    const data = await buscarCategoriasEmAlta(limit, req.requestId);
+    
+    return res.status(200).json({
+        status: 'success',
+        message: "Trending tags recuperadas.",
+        data,
+        meta: null
+    });
 });

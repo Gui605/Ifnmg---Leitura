@@ -1,3 +1,4 @@
+//backend/src/features/perfil/perfil.service.ts
 import prisma from '../../shared/prisma/prisma.client';
 import { PerfilPatchBody } from '../../shared/types/perfil.types';
 import { AppError } from '../../shared/utils/AppError';
@@ -64,4 +65,55 @@ async function buscarPerfilCompleto(perfilId: number, _requestId?: string) {
     return perfil;
 }
 
-export default { atualizarPerfil, buscarPerfilCompleto };
+/**
+ * 💡 FOLLOW SYSTEM: Lógica de Grafo Social
+ * Implementa idempotência e validação de auto-seguimento.
+ */
+async function seguirPerfil(seguidorId: number, seguidoId: number, requestId?: string) {
+    if (seguidorId === seguidoId) {
+        throw AppError.badRequest('Você não pode seguir a si mesmo.');
+    }
+
+    const seguidoExiste = await prisma.perfis.findUnique({
+        where: { perfil_id: seguidoId },
+        select: { perfil_id: true }
+    });
+
+    if (!seguidoExiste) {
+        throw AppError.notFound('O perfil que você tenta seguir não existe.');
+    }
+
+    await prisma.seguidores.upsert({
+        where: {
+            seguidor_id_seguido_id: {
+                seguidor_id: seguidorId,
+                seguido_id: seguidoId
+            }
+        },
+        update: {}, // Idempotência: se já segue, não faz nada
+        create: {
+            seguidor_id: seguidorId,
+            seguido_id: seguidoId
+        }
+    });
+}
+
+async function deixarDeSeguirPerfil(seguidorId: number, seguidoId: number, requestId?: string) {
+    try {
+        await prisma.seguidores.delete({
+            where: {
+                seguidor_id_seguido_id: {
+                    seguidor_id: seguidorId,
+                    seguido_id: seguidoId
+                }
+            }
+        });
+    } catch (error: any) {
+        if (error.code === 'P2025') {
+            throw AppError.notFound('Você não segue este perfil.');
+        }
+        throw error;
+    }
+}
+
+export default { atualizarPerfil, buscarPerfilCompleto, seguirPerfil, deixarDeSeguirPerfil };

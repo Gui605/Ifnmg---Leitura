@@ -1,7 +1,15 @@
-import Swal, { SweetAlertOptions } from 'sweetalert2';
+import Swal, { SweetAlertOptions, SweetAlertResult } from 'sweetalert2';
 
 // --- Tipagens ---
 export type ToastLevel = 'info' | 'success' | 'warning' | 'error';
+
+export type ModalConfig = {
+  titulo: string;
+  texto?: string;
+  textoConfirmar?: string;
+  mostrarBotaoCancelar?: boolean;
+  textoCancelar?: string;
+} & Partial<SweetAlertOptions>;
 
 // --- Configurações compartilhadas ---
 const getSwal = async () => (await import('sweetalert2')).default;
@@ -46,14 +54,13 @@ export const Notificacao = {
 
   // 2. BLOCKING (MODALS / DIALOGS)
   modal: {
-    sucesso: async (titleOrCfg: string | { titulo: string; texto?: string; textoConfirmar?: string; mostrarBotaoCancelar?: boolean; textoCancelar?: string; options?: Partial<SweetAlertOptions> }): Promise<void> => {
+    sucesso: async (titleOrCfg: string | ModalConfig): Promise<SweetAlertResult> => {
       const swal = await getSwal();
       if (typeof titleOrCfg === 'string') {
-        await swal.fire({ icon: 'success', title: titleOrCfg, ...BASE, customClass: CLASSES });
-        return;
+        return swal.fire({ icon: 'success', title: titleOrCfg, ...BASE, customClass: CLASSES });
       }
-      const { titulo, texto, textoConfirmar, mostrarBotaoCancelar, textoCancelar, options } = titleOrCfg;
-      await swal.fire({
+      const { titulo, texto, textoConfirmar, mostrarBotaoCancelar, textoCancelar, ...options } = titleOrCfg;
+      return swal.fire({
         icon: 'success',
         title: titulo,
         text: texto,
@@ -62,52 +69,49 @@ export const Notificacao = {
         cancelButtonText: textoCancelar || 'Cancelar',
         ...BASE,
         customClass: CLASSES,
-        ...(options as any)
-      });
+        ...options
+      } as SweetAlertOptions);
     },
 
-    erro: async (titleOrCfg: string | { titulo: string; texto?: string; options?: Partial<SweetAlertOptions> }): Promise<void> => {
+    erro: async (titleOrCfg: string | ModalConfig): Promise<SweetAlertResult> => {
       const swal = await getSwal();
       if (typeof titleOrCfg === 'string') {
-        await swal.fire({ icon: 'error', title: titleOrCfg, ...BASE, customClass: CLASSES });
-        return;
+        return swal.fire({ icon: 'error', title: titleOrCfg, ...BASE, customClass: CLASSES });
       }
-      const { titulo, texto, options } = titleOrCfg;
-      await swal.fire({
+      const { titulo, texto, ...options } = titleOrCfg;
+      return swal.fire({
         icon: 'error',
         title: titulo,
         text: texto,
         ...BASE,
         customClass: CLASSES,
-        ...(options as any)
-      });
+        ...options
+      } as SweetAlertOptions);
     },
 
-    info: async (titleOrCfg: string | { titulo: string; texto?: string; options?: Partial<SweetAlertOptions> }): Promise<void> => {
+    info: async (titleOrCfg: string | ModalConfig): Promise<SweetAlertResult> => {
       const swal = await getSwal();
       if (typeof titleOrCfg === 'string') {
-        await swal.fire({ icon: 'info', title: titleOrCfg, ...BASE, customClass: CLASSES });
-        return;
+        return swal.fire({ icon: 'info', title: titleOrCfg, ...BASE, customClass: CLASSES });
       }
-      const { titulo, texto, options } = titleOrCfg;
-      await swal.fire({
+      const { titulo, texto, ...options } = titleOrCfg;
+      return swal.fire({
         icon: 'info',
         title: titulo,
         text: texto,
         ...BASE,
         customClass: CLASSES,
-        ...(options as any)
-      });
+        ...options
+      } as SweetAlertOptions);
     },
 
-    aviso: async (titleOrCfg: string | { titulo: string; texto?: string; textoConfirmar?: string; mostrarBotaoCancelar?: boolean; textoCancelar?: string; options?: Partial<SweetAlertOptions> }): Promise<void> => {
+    aviso: async (titleOrCfg: string | ModalConfig): Promise<SweetAlertResult> => {
       const swal = await getSwal();
       if (typeof titleOrCfg === 'string') {
-        await swal.fire({ icon: 'warning', title: titleOrCfg, ...BASE, customClass: CLASSES });
-        return;
+        return swal.fire({ icon: 'warning', title: titleOrCfg, ...BASE, customClass: CLASSES });
       }
-      const { titulo, texto, textoConfirmar, mostrarBotaoCancelar, textoCancelar, options } = titleOrCfg;
-      await swal.fire({
+      const { titulo, texto, textoConfirmar, mostrarBotaoCancelar, textoCancelar, ...options } = titleOrCfg;
+      return swal.fire({
         icon: 'warning',
         title: titulo,
         text: texto,
@@ -116,11 +120,11 @@ export const Notificacao = {
         cancelButtonText: textoCancelar || 'Cancelar',
         ...BASE,
         customClass: CLASSES,
-        ...(options as any)
-      });
+        ...options
+      } as SweetAlertOptions);
     },
 
-    confirmar: async (titleOrCfg: string | { titulo: string; texto?: string; textoConfirmar?: string; isDestructive?: boolean; mostrarBotaoCancelar?: boolean; textoCancelar?: string; options?: Partial<SweetAlertOptions> }): Promise<boolean | null> => {
+    confirmar: async (titleOrCfg: string | (ModalConfig & { isDestructive?: boolean })): Promise<boolean | null> => {
       const swal = await getSwal();
       if (typeof titleOrCfg === 'string') {
         const res = await swal.fire({ icon: 'warning', title: titleOrCfg, showCancelButton: true, ...BASE, customClass: CLASSES });
@@ -128,7 +132,7 @@ export const Notificacao = {
         if (res.isDenied) return false;
         return null;
       }
-      const { titulo, texto, textoConfirmar, isDestructive, mostrarBotaoCancelar, textoCancelar, options } = titleOrCfg;
+      const { titulo, texto, textoConfirmar, isDestructive, mostrarBotaoCancelar, textoCancelar, ...options } = titleOrCfg;
       const res = await swal.fire({
         icon: 'warning',
         title: titulo,
@@ -139,8 +143,8 @@ export const Notificacao = {
         confirmButtonColor: isDestructive ? 'var(--color-if-red)' : undefined,
         ...BASE,
         customClass: CLASSES,
-        ...(options as any)
-      });
+        ...options
+      } as SweetAlertOptions);
 
       if (res.isConfirmed) return true;
       if (res.isDenied) return false;

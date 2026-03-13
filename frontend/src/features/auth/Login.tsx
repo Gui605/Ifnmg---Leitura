@@ -96,44 +96,56 @@ export default function Login() {
   }, []);
 
   async function alertaSucessoCadastro() {
-    await Notificacao.modal.sucesso({
+    const res = await Notificacao.modal.sucesso({
       titulo: 'Cadastro Realizado!',
       texto: 'Enviamos um link de ativação para seu e-mail institucional. Verifique seu Gmail para acessar.',
       textoConfirmar: 'Abrir Gmail',
       textoCancelar: 'Fechar',
       mostrarBotaoCancelar: true
     });
+    if (res.isConfirmed) {
+      window.open('https://mail.google.com/', '_blank');
+    }
     resetFormulario();
   }
 
   async function alertaCadastroPendente() {
-    await Notificacao.modal.aviso({
+    const res = await Notificacao.modal.aviso({
       titulo: 'Cadastro Pendente',
       texto: 'Você possui um cadastro pendente. Verifique seu Gmail para confirmar.',
       textoConfirmar: 'Abrir Gmail',
       textoCancelar: 'Fechar',
       mostrarBotaoCancelar: true
     });
+    if (res.isConfirmed) {
+      window.open('https://mail.google.com/', '_blank');
+    }
   }
 
   async function alertaLinkReenviado() {
-    await Notificacao.modal.sucesso({
+    const res = await Notificacao.modal.sucesso({
       titulo: 'Link Reenviado',
-      texto: 'Vimos que seu link expirou. Um novo link foi enviado para sua caixa de entrada.',
+      texto: 'Vimos que seu link expirou. Um novo link foi enviado para sua caixa de entrada no Gmail.',
       textoConfirmar: 'Abrir Gmail',
       textoCancelar: 'Fechar',
       mostrarBotaoCancelar: true
     });
+    if (res.isConfirmed) {
+      window.open('https://mail.google.com/', '_blank');
+    }
   }
 
   async function alertaContaPendenteLogin() {
-    await Notificacao.modal.aviso({
+    const res = await Notificacao.modal.aviso({
       titulo: 'Conta Não Ativada',
       texto: 'Sua conta ainda não foi ativada. Verifique seu e-mail.',
       textoConfirmar: 'Abrir Gmail',
       textoCancelar: 'Fechar',
       mostrarBotaoCancelar: true
     });
+    if (res.isConfirmed) {
+      window.open('https://mail.google.com/', '_blank');
+    }
   }
 
   async function alertaEmailExistente() {
@@ -147,12 +159,11 @@ export default function Login() {
 
     if (res === true) {
       const emailAtual = emailTrimNow;
-      resetFormulario(false);
-      setEmail(emailAtual);
+      resetFormulario(true);
       setEhLogin(true);
     } else if (res === false) {
       const emailAtual = emailTrimNow;
-      resetFormulario(false);
+      resetFormulario(true);
       setEhLogin(true);
       await abrirRecuperacao(emailAtual);
     }

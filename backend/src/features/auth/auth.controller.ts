@@ -1,3 +1,4 @@
+//backend/src/features/auth/auth.controller.ts
 import { Request, Response } from 'express';
 import authService from './auth.service';
 import recuperacaoService from './recuperacao.service';
@@ -19,7 +20,6 @@ const registrar = tratarAssincrono(async (req: Request<{}, {}, RegistrarData>, r
     return res.status(202).json({ 
         status: 'success',
         message: 'Recebemos sua solicitação. Se os dados informados forem válidos e a conta ainda não estiver ativa, um link de confirmação será enviado em instantes. Caso não receba, verifique sua caixa de spam ou tente realizar o processo novamente garantindo que o e-mail foi digitado corretamente.',
-        data: null,
         meta: null
     });
 });

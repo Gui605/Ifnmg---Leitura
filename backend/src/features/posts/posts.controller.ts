@@ -1,3 +1,4 @@
+//backend/src/features/posts/posts.controller.ts
 import { Request, Response } from 'express';
 import { tratarAssincrono } from '../../shared/utils/asyncHandler'; 
 import postsService from './posts.service';

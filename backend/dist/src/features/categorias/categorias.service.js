@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.seguirCategoria = seguirCategoria;
 exports.deixarDeSeguirCategoria = deixarDeSeguirCategoria;
 exports.listarInteresses = listarInteresses;
+exports.buscarCategoriasEmAlta = buscarCategoriasEmAlta;
 const prisma_client_1 = __importDefault(require("../../shared/prisma/prisma.client"));
 const AppError_1 = require("../../shared/utils/AppError");
 async function listar(requestId) {
@@ -159,4 +160,48 @@ async function listarInteresses(perfilId, requestId) {
         }
     }));
     return out;
+}
+/**
+ * 📈 TRENDING TAGS: Agregação de Categorias em Alta
+ * Identifica as categorias com mais posts nos últimos 7 dias.
+ */
+async function buscarCategoriasEmAlta(limite = 5, _requestId) {
+    const seteDiasAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    // 1. Agrega contagem de posts por categoria no período
+    const agregacao = await prisma_client_1.default.postsCategorias.groupBy({
+        by: ['categoria_id'],
+        where: {
+            post: {
+                data_criacao: {
+                    gte: seteDiasAtras
+                }
+            }
+        },
+        _count: {
+            post_id: true
+        },
+        orderBy: {
+            _count: {
+                post_id: 'desc'
+            }
+        },
+        take: limite
+    });
+    if (agregacao.length === 0)
+        return [];
+    // 2. Hidrata com o nome das categorias
+    const ids = agregacao.map(a => a.categoria_id);
+    const categorias = await prisma_client_1.default.categorias.findMany({
+        where: { categoria_id: { in: ids } },
+        select: { categoria_id: true, nome: true }
+    });
+    // 3. Formata o retorno mantendo a ordem da agregação
+    return agregacao.map(a => {
+        const cat = categorias.find(c => c.categoria_id === a.categoria_id);
+        return {
+            categoria_id: a.categoria_id,
+            nome: cat?.nome ?? 'Desconhecida',
+            contagem: a._count.post_id
+        };
+    });
 }

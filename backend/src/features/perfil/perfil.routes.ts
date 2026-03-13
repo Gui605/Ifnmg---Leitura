@@ -1,3 +1,4 @@
+//backend/src/features/perfil/perfil.routes.ts
 import { Router } from 'express';
 import perfilController from './perfil.controller';
 import { middlewareAutenticacao } from '../../shared/middlewares/authMiddleware'; 
@@ -53,6 +54,15 @@ perfilRoutes.delete(
     '/seguranca/conta', 
    validate({ body: DeletarContaSchema }),
     perfilController.deletarPerfil
+);
+
+// --- 🤝 Sistema de Seguidores ---
+
+/** * POST /:id/seguir -> Toggle follow/unfollow
+ */
+perfilRoutes.post(
+    '/:id/seguir',
+    perfilController.toggleFollow
 );
 
 export default perfilRoutes;

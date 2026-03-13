@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+//backend/src/features/perfil/perfil.service.ts
 const prisma_client_1 = __importDefault(require("../../shared/prisma/prisma.client"));
 const AppError_1 = require("../../shared/utils/AppError");
 /**
@@ -61,4 +62,51 @@ async function buscarPerfilCompleto(perfilId, _requestId) {
     }
     return perfil;
 }
-exports.default = { atualizarPerfil, buscarPerfilCompleto };
+/**
+ * 💡 FOLLOW SYSTEM: Lógica de Grafo Social
+ * Implementa idempotência e validação de auto-seguimento.
+ */
+async function seguirPerfil(seguidorId, seguidoId, requestId) {
+    if (seguidorId === seguidoId) {
+        throw AppError_1.AppError.badRequest('Você não pode seguir a si mesmo.');
+    }
+    const seguidoExiste = await prisma_client_1.default.perfis.findUnique({
+        where: { perfil_id: seguidoId },
+        select: { perfil_id: true }
+    });
+    if (!seguidoExiste) {
+        throw AppError_1.AppError.notFound('O perfil que você tenta seguir não existe.');
+    }
+    await prisma_client_1.default.seguidores.upsert({
+        where: {
+            seguidor_id_seguido_id: {
+                seguidor_id: seguidorId,
+                seguido_id: seguidoId
+            }
+        },
+        update: {}, // Idempotência: se já segue, não faz nada
+        create: {
+            seguidor_id: seguidorId,
+            seguido_id: seguidoId
+        }
+    });
+}
+async function deixarDeSeguirPerfil(seguidorId, seguidoId, requestId) {
+    try {
+        await prisma_client_1.default.seguidores.delete({
+            where: {
+                seguidor_id_seguido_id: {
+                    seguidor_id: seguidorId,
+                    seguido_id: seguidoId
+                }
+            }
+        });
+    }
+    catch (error) {
+        if (error.code === 'P2025') {
+            throw AppError_1.AppError.notFound('Você não segue este perfil.');
+        }
+        throw error;
+    }
+}
+exports.default = { atualizarPerfil, buscarPerfilCompleto, seguirPerfil, deixarDeSeguirPerfil };

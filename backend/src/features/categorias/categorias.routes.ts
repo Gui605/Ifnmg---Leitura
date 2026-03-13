@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import categoriasController from './categorias.controller';
+import categoriasController, { getTrending } from './categorias.controller';
 import { middlewareAutenticacao } from '../../shared/middlewares/authMiddleware';
+import { middlewareAutenticacaoOpcional } from '../../shared/middlewares/optionalAuthMiddleware';
 import { middlewareAdministrador } from '../../shared/middlewares/adminMiddleware';
 import { validate} from '../../shared/middlewares/validate.middleware';
 import { CategoriaCreateSchema, CategoriaUpdateSchema } from '../../shared/types/categoria.types';
 import { z } from 'zod';
-import { limitadorEngajamento } from '../../shared/middlewares/rateLimiter';
+import { limitadorEngajamento, limitadorLeitura } from '../../shared/middlewares/rateLimiter';
 import { listarInteressesCategoria, seguirCategoriaController, deixarDeSeguirCategoriaController } from './categorias.controller';
 
 const categoriasRoutes = Router();
@@ -20,6 +21,14 @@ const EmptyBodySchema = z.object({}).strict();
 
 // --- Leitura Pública ---
 categoriasRoutes.get('/', categoriasController.listar);
+
+// GET /api/v1/categorias/trending
+categoriasRoutes.get(
+    '/trending', 
+    middlewareAutenticacaoOpcional, 
+    limitadorLeitura, 
+    getTrending
+);
 
 // --- Escrita Protegida (Exige privilégios de Administrador) ---
 

@@ -1,5 +1,5 @@
 import prisma from '../../shared/prisma/prisma.client';
-import { CategoriaCreateBody, CategoriaUpdateBody, InteresseResponse } from '../../shared/types/categoria.types';
+import { CategoriaCreateBody, CategoriaUpdateBody, InteresseResponse, TrendingCategoriaResponse } from '../../shared/types/categoria.types';
 import { AppError } from '../../shared/utils/AppError';
 import { ErrorCodes } from '../../errors/ErrorCodes';
 
@@ -166,4 +166,52 @@ export async function listarInteresses(perfilId: number, requestId?: string): Pr
         }
     }));
     return out;
+}
+
+/**
+ * 📈 TRENDING TAGS: Agregação de Categorias em Alta
+ * Identifica as categorias com mais posts nos últimos 7 dias.
+ */
+export async function buscarCategoriasEmAlta(limite: number = 5, _requestId?: string): Promise<TrendingCategoriaResponse[]> {
+    const seteDiasAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    // 1. Agrega contagem de posts por categoria no período
+    const agregacao = await prisma.postsCategorias.groupBy({
+        by: ['categoria_id'],
+        where: {
+            post: {
+                data_criacao: {
+                    gte: seteDiasAtras
+                }
+            }
+        },
+        _count: {
+            post_id: true
+        },
+        orderBy: {
+            _count: {
+                post_id: 'desc'
+            }
+        },
+        take: limite
+    });
+
+    if (agregacao.length === 0) return [];
+
+    // 2. Hidrata com o nome das categorias
+    const ids = agregacao.map(a => a.categoria_id);
+    const categorias = await prisma.categorias.findMany({
+        where: { categoria_id: { in: ids } },
+        select: { categoria_id: true, nome: true }
+    });
+
+    // 3. Formata o retorno mantendo a ordem da agregação
+    return agregacao.map(a => {
+        const cat = categorias.find(c => c.categoria_id === a.categoria_id);
+        return {
+            categoria_id: a.categoria_id,
+            nome: cat?.nome ?? 'Desconhecida',
+            contagem: a._count.post_id
+        };
+    });
 }
