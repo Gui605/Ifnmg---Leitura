@@ -4,7 +4,7 @@ import perfilController from './perfil.controller';
 import { middlewareAutenticacao } from '../../shared/middlewares/authMiddleware'; 
 import { validate } from '../../shared/middlewares/validate.middleware';
 import { 
-    UpdatePerfilSchema, 
+    PerfilPatchSchema, 
     SenhaPatchSchema, 
     DeletarContaSchema 
 } from '../../shared/types/perfil.types';
@@ -31,7 +31,7 @@ perfilRoutes.get('/me', perfilController.getPerfilInfo);
  */
 perfilRoutes.patch(
     '/me', 
-    validate({ body: UpdatePerfilSchema }),
+    validate({ body: PerfilPatchSchema }),
     perfilController.updatePerfil
 );
 

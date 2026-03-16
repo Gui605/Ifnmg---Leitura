@@ -74,6 +74,8 @@ async function main() {
   await prisma.perfis.create({
     data: {
       nome_user: 'Usuário Temporário',
+      level: 0,
+      xp: 0,
       usuario: {
         create: {
           email: 'fantasma@teste.com',

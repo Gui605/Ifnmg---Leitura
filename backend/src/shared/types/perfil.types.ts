@@ -6,18 +6,33 @@ import { z } from 'zod';
  * O .trim() já limpa espaços em branco automaticamente.
  */
 
-// 1. Schema para Atualização de Perfil
-export const UpdatePerfilSchema = z.object({
-    nome: z.string()
-        .min(2, "O nome deve ter pelo menos 2 caracteres")
-        .max(100, "O nome não pode exceder 100 caracteres")
-        .trim()
-        .optional(),
-    // Exemplo de campo futuro: 
-    // bio: z.string().max(255).optional(),
+// 1. Schemas de Perfil
+export const TituloResumoSchema = z.object({
+  titulo_id: z.number(),
+  nome: z.string(),
+  descricao: z.string().nullable(),
+  categoria: z.string(),
+});
+
+export const PerfilTitulosSchema = z.object({
+  atribuido_em: z.date(),
+  esta_ativo: z.boolean(),
+  titulo: TituloResumoSchema,
+});
+
+export const PatenteSchema = z.object({
+  nivel: z.number(),
+  nome: z.string(),
+});
+
+// 2. Schema para Atualização de Perfil
+export const PerfilPatchSchema = z.object({
+    nome: z.string().min(3).max(50).optional(),
+    bio: z.string().max(255).optional(),
+    titulo_ativo_id: z.number().positive().optional(),
 }).strict();
 
-// 2. Schema para Alteração de Senha
+// 3. Schema para Alteração de Senha
 export const SenhaPatchSchema = z.object({
     senhaAntiga: z.string().min(1, "A senha antiga é obrigatória"),
     novaSenha: z.string()
@@ -30,7 +45,7 @@ export const SenhaPatchSchema = z.object({
     path: ["confirmarNovaSenha"],
 });
 
-// 3. Schema para Deleção de Conta
+// 4. Schema para Deleção de Conta
 export const DeletarContaSchema = z.object({
     senhaAtual: z.string().min(1, "A senha é necessária para confirmar a exclusão"),
 }).strict();
@@ -40,6 +55,9 @@ export const DeletarContaSchema = z.object({
  * O TypeScript extrai automaticamente as interfaces dos schemas acima.
  * Não é mais necessário escrever "export interface ..." manualmente!
  */
-export type PerfilPatchBody = z.infer<typeof UpdatePerfilSchema>;
+export type PerfilPatchBody = z.infer<typeof PerfilPatchSchema>;
+export type TituloResumo = z.infer<typeof TituloResumoSchema>;
+export type PerfilTitulos = z.infer<typeof PerfilTitulosSchema>;
+export type Patente = z.infer<typeof PatenteSchema>;
 export type SenhaPatchBody = z.infer<typeof SenhaPatchSchema>;
 export type DeletarContaBody = z.infer<typeof DeletarContaSchema>;

@@ -111,7 +111,7 @@ async function setup() {
     {
       titulo: 'Post de Teste Social',
       conteudo: 'Conteúdo para testes sociais',
-      categoriasIds: [categoriaId]
+      tags: [`Categoria Teste ${Date.now()}`]
     },
     { headers: auth() }
   );
@@ -251,6 +251,8 @@ async function runSocialTests() {
   });
 
   await runCase('Denúncia: Bloquear duplicada', async () => {
+    // Aguarda janela do rate limiter de engajamento
+    await sleep(1500);
     const res = await api.post(
       `/denuncias/${postId}`,
       {

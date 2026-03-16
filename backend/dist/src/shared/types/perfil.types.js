@@ -1,23 +1,35 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DeletarContaSchema = exports.SenhaPatchSchema = exports.UpdatePerfilSchema = void 0;
+exports.DeletarContaSchema = exports.SenhaPatchSchema = exports.PerfilPatchSchema = exports.PatenteSchema = exports.PerfilTitulosSchema = exports.TituloResumoSchema = void 0;
 const zod_1 = require("zod");
 /**
  * 🛡️ SCHEMAS DE VALIDAÇÃO (ZOD)
  * O .strict() garante que campos extras (Mass Assignment) disparem erro 400.
  * O .trim() já limpa espaços em branco automaticamente.
  */
-// 1. Schema para Atualização de Perfil
-exports.UpdatePerfilSchema = zod_1.z.object({
-    nome: zod_1.z.string()
-        .min(2, "O nome deve ter pelo menos 2 caracteres")
-        .max(100, "O nome não pode exceder 100 caracteres")
-        .trim()
-        .optional(),
-    // Exemplo de campo futuro: 
-    // bio: z.string().max(255).optional(),
+// 1. Schemas de Perfil
+exports.TituloResumoSchema = zod_1.z.object({
+    titulo_id: zod_1.z.number(),
+    nome: zod_1.z.string(),
+    descricao: zod_1.z.string().nullable(),
+    categoria: zod_1.z.string(),
+});
+exports.PerfilTitulosSchema = zod_1.z.object({
+    atribuido_em: zod_1.z.date(),
+    esta_ativo: zod_1.z.boolean(),
+    titulo: exports.TituloResumoSchema,
+});
+exports.PatenteSchema = zod_1.z.object({
+    nivel: zod_1.z.number(),
+    nome: zod_1.z.string(),
+});
+// 2. Schema para Atualização de Perfil
+exports.PerfilPatchSchema = zod_1.z.object({
+    nome: zod_1.z.string().min(3).max(50).optional(),
+    bio: zod_1.z.string().max(255).optional(),
+    titulo_ativo_id: zod_1.z.number().positive().optional(),
 }).strict();
-// 2. Schema para Alteração de Senha
+// 3. Schema para Alteração de Senha
 exports.SenhaPatchSchema = zod_1.z.object({
     senhaAntiga: zod_1.z.string().min(1, "A senha antiga é obrigatória"),
     novaSenha: zod_1.z.string()
@@ -29,7 +41,7 @@ exports.SenhaPatchSchema = zod_1.z.object({
     message: "As senhas não coincidem",
     path: ["confirmarNovaSenha"],
 });
-// 3. Schema para Deleção de Conta
+// 4. Schema para Deleção de Conta
 exports.DeletarContaSchema = zod_1.z.object({
     senhaAtual: zod_1.z.string().min(1, "A senha é necessária para confirmar a exclusão"),
 }).strict();

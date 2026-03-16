@@ -51,8 +51,13 @@ async function buscarPerfilCompleto(perfilId, _requestId) {
                 select: {
                     email: true,
                     data_criacao: true,
-                    cadastro_confirmado: true
-                    // 🛡️ Segurança: password_hash nunca é exposto
+                    cadastro_confirmado: true,
+                    nome_campus: true
+                }
+            },
+            titulos: {
+                include: {
+                    titulo: true
                 }
             }
         }
@@ -60,7 +65,22 @@ async function buscarPerfilCompleto(perfilId, _requestId) {
     if (!perfil) {
         throw AppError_1.AppError.notFound('As informações do perfil solicitado não foram encontradas.');
     }
-    return perfil;
+    // 🛡️ AGREGAÇÃO DE ESTATÍSTICAS
+    const [totalPosts, totalCurtidas, totalSeguidores, totalSeguindo] = await Promise.all([
+        prisma_client_1.default.posts.count({ where: { autor_id: perfilId } }),
+        prisma_client_1.default.votos.count({ where: { post: { autor_id: perfilId }, tipo: 'UP' } }),
+        prisma_client_1.default.seguidores.count({ where: { seguido_id: perfilId } }),
+        prisma_client_1.default.seguidores.count({ where: { seguidor_id: perfilId } })
+    ]);
+    return {
+        ...perfil,
+        estatisticas: {
+            pergaminhos: totalPosts,
+            curtidas: totalCurtidas,
+            seguidores: totalSeguidores,
+            seguindo: totalSeguindo
+        }
+    };
 }
 /**
  * 💡 FOLLOW SYSTEM: Lógica de Grafo Social
@@ -109,4 +129,66 @@ async function deixarDeSeguirPerfil(seguidorId, seguidoId, requestId) {
         throw error;
     }
 }
-exports.default = { atualizarPerfil, buscarPerfilCompleto, seguirPerfil, deixarDeSeguirPerfil };
+const gamificacao_config_1 = require("../../shared/utils/gamificacao.config");
+const logService_1 = require("../../shared/utils/logService");
+// ... (código existente)
+async function processarGanhoXP(perfilId, evento, requestId) {
+    const xpGanho = gamificacao_config_1.REGRAS_XP[evento];
+    if (!xpGanho)
+        return;
+    const perfil = await prisma_client_1.default.perfis.update({
+        where: { perfil_id: perfilId },
+        data: { xp: { increment: xpGanho } },
+        select: { xp: true, level: true }
+    });
+    await (0, logService_1.registrar)(perfilId, evento, { xpGanho }, requestId);
+    // Lógica de Level Up
+    const novoLevel = Math.floor(perfil.xp / 1000); // Exemplo: 1000 XP por nível
+    if (novoLevel > perfil.level) {
+        await prisma_client_1.default.perfis.update({
+            where: { perfil_id: perfilId },
+            data: { level: novoLevel }
+        });
+        await (0, logService_1.registrar)(perfilId, 'LEVEL_UP', { novoLevel }, requestId);
+        await verificarNovosTitulos(perfilId, requestId);
+    }
+}
+function getPatentePorNivel(level) {
+    let patente = gamificacao_config_1.PATENTES[0].nome;
+    for (const p of gamificacao_config_1.PATENTES) {
+        if (level >= p.nivel) {
+            patente = p.nome;
+        }
+        else {
+            break;
+        }
+    }
+    return patente;
+}
+async function verificarNovosTitulos(perfilId, requestId) {
+    const eventos = await prisma_client_1.default.logAtividade.groupBy({
+        by: ['evento'],
+        where: { perfil_id: perfilId },
+        _count: {
+            evento: true
+        }
+    });
+    const titulosDisponiveis = await prisma_client_1.default.titulos.findMany();
+    const titulosGanhos = await prisma_client_1.default.perfisTitulos.findMany({ where: { perfil_id: perfilId } });
+    for (const titulo of titulosDisponiveis) {
+        const jaPossui = titulosGanhos.some(t => t.titulo_id === titulo.titulo_id);
+        if (jaPossui)
+            continue;
+        const contagemEvento = eventos.find(e => e.evento === titulo.categoria)?._count.evento || 0;
+        if (contagemEvento >= titulo.requisito) {
+            await prisma_client_1.default.perfisTitulos.create({
+                data: {
+                    perfil_id: perfilId,
+                    titulo_id: titulo.titulo_id
+                }
+            });
+            await (0, logService_1.registrar)(perfilId, 'TITULO_GANHO', { titulo: titulo.nome }, requestId);
+        }
+    }
+}
+exports.default = { atualizarPerfil, buscarPerfilCompleto, seguirPerfil, deixarDeSeguirPerfil, processarGanhoXP };

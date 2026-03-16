@@ -4,6 +4,7 @@ import { AppError } from '../../shared/utils/AppError';
 import { registrar as registrarLog } from '../../shared/utils/logService';
 import { PostsQuery } from '../../shared/types/post.types';
 import { ErrorCodes } from '../../errors/ErrorCodes';
+import perfilService from '../perfil/perfil.service';
 
 type CriarPostData = { titulo: string; conteudo: string; tags: string[] };
 
@@ -54,6 +55,7 @@ async function criarPost(perfilId: number, data: CriarPostData, requestId?: stri
   });
 
   await registrarLog(perfilId, 'POST_CREATED', { post_id: post.post_id }, requestId);
+  await perfilService.processarGanhoXP(perfilId, 'POST_PUBLICADO', requestId);
   return post;
 }
 
@@ -169,14 +171,19 @@ async function votarPost(perfilId: number, postId: number, tipo: 'UP' | 'DOWN', 
 async function comentarPost(perfilId: number, postId: number, texto: string, requestId?: string) {
   const post = await prisma.posts.findUnique({ where: { post_id: postId }, select: { post_id: true } });
   if (!post) throw AppError.notFound('Publicação não encontrada.');
-  await prisma.$transaction(async (tx) => {
-    await tx.comentarios.create({
-      data: { perfil_id: perfilId, post_id: postId, texto }
+
+  const novoComentario = await prisma.$transaction(async (tx) => {
+    const comentario = await tx.comentarios.create({
+      data: { perfil_id: perfilId, post_id: postId, texto },
     });
     const total = await tx.comentarios.count({ where: { post_id: postId } });
     await tx.posts.update({ where: { post_id: postId }, data: { total_comentarios: total } });
+    return comentario;
   });
-  await registrarLog(perfilId, 'POST_COMMENTED', { post_id: postId }, requestId);
+
+  await registrarLog(perfilId, 'COMMENT_CREATED', { post_id: postId, comentario_id: novoComentario.comentario_id }, requestId);
+  await perfilService.processarGanhoXP(perfilId, 'COMENTARIO', requestId);
+
   const postAtualizado = await prisma.posts.findUnique({
     where: { post_id: postId },
     include: { autor: { select: { nome_user: true } } }

@@ -27,11 +27,14 @@ const criarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     });
 });
 const listarPosts = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
-    const { page, limit, categoria, ordenarPor } = req.query;
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+    const categoriaId = req.query.categoria ? Number(req.query.categoria) : undefined;
+    const { ordenarPor } = req.query;
     const { posts, meta } = await posts_service_1.default.listar({
         page,
         limit,
-        categoriaId: categoria,
+        categoriaId,
         ordenarPor
     });
     return res.status(200).json({

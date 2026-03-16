@@ -24,7 +24,7 @@ perfilRoutes.get('/me', perfil_controller_1.default.getPerfilInfo);
 /** * PATCH /me -> Atualização de dados básicos
  * 🛡️ Camada 2: Validação de Contrato (Apenas campos permitidos pelo Zod)
  */
-perfilRoutes.patch('/me', (0, validate_middleware_1.validate)({ body: perfil_types_1.UpdatePerfilSchema }), perfil_controller_1.default.updatePerfil);
+perfilRoutes.patch('/me', (0, validate_middleware_1.validate)({ body: perfil_types_1.PerfilPatchSchema }), perfil_controller_1.default.updatePerfil);
 // --- 🔐 Operações de Segurança Crítica ---
 /** * PATCH /seguranca/senha -> Troca de credenciais
  * 🛡️ Camada 2: O Zod valida força da senha e se a confirmação é idêntica.

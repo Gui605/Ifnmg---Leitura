@@ -51,8 +51,13 @@ async function buscarPerfilCompleto(perfilId: number, _requestId?: string) {
                 select: {
                     email: true,
                     data_criacao: true,
-                    cadastro_confirmado: true
-                    // 🛡️ Segurança: password_hash nunca é exposto
+                    cadastro_confirmado: true,
+                    nome_campus: true
+                }
+            },
+            titulos: {
+                include: {
+                    titulo: true
                 }
             }
         }
@@ -62,7 +67,23 @@ async function buscarPerfilCompleto(perfilId: number, _requestId?: string) {
         throw AppError.notFound('As informações do perfil solicitado não foram encontradas.');
     }
 
-    return perfil;
+    // 🛡️ AGREGAÇÃO DE ESTATÍSTICAS
+    const [totalPosts, totalCurtidas, totalSeguidores, totalSeguindo] = await Promise.all([
+        prisma.posts.count({ where: { autor_id: perfilId } }),
+        prisma.votos.count({ where: { post: { autor_id: perfilId }, tipo: 'UP' } }),
+        prisma.seguidores.count({ where: { seguido_id: perfilId } }),
+        prisma.seguidores.count({ where: { seguidor_id: perfilId } })
+    ]);
+
+    return {
+        ...perfil,
+        estatisticas: {
+            pergaminhos: totalPosts,
+            curtidas: totalCurtidas,
+            seguidores: totalSeguidores,
+            seguindo: totalSeguindo
+        }
+    };
 }
 
 /**
@@ -116,4 +137,75 @@ async function deixarDeSeguirPerfil(seguidorId: number, seguidoId: number, reque
     }
 }
 
-export default { atualizarPerfil, buscarPerfilCompleto, seguirPerfil, deixarDeSeguirPerfil };
+import { REGRAS_XP, PATENTES } from '../../shared/utils/gamificacao.config';
+import { registrar as registrarLog } from '../../shared/utils/logService';
+
+// ... (código existente)
+
+async function processarGanhoXP(perfilId: number, evento: keyof typeof REGRAS_XP, requestId?: string) {
+  const xpGanho = REGRAS_XP[evento];
+  if (!xpGanho) return;
+
+  const perfil = await prisma.perfis.update({
+    where: { perfil_id: perfilId },
+    data: { xp: { increment: xpGanho } },
+    select: { xp: true, level: true }
+  });
+
+  await registrarLog(perfilId, evento, { xpGanho }, requestId);
+
+  // Lógica de Level Up
+  const novoLevel = Math.floor(perfil.xp / 1000); // Exemplo: 1000 XP por nível
+  if (novoLevel > perfil.level) {
+    await prisma.perfis.update({
+      where: { perfil_id: perfilId },
+      data: { level: novoLevel }
+    });
+    await registrarLog(perfilId, 'LEVEL_UP', { novoLevel }, requestId);
+    await verificarNovosTitulos(perfilId, requestId);
+  }
+}
+
+function getPatentePorNivel(level: number): string {
+  let patente = PATENTES[0].nome;
+  for (const p of PATENTES) {
+    if (level >= p.nivel) {
+      patente = p.nome;
+    } else {
+      break;
+    }
+  }
+  return patente;
+}
+
+async function verificarNovosTitulos(perfilId: number, requestId?: string) {
+  const eventos = await prisma.logAtividade.groupBy({
+    by: ['evento'],
+    where: { perfil_id: perfilId },
+    _count: {
+      evento: true
+    }
+  });
+
+  const titulosDisponiveis = await prisma.titulos.findMany();
+  const titulosGanhos = await prisma.perfisTitulos.findMany({ where: { perfil_id: perfilId } });
+
+  for (const titulo of titulosDisponiveis) {
+    const jaPossui = titulosGanhos.some(t => t.titulo_id === titulo.titulo_id);
+    if (jaPossui) continue;
+
+    const contagemEvento = eventos.find(e => e.evento === titulo.categoria)?._count.evento || 0;
+
+    if (contagemEvento >= titulo.requisito) {
+      await prisma.perfisTitulos.create({
+        data: {
+          perfil_id: perfilId,
+          titulo_id: titulo.titulo_id
+        }
+      });
+      await registrarLog(perfilId, 'TITULO_GANHO', { titulo: titulo.nome }, requestId);
+    }
+  }
+}
+
+export default { atualizarPerfil, buscarPerfilCompleto, seguirPerfil, deixarDeSeguirPerfil, processarGanhoXP };

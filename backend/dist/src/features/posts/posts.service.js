@@ -8,6 +8,7 @@ const prisma_client_1 = __importDefault(require("../../shared/prisma/prisma.clie
 const AppError_1 = require("../../shared/utils/AppError");
 const logService_1 = require("../../shared/utils/logService");
 const ErrorCodes_1 = require("../../errors/ErrorCodes");
+const perfil_service_1 = __importDefault(require("../perfil/perfil.service"));
 async function criarPost(perfilId, data, requestId) {
     // 🛡️ Denormalização: Busca o nome do autor e o campus antes de criar o post
     const perfil = await prisma_client_1.default.perfis.findUnique({
@@ -50,6 +51,7 @@ async function criarPost(perfilId, data, requestId) {
         return novo;
     });
     await (0, logService_1.registrar)(perfilId, 'POST_CREATED', { post_id: post.post_id }, requestId);
+    await perfil_service_1.default.processarGanhoXP(perfilId, 'POST_PUBLICADO', requestId);
     return post;
 }
 async function listar(q) {
@@ -163,14 +165,16 @@ async function comentarPost(perfilId, postId, texto, requestId) {
     const post = await prisma_client_1.default.posts.findUnique({ where: { post_id: postId }, select: { post_id: true } });
     if (!post)
         throw AppError_1.AppError.notFound('Publicação não encontrada.');
-    await prisma_client_1.default.$transaction(async (tx) => {
-        await tx.comentarios.create({
-            data: { perfil_id: perfilId, post_id: postId, texto }
+    const novoComentario = await prisma_client_1.default.$transaction(async (tx) => {
+        const comentario = await tx.comentarios.create({
+            data: { perfil_id: perfilId, post_id: postId, texto },
         });
         const total = await tx.comentarios.count({ where: { post_id: postId } });
         await tx.posts.update({ where: { post_id: postId }, data: { total_comentarios: total } });
+        return comentario;
     });
-    await (0, logService_1.registrar)(perfilId, 'POST_COMMENTED', { post_id: postId }, requestId);
+    await (0, logService_1.registrar)(perfilId, 'COMMENT_CREATED', { post_id: postId, comentario_id: novoComentario.comentario_id }, requestId);
+    await perfil_service_1.default.processarGanhoXP(perfilId, 'COMENTARIO', requestId);
     const postAtualizado = await prisma_client_1.default.posts.findUnique({
         where: { post_id: postId },
         include: { autor: { select: { nome_user: true } } }

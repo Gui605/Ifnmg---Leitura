@@ -10,8 +10,12 @@ datasource db {
 model Perfis {
   perfil_id      Int      @id @default(autoincrement())
   nome_user      String   @unique @db.VarChar(100)
+  bio            String?  @db.VarChar(255) // SOBRE
   score_karma    Int      @default(0)
   reading_points Int      @default(0)
+  level          Int      @default(1) // NÍVEL
+  xp             Int      @default(0) // XP ATUAL
+  titulo_ativo   String?  @db.VarChar(50)
   data_criacao   DateTime @default(now())
 
   usuario     Usuarios?
@@ -25,8 +29,38 @@ model Perfis {
   seguidores Seguidores[] @relation("quem_segue")
   seguidos   Seguidores[] @relation("sendo_seguido")
 
+  titulos PerfisTitulos[]
+
   @@map("perfis")
 }
+
+model Titulos {
+  titulo_id     Int      @id @default(autoincrement())
+  nome          String   @unique @db.VarChar(50)
+  descricao     String?  @db.VarChar(255)
+  categoria     String   @db.VarChar(30) // NIVEL | POSTS | LEITURA | GERAL
+  requisito     Int
+  data_criacao  DateTime @default(now())
+
+  perfis_ganhos PerfisTitulos[]
+
+  @@map("titulos")
+}
+
+model PerfisTitulos {
+  perfil_id     Int
+  titulo_id     Int
+  atribuido_em  DateTime @default(now())
+  esta_ativo    Boolean  @default(false)
+
+  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+  titulo Titulos @relation(fields: [titulo_id], references: [titulo_id], onDelete: Cascade)
+
+  @@id([perfil_id, titulo_id])
+  @@map("perfis_titulos")
+}
+
+
 
 model Seguidores {
   seguidor_id  Int
@@ -111,10 +145,10 @@ model Posts {
   total_downvotes   Int @default(0)
   total_comentarios Int @default(0)
 
-  autor_id        Int?
+  autor_id        Int
   autor_nome_user String? @db.VarChar(100)
   nome_campus     String? @db.VarChar(100)
-  autor           Perfis? @relation(fields: [autor_id], references: [perfil_id], onDelete: SetNull)
+  autor           Perfis @relation(fields: [autor_id], references: [perfil_id], onDelete: Cascade)
 
   categorias  PostsCategorias[]
   votos       Votos[]
