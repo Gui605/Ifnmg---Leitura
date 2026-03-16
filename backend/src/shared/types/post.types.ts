@@ -14,9 +14,9 @@ export const PostCreateSchema = z.object({
     conteudo: z.string()
         .min(10, "O conteúdo deve ter pelo menos 10 caracteres")
         .max(10000, "O post excedeu o limite de 10.000 caracteres"),
-    categoriasIds: z.array(z.number().positive())
-        .min(1, "O post deve pertencer a pelo menos uma categoria")
-        .max(5, "Um post pode ter no máximo 5 categorias")
+    tags: z.array(z.string().min(1).max(30))
+        .min(1, "O post deve ter pelo menos uma tag")
+        .max(5, "Um post pode ter no máximo 5 tags")
 }).strict();
 
 /**

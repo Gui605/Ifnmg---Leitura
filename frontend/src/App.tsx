@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './features/auth/Login';
 import Redefinir from './features/auth/Redefinir';
 import Feed from './features/feed/Feed';
+import EscreverPost from './features/posts/EscreverPost';
 import { useAuth } from './shared/utils/authContext';
 import { ProtectedRoute, PublicOnlyRoute } from './shared/guards';
 
@@ -27,6 +28,7 @@ export default function App() {
         {/* Rotas Protegidas */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Feed />} />
+          <Route path="/escrever" element={<EscreverPost />} />
         </Route>
       </Routes>
     </BrowserRouter>

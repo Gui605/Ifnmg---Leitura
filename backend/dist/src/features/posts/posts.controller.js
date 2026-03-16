@@ -8,16 +8,16 @@ const posts_service_1 = __importDefault(require("./posts.service"));
 const AppError_1 = require("../../shared/utils/AppError");
 const criarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const perfilId = req.perfil_id;
-    const { titulo, conteudo, categoriasIds } = req.body;
+    const { titulo, conteudo, tags } = req.body;
     if (!perfilId) {
         throw AppError_1.AppError.unauthorized('Sessão inválida. Por favor, faça login novamente.');
     }
-    // Garante integridade referencial removendo duplicatas
-    const categoriasUnicas = [...new Set(categoriasIds)];
+    // Garante integridade referencial removendo duplicatas de tags
+    const tagsUnicas = [...new Set(tags)];
     const novoPost = await posts_service_1.default.criarPost(perfilId, {
         titulo,
         conteudo,
-        categoriasIds: categoriasUnicas
+        tags: tagsUnicas
     }, req.requestId);
     return res.status(201).json({
         status: 'success',
@@ -27,14 +27,18 @@ const criarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     });
 });
 const listarPosts = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
-    const perfilId = req.perfil_id;
     const { page, limit, categoria, ordenarPor } = req.query;
-    const result = await posts_service_1.default.listarPosts({ page, limit, categoria, ordenarPor }, perfilId, req.requestId);
+    const { posts, meta } = await posts_service_1.default.listar({
+        page,
+        limit,
+        categoriaId: categoria,
+        ordenarPor
+    });
     return res.status(200).json({
         status: 'success',
-        message: 'Publicações recuperadas com sucesso.',
-        data: result.data,
-        meta: result.meta
+        message: 'Feed de posts recuperado.',
+        data: posts,
+        meta
     });
 });
 const deletarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {

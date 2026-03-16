@@ -1,3 +1,4 @@
+//frontend/EscrevAí.md
 Arquitetura final do Feed
 
 Estrutura recomendada:

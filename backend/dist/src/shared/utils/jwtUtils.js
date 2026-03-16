@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.obterSegredoJwt = obterSegredoJwt;
 exports.gerarToken = gerarToken;
 exports.verificarToken = verificarToken;
+//backend/src/shared/utils/jwtUtils.ts
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const auth_types_1 = require("../types/auth.types");
 const JWT_SECRET = process.env.JWT_SECRET;

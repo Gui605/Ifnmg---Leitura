@@ -11,19 +11,19 @@ type EmptyBody = Record<string, never>;
 
 const criarPost = tratarAssincrono(async (req: Request<{}, any, PostCreateBody>, res: Response) => {
     const perfilId = req.perfil_id; 
-    const { titulo, conteudo, categoriasIds } = req.body; 
+    const { titulo, conteudo, tags } = req.body; 
     
     if (!perfilId) {
         throw AppError.unauthorized('Sessão inválida. Por favor, faça login novamente.');
     }
 
-    // Garante integridade referencial removendo duplicatas
-    const categoriasUnicas = [...new Set(categoriasIds)];
+    // Garante integridade referencial removendo duplicatas de tags
+    const tagsUnicas = [...new Set(tags)];
 
     const novoPost = await postsService.criarPost(perfilId, { 
         titulo, 
         conteudo, 
-        categoriasIds: categoriasUnicas 
+        tags: tagsUnicas 
     }, req.requestId);
 
     return res.status(201).json({
@@ -35,16 +35,23 @@ const criarPost = tratarAssincrono(async (req: Request<{}, any, PostCreateBody>,
 });
 
 const listarPosts = tratarAssincrono(async (req: Request<{}, any, any, PostsQuery>, res: Response) => {
-    const perfilId = req.perfil_id; 
-    const { page, limit, categoria, ordenarPor } = req.query;
-    
-    const result = await postsService.listarPosts({ page, limit, categoria, ordenarPor } as any, perfilId, req.requestId);
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+    const categoriaId = req.query.categoria ? Number(req.query.categoria) : undefined;
+    const { ordenarPor } = req.query;
+
+    const { posts, meta } = await postsService.listar({ 
+        page, 
+        limit, 
+        categoriaId,
+        ordenarPor 
+    });
 
     return res.status(200).json({
         status: 'success',
-        message: 'Publicações recuperadas com sucesso.',
-        data: result.data,
-        meta: result.meta
+        message: 'Feed de posts recuperado.',
+        data: posts,
+        meta
     });
 });
 

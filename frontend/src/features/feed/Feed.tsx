@@ -1,11 +1,12 @@
 // frontend/src/features/feed/Feed.tsx
 
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Notificacao } from '../../shared/utils/Notificacao';
 import { PerfilResumo } from '../../shared/types/perfil.types';
 import { PostResumo } from '../../shared/types/post.types';
 import { getMeuPerfil } from '../../shared/services/perfil.service';
-import { getFeed } from '../../shared/services/post.service';
+import { getPosts } from '../../shared/services/post.service';
 import { useTema } from '../../shared/utils/themeHandler';
 
 import {
@@ -36,10 +37,13 @@ import TrendingTags from './TrendingTags';
 import SuggestedUsers from './SuggestedUsers';
 
 export default function Feed() {
-
+  const navigate = useNavigate();
   const [perfil, setPerfil] = useState<PerfilResumo | null>(null);
   const [posts, setPosts] = useState<PostResumo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
   const [isLeftVisible, setIsLeftVisible] = useState(true);
@@ -49,84 +53,69 @@ export default function Feed() {
 
   const { modoEscuro, alternarTema } = useTema();
 
+  // 1. Carregamento Inicial (Perfil + Primeira Página)
   useEffect(() => {
-
-    // --- MOCK MODE (para validação visual) ---
-
-    setPerfil({
-      nome_user: "Guilherme_Dev",
-      is_admin: true,
-      score_karma: 1250,
-      reading_points: 850
-    });
-
-    setPosts([
-      {
-        post_id: 1,
-        titulo: "O Amanhecer no Bloco A: Uma Crônica Acadêmica",
-        conteudo:
-          "Entre o aroma de café recém-passado e os sussurros da biblioteca...",
-        autor_id: 1,
-        autor_nome_user: "Anônimo",
-        nome_campus: "Araçuaí",
-        data_criacao: new Date().toISOString(),
-        total_upvotes: 124,
-        total_downvotes: 0,
-        total_comentarios: 18,
-        tags: ["CRONICA", "VIDANOCAMPUS", "IFNMG"]
-      }
-    ]);
-
-    setErro(null);
-    setLoading(false);
-
-    /*
-    // --- MODO REAL (DESCOMENTAR QUANDO BACKEND ESTIVER PRONTO) ---
-
     let cancelado = false;
 
-    async function carregarDados() {
+    async function carregarInicial() {
       try {
-
         const [perfilData, feedData] = await Promise.all([
           getMeuPerfil(),
-          getFeed()
+          getPosts(1)
         ]);
 
         if (!cancelado) {
           setPerfil(perfilData);
-          setPosts(feedData);
+          setPosts(feedData.posts);
+          setHasMore(feedData.meta.page < feedData.meta.totalPages);
           setErro(null);
         }
-
       } catch (err: any) {
-
         if (!cancelado) {
-
-          const status = err?.status;
-
-          if (status === 401) {
-            setErro('Sessão expirada.');
-          } else {
-            setErro(err?.message || 'Erro ao carregar dados.');
-          }
-
+          setErro(err?.message || 'Erro ao carregar dados iniciais.');
         }
-
       } finally {
         if (!cancelado) setLoading(false);
       }
     }
 
-    carregarDados();
+    carregarInicial();
+    return () => { cancelado = true; };
+  }, []);
 
-    return () => {
-      cancelado = true;
+  // 2. Lógica de Infinite Scroll (Scroll Listener)
+  useEffect(() => {
+    const handleScroll = () => {
+      if (loading || loadingMore || !hasMore) return;
+
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = document.documentElement.scrollTop;
+      const clientHeight = document.documentElement.clientHeight;
+
+      // Se chegar a 100px do fim da página, carrega mais
+      if (scrollTop + clientHeight >= scrollHeight - 100) {
+        carregarMais();
+      }
     };
 
-    */
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loading, loadingMore, hasMore, page]);
 
-  }, []);
+  async function carregarMais() {
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    try {
+      const feedData = await getPosts(nextPage);
+      setPosts(prev => [...prev, ...feedData.posts]);
+      setPage(nextPage);
+      setHasMore(feedData.meta.page < feedData.meta.totalPages);
+    } catch (err: any) {
+      console.error("Erro ao carregar mais posts:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -213,7 +202,10 @@ export default function Feed() {
 
           </nav>
 
-          <button className="hidden sm:flex items-center gap-2 bg-[var(--accent-primary)] text-white px-4 py-2 rounded-lg font-bold text-sm shadow-sm">
+          <button 
+            onClick={() => navigate('/escrever')}
+            className="hidden sm:flex items-center gap-2 bg-[var(--accent-primary)] text-white px-4 py-2 rounded-lg font-bold text-sm shadow-sm"
+          >
             <PenLine size={16} />
             Escrever
           </button>
@@ -375,8 +367,25 @@ export default function Feed() {
 
             {/* Posts */}
             {!loading && posts.map((post) => (
-              <PostCard key={post.post_id} post={post} />
+              <PostCard key={post.post_id} post={{
+                ...post,
+                autor_nome_user: post.autor_nome_user ?? "Usuario Desativado"
+              }} />
             ))}
+
+            {/* Loading More Indicator */}
+            {loadingMore && (
+              <div className="flex justify-center p-4">
+                <div className="w-6 h-6 border-2 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+
+            {/* Fim do Feed */}
+            {!hasMore && posts.length > 0 && (
+              <div className="p-10 text-center text-[var(--text-secondary)] text-sm italic">
+                Você chegou ao fim dos pergaminhos.
+              </div>
+            )}
           </div>
         </section>
 

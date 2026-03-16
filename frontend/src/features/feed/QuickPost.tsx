@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Image, Paperclip } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { getMeuPerfil } from "../../shared/services/perfil.service";
 import { PerfilResumo } from "../../shared/types/perfil.types";
 
 export default function QuickPost() {
+  const navigate = useNavigate();
   const [perfil, setPerfil] = useState<PerfilResumo | null>(null);
 
   useEffect(() => {
@@ -28,7 +30,10 @@ export default function QuickPost() {
         {inicial}
       </div>
 
-      <div className="flex-1 bg-[var(--accent-primary)]/5 rounded-full px-4 py-2 text-[var(--text-secondary)] cursor-pointer hover:bg-[var(--accent-primary)]/10 transition">
+      <div 
+        onClick={() => navigate('/escrever')}
+        className="flex-1 bg-[var(--accent-primary)]/5 rounded-full px-4 py-2 text-[var(--text-secondary)] cursor-pointer hover:bg-[var(--accent-primary)]/10 transition"
+      >
         Qual sua nova descoberta?
       </div>
 

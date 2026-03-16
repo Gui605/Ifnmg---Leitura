@@ -15,9 +15,9 @@ exports.PostCreateSchema = zod_1.z.object({
     conteudo: zod_1.z.string()
         .min(10, "O conteúdo deve ter pelo menos 10 caracteres")
         .max(10000, "O post excedeu o limite de 10.000 caracteres"),
-    categoriasIds: zod_1.z.array(zod_1.z.number().positive())
-        .min(1, "O post deve pertencer a pelo menos uma categoria")
-        .max(5, "Um post pode ter no máximo 5 categorias")
+    tags: zod_1.z.array(zod_1.z.string().min(1).max(30))
+        .min(1, "O post deve ter pelo menos uma tag")
+        .max(5, "Um post pode ter no máximo 5 tags")
 }).strict();
 /**
  * 🛡️ SCHEMA DE FILTRAGEM E PAGINAÇÃO

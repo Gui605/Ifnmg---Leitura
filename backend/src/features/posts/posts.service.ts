@@ -5,8 +5,7 @@ import { registrar as registrarLog } from '../../shared/utils/logService';
 import { PostsQuery } from '../../shared/types/post.types';
 import { ErrorCodes } from '../../errors/ErrorCodes';
 
-type CriarPostData = { titulo: string; conteudo: string; categoriasIds: number[] };
-type ListarFiltro = PostsQuery & { ordenarPor?: 'score' | 'data'; categoria?: number };
+type CriarPostData = { titulo: string; conteudo: string; tags: string[] };
 
 async function criarPost(perfilId: number, data: CriarPostData, requestId?: string) {
   // 🛡️ Denormalização: Busca o nome do autor e o campus antes de criar o post
@@ -23,23 +22,92 @@ async function criarPost(perfilId: number, data: CriarPostData, requestId?: stri
   if (!perfil) throw AppError.notFound('Perfil do autor não encontrado.');
 
   const post = await prisma.$transaction(async (tx) => {
+    // 1. Converter tags (nomes) em IDs de categorias (cria se não existir)
+    const categoriasIds: number[] = [];
+    for (const tagName of data.tags) {
+      const categoria = await tx.categorias.upsert({
+        where: { nome: tagName },
+        update: {},
+        create: { nome: tagName }
+      });
+      categoriasIds.push(categoria.categoria_id);
+    }
+
+    // 2. Criar o post com snapshot de autoria
     const novo = await tx.posts.create({
       data: {
         titulo: data.titulo,
         conteudo: data.conteudo,
         autor_id: perfilId,
-        autor_nome_user: perfil.nome_user, // Campo denormalizado
-        nome_campus: perfil.usuario?.nome_campus // Campo denormalizado
+        autor_nome_user: perfil.nome_user, // Snapshot
+        nome_campus: perfil.usuario?.nome_campus // Snapshot
       }
     });
-    if (data.categoriasIds?.length) {
-      const links = data.categoriasIds.map((cid) => ({ post_id: novo.post_id, categoria_id: cid }));
+
+    // 3. Vincular categorias
+    if (categoriasIds.length > 0) {
+      const links = categoriasIds.map((cid) => ({ post_id: novo.post_id, categoria_id: cid }));
       await tx.postsCategorias.createMany({ data: links, skipDuplicates: true });
     }
+
     return novo;
   });
+
   await registrarLog(perfilId, 'POST_CREATED', { post_id: post.post_id }, requestId);
   return post;
+}
+
+async function listar(q: { page?: number; limit?: number; categoriaId?: number; ordenarPor?: string }) {
+  const page = q.page ?? 1;
+  const limit = q.limit ?? 10;
+  const skip = (page - 1) * limit;
+
+  const where: any = {};
+  if (q.categoriaId) {
+    where.categorias = { some: { categoria_id: q.categoriaId } };
+  }
+
+  const orderBy: any = q.ordenarPor === 'score' 
+    ? { total_upvotes: 'desc' } 
+    : { data_criacao: 'desc' };
+
+  const [total, posts] = await Promise.all([
+    prisma.posts.count({ where }),
+    prisma.posts.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy,
+      include: {
+        autor: {
+          select: { nome_user: true }
+        },
+        categorias: {
+          include: {
+            categoria: {
+              select: { nome: true }
+            }
+          }
+        }
+      }
+    })
+  ]);
+
+  const data = posts.map(p => ({
+    ...p,
+    autor_nome_user: p.autor_nome_user ?? p.autor?.nome_user ?? "Usuário Desativado",
+    tags: p.categorias.map(c => c.categoria.nome)
+  }));
+
+  return {
+    posts: data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    }
+  };
 }
 
 async function deletarPost(postId: number, perfilId: number, requestId?: string) {
@@ -48,64 +116,6 @@ async function deletarPost(postId: number, perfilId: number, requestId?: string)
   if (!post.autor_id || post.autor_id !== perfilId) throw new AppError('Você não tem permissão para excluir esta publicação.', 403, ErrorCodes.FORBIDDEN);
   await prisma.posts.delete({ where: { post_id: postId } });
   await registrarLog(perfilId, 'POST_DELETED', { post_id: postId }, requestId);
-}
-
-async function listarPosts(q: PostsQuery, perfilId?: number, requestId?: string) {
-  const page = q.page ?? 1;
-  const limit = q.limit ?? 10;
-  const skip = (page - 1) * limit;
-  
-  // Definição tipada do where (usando Prisma.PostsWhereInput se possível)
-  const where: any = {}; 
-  if (q.categoria) {
-    where.categorias = { some: { categoria_id: q.categoria } };
-  }
-
-  const orderBy = q.ordenarPor === 'score'
-    ? [{ total_upvotes: 'desc' as const }, { data_criacao: 'desc' as const }]
-    : [{ data_criacao: 'desc' as const }];
-
-  const [total, posts] = await Promise.all([
-    prisma.posts.count({ where }),
-    prisma.posts.findMany({
-      where,
-      orderBy,
-      skip,
-      take: limit,
-      include: {
-        categorias: {
-          include: {
-            categoria: {
-              select: {
-                nome: true,
-                categoria_id: true
-              }
-            }
-          }
-        }
-      }
-    })
-  ]);
-
-  const totalPages = Math.ceil(total / limit);
-
-  // Mantenha os contadores (stats) que o seu backend já calcula!
-  // O Frontend precisa deles para exibir o contador na tela.
-  const postsComDados = posts.map((p) => ({
-    ...p, // Espalha os dados brutos (inclui stats e autor_nome_user denormalizado)
-    autor_nome_user: p.autor_nome_user ?? 'Anônimo', // Fallback caso o campo denormalizado esteja nulo (posts antigos)
-    tags: p.categorias.map(c => c.categoria.nome) // Flatten tags para o frontend
-  }));
-
-  return { 
-    data: postsComDados,
-    meta: {
-        total,
-        page,
-        limit,
-        totalPages
-    }
-  };
 }
 
 async function votarPost(perfilId: number, postId: number, tipo: 'UP' | 'DOWN', requestId?: string) {
@@ -175,4 +185,4 @@ async function comentarPost(perfilId: number, postId: number, texto: string, req
   return postAtualizado;
 }
 
-export default { criarPost, deletarPost, listarPosts, votarPost, comentarPost };
+export default { criarPost, deletarPost, listar, votarPost, comentarPost };
