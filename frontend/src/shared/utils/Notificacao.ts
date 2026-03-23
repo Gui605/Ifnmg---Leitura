@@ -179,6 +179,53 @@ export const Notificacao = {
         }
       });
       return res.value;
+    },
+
+    levelUp: async (cfg: { 
+      novoNivel: number; 
+      novoTitulo?: string; 
+      onEquipTitle?: () => void 
+    }) => {
+      const swal = await getSwal();
+      return swal.fire({
+        title: `<div class="font-lexend text-[var(--accent-primary)] text-2xl font-black uppercase tracking-tighter">Level Up!</div>`,
+        html: `
+          <div class="flex flex-col items-center gap-4 py-4">
+            <div class="relative">
+              <div class="size-24 bg-[var(--accent-primary)]/10 rounded-full flex items-center justify-center text-[var(--accent-primary)] animate-bounce">
+                <span class="text-4xl font-black">${cfg.novoNivel}</span>
+              </div>
+              <div class="absolute -top-2 -right-2 size-8 bg-[var(--accent-primary)] text-white rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              </div>
+            </div>
+            <div class="text-center">
+              <p class="text-[var(--text-primary)] font-medium">Parabéns! Você alcançou o nível ${cfg.novoNivel}.</p>
+              ${cfg.novoTitulo ? `
+                <div class="mt-4 p-3 bg-[var(--accent-primary)]/5 border border-[var(--accent-primary)]/20 rounded-xl">
+                  <p class="text-[10px] text-[var(--text-secondary)] uppercase font-bold tracking-widest">Novo Título Desbloqueado</p>
+                  <p class="text-lg font-black text-[var(--accent-primary)] font-lexend mt-1">${cfg.novoTitulo}</p>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `,
+        showConfirmButton: !!cfg.novoTitulo,
+        confirmButtonText: 'Equipar Agora',
+        showCancelButton: true,
+        cancelButtonText: cfg.novoTitulo ? 'Depois' : 'Continuar',
+        confirmButtonColor: 'var(--accent-primary)',
+        ...BASE,
+        customClass: {
+          ...CLASSES,
+          popup: 'rounded-3xl border-2 border-[var(--accent-primary)]/20 shadow-2xl',
+        }
+      }).then((result) => {
+        if (result.isConfirmed && cfg.onEquipTitle) {
+          cfg.onEquipTitle();
+        }
+        return result;
+      });
     }
   }
 };

@@ -2,33 +2,23 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Notificacao } from '../../shared/utils/Notificacao';
 import { PerfilResumo } from '../../shared/types/perfil.types';
 import { PostResumo } from '../../shared/types/post.types';
 import { getMeuPerfil } from '../../shared/services/perfil.service';
 import { getPosts } from '../../shared/services/post.service';
-import { useTema } from '../../shared/utils/themeHandler';
+import Header from '../../shared/components/Header';
 
 import {
-  Menu,
-  X,
-  Sun,
-  Moon,
-  Layout,
-  Search,
-  PenLine,
-  BookOpen,
   Compass,
   Users as UsersIcon,
-  Plus,
   Medal,
   TrendingUp as TrendingUpIcon,
   Home,
-  PanelLeft,
-  PanelRight,
   Bookmark,
   Settings,
-  Bell
+  Bell,
+  PenLine,
+  BookOpen
 } from 'lucide-react';
 
 import PostCard from './PostCard';
@@ -48,10 +38,6 @@ export default function Feed() {
 
   const [isLeftVisible, setIsLeftVisible] = useState(true);
   const [isRightVisible, setIsRightVisible] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLayoutMenuOpen, setIsLayoutMenuOpen] = useState(false);
-
-  const { modoEscuro, alternarTema } = useTema();
 
   // 1. Carregamento Inicial (Perfil + Primeira Página)
   useEffect(() => {
@@ -117,10 +103,6 @@ export default function Feed() {
     }
   }
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
   const gridConfig = !isLeftVisible && !isRightVisible 
     ? 'grid-cols-1' 
     : isLeftVisible && isRightVisible 
@@ -129,177 +111,36 @@ export default function Feed() {
         ? 'md:grid-cols-[260px,1fr]' 
         : 'md:grid-cols-[1fr,320px]';
 
+  const navLinks = [
+    { label: 'Início', path: '/dashboard' },
+    { label: 'Explorar', path: '/explorar' },
+    { label: 'Comunidade', path: '/comunidade' }
+  ];
+
+  const headerActions = (
+    <button 
+      onClick={() => navigate('/escrever')}
+      className="hidden sm:flex items-center gap-2 bg-[var(--accent-primary)] text-white px-4 py-2 rounded-lg font-bold text-sm shadow-sm hover:opacity-90 transition-opacity"
+    >
+      <PenLine size={16} />
+      Escrever
+    </button>
+  );
+
   return (
-
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300 font-sans">
-
-      {/* HEADER */}
-
-      <header className="sticky top-0 z-50 w-full h-16 bg-[var(--bg-card)] border-b border-[var(--accent-primary)]/10 px-4 md:px-10 flex items-center justify-between shadow-sm backdrop-blur-md">
-
-        <div className="flex items-center gap-8 flex-1">
-
-          {/* Logo */}
-
-          <div className="flex items-center gap-4">
-
-            <button
-              onClick={toggleMobileMenu}
-              className="p-2 hover:bg-[var(--input-bg)] rounded-lg md:hidden transition-colors"
-            >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-
-            <div className="flex items-center gap-2 text-[var(--accent-primary)]">
-              <BookOpen size={28} />
-              <h1 className="text-base font-bold tracking-tight text-[var(--text-primary)] hidden sm:block">
-                IFNMG LEITURA
-              </h1>
-            </div>
-
-          </div>
-
-          {/* BUSCA */}
-
-          <div className="hidden md:flex flex-1 max-w-md">
-
-            <div className="relative w-full">
-
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--accent-primary)]"
-                size={18}
-              />
-
-              <input
-                type="text"
-                placeholder="Buscar pergaminhos acadêmicos..."
-                className="w-full bg-[var(--input-bg)] rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-[var(--accent-primary)] border-none"
-              />
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* MENU DIREITA */}
-
-        <div className="flex items-center gap-4 md:gap-8">
-
-          <nav className="hidden lg:flex items-center gap-6">
-
-            <a className="text-sm font-medium text-[var(--text-primary)]">
-              Início
-            </a>
-
-            <a className="text-sm font-medium text-[var(--text-primary)]">
-              Explorar
-            </a>
-
-            <a className="text-sm font-medium text-[var(--text-primary)]">
-              Comunidade
-            </a>
-
-          </nav>
-
-          <button 
-            onClick={() => navigate('/escrever')}
-            className="hidden sm:flex items-center gap-2 bg-[var(--accent-primary)] text-white px-4 py-2 rounded-lg font-bold text-sm shadow-sm"
-          >
-            <PenLine size={16} />
-            Escrever
-          </button>
-
-          {/* MENU LAYOUT */}
-
-          <div className="relative">
-
-            <button
-              onMouseEnter={() => setIsLayoutMenuOpen(true)}
-              onMouseLeave={() => setIsLayoutMenuOpen(false)}
-              className="p-2 hover:bg-[var(--input-bg)] rounded-lg text-[var(--text-secondary)]"
-            >
-              <Layout size={20} />
-            </button>
-
-            {isLayoutMenuOpen && (
-
-              <div
-                onMouseEnter={() => setIsLayoutMenuOpen(true)}
-                onMouseLeave={() => setIsLayoutMenuOpen(false)}
-                className="absolute right-0 mt-2 w-56 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl shadow-xl p-2 z-50"
-              >
-                <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider px-3 py-2">Visualização</p>
-                <button
-                  onClick={() => setIsLeftVisible(!isLeftVisible)}
-                  className="w-full flex items-center justify-between p-2 hover:bg-[var(--input-bg)] rounded-lg text-sm transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <PanelLeft size={16} />
-                    Sidebar Esquerda
-                  </div>
-
-                  {isLeftVisible && <Plus size={14} className="rotate-45" />}
-                </button>
-
-                <button
-                  onClick={() => setIsRightVisible(!isRightVisible)}
-                  className="w-full flex items-center justify-between p-2 hover:bg-[var(--input-bg)] rounded-lg text-sm transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <PanelRight size={16} />
-                    Sidebar Direita
-                  </div>
-
-                  {isRightVisible && <Plus size={14} className="rotate-45" />}
-                </button>
-
-                <div className="h-px bg-[var(--border-color)] my-1 mx-2" />
-                <button 
-                  onClick={() => {
-                    const nextState = !(!isLeftVisible && !isRightVisible);
-                    setIsLeftVisible(!nextState);
-                    setIsRightVisible(!nextState);
-                  }}
-                  className={`w-full flex items-center gap-3 p-2 rounded-lg text-sm transition-colors ${(!isLeftVisible && !isRightVisible) ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]' : 'hover:bg-[var(--color-if-red)]/10 text-[var(--color-if-red)]'}`}
-                >
-                  <BookOpen size={16} /> 
-                  {(!isLeftVisible && !isRightVisible) ? 'Mostrar Sidebars' : 'Modo Foco (Ocultar Tudo)'}
-                </button>
-
-              </div>
-
-            )}
-
-          </div>
-
-          {/* TEMA */}
-
-          <button
-            onClick={alternarTema}
-            className="p-2 hover:bg-[var(--input-bg)] rounded-lg text-[var(--text-secondary)]"
-          >
-            {modoEscuro ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-
-          {/* AVATAR */}
-
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[var(--accent-primary)] cursor-pointer hover:scale-105 transition-transform">
-
-            <img
-              className="w-full h-full object-cover"
-              alt="User"
-              src={`https://api.dicebear.com/9.x/notionists/svg?seed=${perfil?.nome_user || 'user'}&backgroundColor=b6e3f4`}
-            />
-
-          </div>
-
-        </div>
-
-      </header>
+      <Header 
+        perfil={perfil}
+        showSearch={true}
+        navLinks={navLinks}
+        actions={headerActions}
+        toggleLeft={() => setIsLeftVisible(!isLeftVisible)}
+        toggleRight={() => setIsRightVisible(!isRightVisible)}
+        isLeftVisible={isLeftVisible}
+        isRightVisible={isRightVisible}
+      />
 
       {/* LAYOUT */}
-
       <main
         className={`
         max-w-[1400px] mx-auto px-4 md:px-10 py-8 grid gap-8 transition-all duration-500 ease-in-out
@@ -308,35 +149,28 @@ export default function Feed() {
       >
 
         {/* LEFT SIDEBAR */}
-
         {isLeftVisible && (
-
           <aside className="hidden md:block sticky top-16 h-[calc(100vh-64px)] overflow-y-auto scrollbar-hide space-y-8 transition-all duration-500 py-8">
-
             <div className="bg-[var(--bg-card)] rounded-2xl shadow-[var(--shadow-elevation-1)] border border-[var(--border-color)] p-2">
-
               <nav className="flex flex-col gap-1">
-
                 <SidebarLink icon={<Home size={20} strokeWidth={2} />} label="Feed" active />
                 <SidebarLink icon={<Compass size={20} strokeWidth={2} />} label="Explorar" />
                 <SidebarLink icon={<Bell size={20} strokeWidth={2} />} label="Notificações" />
                 <SidebarLink icon={<UsersIcon size={20} strokeWidth={2} />} label="Comunidade" />
                 <SidebarLink icon={<Bookmark size={20} strokeWidth={2} />} label="Salvos" />
                 <SidebarLink icon={<BookOpen size={20} strokeWidth={2} />} label="Biblioteca" />
-                <SidebarLink icon={<Settings size={20} strokeWidth={2} />} label="Configurações" />
-
+                <SidebarLink 
+                  icon={<Settings size={20} strokeWidth={2} />} 
+                  label="Configurações" 
+                  onClick={() => navigate('/configuracoes/perfil')}
+                />
               </nav>
-
             </div>
-
             <GamificationPanel perfil={perfil} />
-
           </aside>
-
         )}
 
         {/* FEED */}
-
         <section className={`
           flex-1 w-full pb-24 md:pb-0 transition-all duration-500
           ${(!isLeftVisible && !isRightVisible) ? 'max-w-3xl mx-auto' : 'max-w-2xl mx-auto'}
@@ -345,6 +179,13 @@ export default function Feed() {
             
             {/* Quick Post */}
             <QuickPost />
+
+            {/* Erro */}
+            {erro && (
+              <div className="p-4 bg-[var(--color-if-red)]/10 text-[var(--color-if-red)] rounded-xl border border-[var(--color-if-red)]/20 text-center text-sm font-bold">
+                {erro}
+              </div>
+            )}
 
             {/* Loading */}
             {loading && (
@@ -390,20 +231,14 @@ export default function Feed() {
         </section>
 
         {/* RIGHT SIDEBAR */}
-
         {isRightVisible && (
-
           <aside className="hidden lg:block sticky top-16 h-[calc(100vh-64px)] overflow-y-auto scrollbar-hide space-y-6 transition-all duration-500 py-8">
-          
             <TrendingTags />
             <SuggestedUsers />
-
           </aside>
-
         )}
 
       </main>
-
     </div>
   );
 }
@@ -411,82 +246,69 @@ export default function Feed() {
 function SidebarLink({
   icon,
   label,
-  active = false
+  active = false,
+  onClick
 }: {
   icon: React.ReactNode;
   label: string;
   active?: boolean;
+  onClick?: () => void;
 }) {
-
   return (
     <button
+      onClick={onClick}
       className={`
-        flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition
-        ${
-          active
-            ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] font-bold'
-            : 'text-[var(--text-primary)] hover:bg-[var(--accent-primary)]/5'
-        }
-      `}
+      flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 w-full
+      ${active 
+        ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] font-bold' 
+        : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)]'}
+    `}
     >
-      {icon}
-      {label}
+      <span className={active ? 'text-[var(--accent-primary)]' : ''}>
+        {icon}
+      </span>
+      <span className="text-sm font-lexend">{label}</span>
     </button>
   );
 }
 
 function GamificationPanel({ perfil }: { perfil: PerfilResumo | null }) {
+  if (!perfil) return null;
 
-  const karma = Math.max(
-    0,
-    Math.min(100, Math.round((perfil?.score_karma ?? 0) % 101))
-  );
+  const xpPercent = Math.min(100, (perfil.xp / (perfil.level * 1000)) * 100);
 
   return (
-
-    <div className="bg-[var(--bg-card)] rounded-2xl shadow-[var(--shadow-elevation-1)] border border-[var(--border-color)] p-6 transition-all duration-300">
-      <div className="flex items-center gap-3 mb-6">
-        <Medal className="text-[var(--accent-primary)]" size={24} strokeWidth={2.5} />
-        <h2 className="font-bold text-lg text-[var(--text-primary)] tracking-tight">
-          Meu Progresso
-        </h2>
+    <div className="bg-[var(--bg-card)] rounded-2xl shadow-[var(--shadow-elevation-1)] border border-[var(--border-color)] p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-[var(--accent-primary)]">
+          <TrendingUpIcon size={18} />
+          <span className="text-xs font-bold font-lexend uppercase tracking-wider">Progresso</span>
+        </div>
+        <span className="text-[10px] font-bold px-2 py-0.5 bg-[var(--input-bg)] rounded-full text-[var(--text-secondary)]">
+          NÍVEL {perfil.level}
+        </span>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex justify-between items-end">
-          <div>
-          <p className="text-[10px] text-[var(--text-secondary)] uppercase font-bold tracking-wider mb-0.5">
-            Nível Atual
-          </p>
-          <p className="text-3sm font-black text-[var(--text-primary)] leading-none">
-            Nível 12
-          </p>
+      <div className="space-y-2">
+        <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight">
+          <span className="text-[var(--text-secondary)]">Experiência</span>
+          <span className="text-[var(--accent-primary)]">{perfil.xp} / {perfil.level * 1000} XP</span>
         </div>
-          <div className="text-right">
-            <p className="text-xs text-[var(--accent-primary)] font-bold">
-              Mestre Acadêmico
-            </p>
-          </div>
-        </div>
-
-        <div className="w-full bg-[var(--accent-primary)]/5 h-3 rounded-full overflow-hidden p-0.5 border border-[var(--border-camp)/10]">
+        <div className="h-2 bg-[var(--input-bg)] rounded-full overflow-hidden">
           <div 
-            className="bg-[var(--accent-primary)] h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(26,128,57,0.2)]" 
-            style={{ width: `${karma}%` }}>
-
-          </div>
+            className="h-full bg-[var(--accent-primary)] transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(26,128,57,0.3)]"
+            style={{ width: `${xpPercent}%` }}
+          />
         </div>
+      </div>
 
-        <div className="flex justify-between items-center bg-[var(--input-bg)] p-3 rounded-xl border border-[var(--border-color)] transition-colors">
-          <div className="flex flex-col">
-            <span className="text-[10px] text-[var(--text-secondary)] font-medium uppercase tracking-wider">
-              Total acumulado
-            </span>
-            <span className="text-sm font-bold text-[var(--text-primary)]">
-              {perfil?.score_karma?.toLocaleString() ?? '0'} XP
-            </span>
-          </div>
-          <TrendingUpIcon size={18} strokeWidth={2.5} className="text-[var(--accent-primary)]" />
+      <div className="pt-2 border-t border-[var(--border-color)]/10 flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-[10px] text-[var(--text-secondary)] font-medium uppercase tracking-tighter">Patente Atual</span>
+          <span className="text-xs font-bold text-[var(--text-primary)] font-lexend">{perfil.titulo_ativo || 'Calouro'}</span>
+        </div>
+        <div className="size-8 bg-[var(--accent-primary)]/10 rounded-lg flex items-center justify-center text-[var(--accent-primary)]">
+          <Medal size={18} />
         </div>
       </div>
     </div>

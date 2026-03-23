@@ -16,3 +16,23 @@ export const PostResumoSchema = z.object({
 });
 
 export type PostResumo = z.infer<typeof PostResumoSchema>;
+
+export const TrabalhoResumoSchema = PostResumoSchema.extend({
+  idioma: z.string().optional(),
+  status_trabalho: z.enum(['Em Andamento', 'Concluído', 'Revisado']).optional(),
+  numero_citacoes: z.number().int().default(0),
+  visualizacoes: z.number().int().default(0),
+  curso: z.string().optional(),
+});
+
+export type TrabalhoResumo = z.infer<typeof TrabalhoResumoSchema>;
+
+export interface FiltrosBusca {
+  query?: string;
+  curso?: string;
+  idioma?: string;
+  status?: string;
+  tags?: string[];
+  ordenar_por?: 'recentes' | 'populares' | 'citacoes';
+  page?: number;
+}

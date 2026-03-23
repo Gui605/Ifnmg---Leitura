@@ -1,13 +1,18 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { storageGet, storageRemove, storageSet } from './storage';
 import { Notificacao } from './Notificacao';
+import { fazerLogout } from '../services/auth.service';
+import { getMeuPerfil } from '../services/perfil.service';
+import { PerfilResumo } from '../types/perfil.types';
 
 type AuthContextValue = {
   token: string | null;
   autenticado: boolean;
   loading: boolean;
+  perfil: PerfilResumo | null;
+  setPerfil: React.Dispatch<React.SetStateAction<PerfilResumo | null>>;
   setSession: (token: string, ttlSeconds?: number) => void;
-  logout: () => void;
+  logout: (silencioso?: boolean) => void;
 };
 
 const TOKEN_KEY = 'auth-token';
@@ -65,6 +70,7 @@ export function broadcastUnauthorized() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(() => getValidToken());
+  const [perfil, setPerfil] = useState<PerfilResumo | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   const setSession = useCallback((t: string, ttlSeconds?: number) => {
@@ -72,38 +78,88 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     storageSet(TOKEN_KEY, t, ttlSeconds);
   }, []);
 
-  const logout = useCallback(() => {
-    setToken(null);
-    storageRemove(TOKEN_KEY);
-    try { Notificacao.toast.show('warning', 'Sua sessão expirou. Redirecionando...'); } catch {}
-    try { setTimeout(() => { window.location.assign('/login'); }, 700); } catch {}
+  const logout = useCallback(async (silencioso: boolean = false) => {
+    try {
+      if (!silencioso) {
+        await fazerLogout();
+      }
+    } catch {
+      // Falha no logout do backend não deve impedir a limpeza no frontend
+    } finally {
+      setToken(null);
+      setPerfil(null);
+      storageRemove(TOKEN_KEY);
+      
+      if (!silencioso) {
+        Notificacao.toast.info("Sessão encerrada com sucesso.");
+        // Pequeno delay para o usuário ler o toast antes do redirecionamento pesado
+        setTimeout(() => {
+          window.location.assign('/entrada');
+        }, 800);
+      } else {
+        window.location.assign('/entrada');
+      }
+    }
   }, []);
 
   useEffect(() => {
-    // Primeira pintura: sincroniza token do storage e encerra estado de carregamento
-    setLoading(false);
+    const handleAuth = async () => {
+      if (token) {
+        try {
+          const p = await getMeuPerfil();
+          setPerfil(p);
+        } catch (error) {
+          logout(true);
+        }
+      } 
+      setLoading(false);
+    };
+    handleAuth();
+
     const onStorage = (e: StorageEvent) => {
       if (e.key === TOKEN_KEY) {
-        const v = getValidToken();
-        setToken(v);
+        setToken(getValidToken());
       }
     };
-    const onUnauthorized = () => logout();
+    const onUnauthorized = () => logout(true);
+
     window.addEventListener('storage', onStorage);
     window.addEventListener('auth:unauthorized', onUnauthorized as EventListener);
+
     return () => {
       window.removeEventListener('storage', onStorage);
       window.removeEventListener('auth:unauthorized', onUnauthorized as EventListener);
     };
-  }, [logout]);
+  }, [token, logout]);
 
   const value = useMemo<AuthContextValue>(() => ({
     token,
     autenticado: !!token,
     loading,
+    perfil,
+    setPerfil,
     setSession,
-    logout
-  }), [token, loading, setSession, logout]);
+    logout,
+  }), [token, loading, perfil, setPerfil, setSession, logout]);
+
+  // Monitoramento de Level Up
+  const prevLevelRef = React.useRef<number | null>(perfil?.level || null);
+  useEffect(() => {
+    if (perfil?.level && prevLevelRef.current && perfil.level > prevLevelRef.current) {
+      // Identifica se ganhou novo título (último na lista se for por level)
+      const novoTitulo = perfil.titulos?.find(t => t.esta_ativo)?.titulo.nome;
+      
+      Notificacao.modal.levelUp({
+        novoNivel: perfil.level,
+        novoTitulo: novoTitulo || undefined,
+        onEquipTitle: () => {
+          // Opcional: Se quiser forçar uma atualização ou ação ao equipar
+          Notificacao.toast.sucesso("Título Equipado!", `Você agora é reconhecido como ${novoTitulo}.`);
+        }
+      });
+    }
+    prevLevelRef.current = perfil?.level || null;
+  }, [perfil?.level, perfil?.titulos]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

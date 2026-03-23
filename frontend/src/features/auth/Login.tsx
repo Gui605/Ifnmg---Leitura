@@ -10,13 +10,14 @@ import { AppError } from '../../shared/utils/appError';
 import { ErrorCodes } from '../../shared/types/errors';
 import { CheckCircle, XCircle, Mail, Lock, BookOpen, AlertCircle, User, AtSign, Home, Calendar } from 'lucide-react';
 import { Notificacao } from '../../shared/utils/Notificacao';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import InputMask from 'react-input-mask';
 
 export default function Login() {
   const { modoEscuro } = useTema();
   const { setSession } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [ehLogin, setEhLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -61,6 +62,20 @@ export default function Login() {
   const campusOkNow = campus.trim().length >= 2 && campus.trim().length <= 100;
   const nascimentoOkNow = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(nascimento.trim());
   const podeMostrarSucesso = !erroEmail && !erroSenha && !erroNome && !erroApelido && !erroCampus && !erroNascimento && !erroConfirmar;
+
+  useEffect(() => {
+    const isCadastro = location.pathname.includes('/cadastro');
+    setEhLogin(!isCadastro);
+  }, [location.pathname]);
+
+  const alternarModo = (modo: 'login' | 'cadastro') => {
+    resetFormulario(false);
+    if (modo === 'cadastro') {
+      navigate('/entrada/cadastro');
+    } else {
+      navigate('/entrada');
+    }
+  };
 
   async function abrirRecuperacao(emailPreenchido?: string) {
     const emailRec = await Notificacao.modal.promptEmail({
@@ -309,15 +324,15 @@ export default function Login() {
       <CenarioLogin />
       <header className="relative z-30 flex items-center justify-between px-6 md:px-20 py-4 border-b border-[var(--border-color)] bg-[var(--bg-card)]">
         <div className="flex items-center gap-3">
-          <div className="text-[var(--accent-primary)]"><BookOpen size={28} /></div>
-          <h2 className="text-xl font-bold tracking-tight">Portal IFNMG</h2>
+          <div className="text-[var(--accent-primary)]"><BookOpen size={28} strokeWidth={1.5} /></div>
+          <h2 className="text-xl font-bold tracking-tight font-lexend">Portal IFNMG</h2>
         </div>
         <div className="flex items-center gap-6 justify-end">
           {!ehLogin && (
             <button
               type="button"
-              onClick={() => { resetFormulario(false); setEhLogin(true); }}
-              className="bg-[var(--accent-primary)] text-white font-bold py-2 px-6 rounded-lg hover:brightness-110 transition-all"
+              onClick={() => alternarModo('login')}
+              className="bg-[var(--accent-primary)] text-white font-bold py-2 px-6 rounded-lg hover:brightness-110 transition-all font-lexend"
             >
               Entrar
             </button>
@@ -330,8 +345,8 @@ export default function Login() {
         <section className="card w-full max-w-[520px] p-8 md:p-10 shadow-xl">
           <div className="flex flex-col items-center gap-2 mb-8">
             <img src={logo} alt="IFNMG" className="h-16 w-auto" style={{ filter: modoEscuro ? 'brightness(0) invert(1)' : 'none' }} />
-            <h1 className="text-3xl font-bold">{ehLogin ? 'Bem-vindo' : 'Criar Conta'}</h1>
-            <p className="text-[var(--text-secondary)]">{ehLogin ? 'Acesse sua conta para continuar' : 'Preencha os dados abaixo'}</p>
+            <h1 className="text-3xl font-bold font-lexend">{ehLogin ? 'Bem-vindo' : 'Criar Conta'}</h1>
+            <p className="text-[var(--text-secondary)] font-lexend">{ehLogin ? 'Acesse sua conta para continuar' : 'Preencha os dados abaixo'}</p>
           </div>
 
           <form noValidate className="space-y-6 w-full" onSubmit={enviarFormulario}>
@@ -516,9 +531,13 @@ export default function Login() {
             </button>
 
             <div className="mt-8 text-center">
-              <p className="text-[var(--text-secondary)] text-sm">
+              <p className="text-[var(--text-secondary)] text-sm font-lexend">
                 {ehLogin ? 'Não possui conta?' : 'Já possui conta?'}{' '}
-                <button type="button" className="text-[var(--accent-primary)] font-bold hover:underline" onClick={() => { resetFormulario(false); setEhLogin(!ehLogin); }}>
+                <button 
+                  type="button" 
+                  className="text-[var(--accent-primary)] font-bold hover:underline font-lexend" 
+                  onClick={() => alternarModo(ehLogin ? 'cadastro' : 'login')}
+                >
                   {ehLogin ? 'Cadastre-se' : 'Entre'}
                 </button>
               </p>
@@ -527,7 +546,7 @@ export default function Login() {
         </section>
       </main>
       <footer className="relative z-30 px-6 md:px-20 py-3 border-t border-[var(--border-color)] bg-[var(--bg-card)]">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-400 font-lexend">
           <span>© 2026 Portal IFNMG. Todos os direitos reservados.</span>
           <div className="flex items-center gap-4">
             <a href="#" className="hover:underline">Termos de Uso</a>

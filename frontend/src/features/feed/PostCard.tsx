@@ -1,11 +1,13 @@
 //frontend/src/features/feed/PostCard.tsx
 import React from "react";
+import { Link } from "react-router-dom";
 import { PostResumo } from "../../shared/types/post.types";
 import PostActions from "./PostActions";
 import TagList from "./TagList";
 
 interface Props {
   post: PostResumo;
+  disableProfileLink?: boolean;
 }
 
 function formatarTempo(dataStr?: string | Date) {
@@ -22,8 +24,19 @@ function formatarTempo(dataStr?: string | Date) {
   return `${dias}d atrás`;
 }
 
-export default function PostCard({ post }: Props) {
+export default function PostCard({ post, disableProfileLink = false }: Props) {
   const tempoPost = formatarTempo(post.data_criacao);
+
+  const ProfileLink = ({ children, className }: { children: React.ReactNode; className?: string }) => {
+    if (disableProfileLink) {
+      return <div className={className}>{children}</div>;
+    }
+    return (
+      <Link to={`/perfil/${post.autor_id}`} className={className}>
+        {children}
+      </Link>
+    );
+  };
 
   return (
     <article className="group bg-[var(--bg-card)] border border-[var(--input-bg)] rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
@@ -35,14 +48,18 @@ export default function PostCard({ post }: Props) {
 
           <div className="flex items-center gap-3">
 
-            <div className="w-9 h-9 bg-[var(--input-bg)] rounded-full flex items-center justify-center font-bold text-xs">
+            <ProfileLink 
+              className="w-9 h-9 bg-[var(--input-bg)] rounded-full flex items-center justify-center font-bold text-xs transition-transform hover:scale-110 active:scale-95 border border-[var(--accent-primary)]/10"
+            >
               {post.autor_nome_user?.charAt(0).toUpperCase()}
-            </div>
+            </ProfileLink>
 
             <div className="flex flex-col">
-              <p className="font-semibold text-sm text-[var(--text-primary)]">
+              <ProfileLink 
+                className="font-semibold text-sm text-[var(--text-primary)] hover:text-[var(--accent-primary)] transition-colors"
+              >
                 {post.autor_nome_user}
-              </p>
+              </ProfileLink>
 
               <div className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
                 {post.nome_campus && (

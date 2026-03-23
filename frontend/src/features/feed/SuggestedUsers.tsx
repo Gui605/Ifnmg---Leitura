@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Users } from 'lucide-react';
 import { toggleFollow } from '../../shared/services/perfil.service';
 import { Notificacao } from '../../shared/utils/Notificacao';
@@ -55,15 +56,23 @@ export default function SuggestedUsers() {
         {suggestions.map((user) => (
           <div key={user.perfil_id} className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[var(--accent-primary)]/10 shrink-0">
+              <Link 
+                to={`/perfil/${user.perfil_id}`} 
+                className="w-10 h-10 rounded-full overflow-hidden border-2 border-[var(--accent-primary)]/10 shrink-0 transition-transform hover:scale-110 active:scale-95"
+              >
                 <img 
                   src={`https://api.dicebear.com/9.x/notionists/svg?seed=${user.nome_user}&backgroundColor=b6e3f4`} 
                   alt={user.nome_user}
                   className="w-full h-full object-cover"
                 />
-              </div>
+              </Link>
               <div className="flex flex-col min-w-0">
-                <span className="text-xs font-bold truncate text-[var(--text-primary)]">{user.nome_user}</span>
+                <Link 
+                  to={`/perfil/${user.perfil_id}`} 
+                  className="text-xs font-bold truncate text-[var(--text-primary)] hover:text-[var(--accent-primary)] transition-colors"
+                >
+                  {user.nome_user}
+                </Link>
               </div>
             </div>
             <button 

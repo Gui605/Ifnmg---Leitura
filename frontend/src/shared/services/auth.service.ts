@@ -14,6 +14,10 @@ export async function fazerLogin(credenciais: LoginCredentials): Promise<AuthRes
   })) as Promise<AuthResponse>;
 }
 
+export async function fazerLogout(): Promise<void> {
+  return apiClient.post('/auth/sair', {}, AuthResponseSchema.partial(), undefined, () => {}) as unknown as Promise<void>;
+}
+
 export async function registrarUsuario(body: RegisterPayload): Promise<RegisterResponse> {
   const payload = { 
     nome_completo: body.nome_completo,

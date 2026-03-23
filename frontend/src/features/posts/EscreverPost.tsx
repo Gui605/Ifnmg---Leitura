@@ -1,15 +1,16 @@
 // src/features/posts/EscreverPost.tsx
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, Save, X, Check, MapPin, Hash, GraduationCap, Tag, Scroll } from "lucide-react";
+import { Send, Save, X, MapPin, Hash, GraduationCap, Scroll, Check } from "lucide-react";
 import { Notificacao } from "../../shared/utils/Notificacao";
-import { getTodas } from "../../shared/services/categoria.service";
+import { getTodas as getCategorias } from "../../shared/services/categoria.service";
 import { criarPost } from "../../shared/services/post.service";
 import { getMeuPerfil } from "../../shared/services/perfil.service";
 import { Categoria } from "../../shared/types/categoria.types";
 import { PerfilResumo } from "../../shared/types/perfil.types";
 import EditorTexto from "./EditorTexto";
 import PreviewCard from "./PreviewCard";
+import Header from "../../shared/components/Header";
 
 export default function EscreverPost() {
   const navigate = useNavigate();
@@ -22,8 +23,6 @@ export default function EscreverPost() {
   const [conteudo, setConteudo] = useState("");
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<number[]>([]);
   const [exibirCampus, setExibirCampus] = useState(true);
-
-  // Autocomplete de Tags
   const [tagBusca, setTagBusca] = useState("");
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
   const tagInputRef = useRef<HTMLDivElement>(null);
@@ -47,21 +46,21 @@ export default function EscreverPost() {
   }, []);
 
   useEffect(() => {
-    Promise.all([getTodas(), getMeuPerfil()])
-      .then(([cats, p]) => {
-        setCategorias(cats);
-        setPerfil(p);
-      })
-      .catch((err) => {
-        console.error("Erro ao carregar dados para escrita:", err);
+    getMeuPerfil()
+      .then(setPerfil)
+      .catch(() => {
         // Fallback mock para perfil se falhar
         setPerfil({
           nome_user: "Guilherme_Dev",
           is_admin: true,
           score_karma: 1250,
-          reading_points: 850
+          reading_points: 850,
+          level: 10,
+          xp: 500
         });
       });
+
+    getCategorias().then(setCategorias).catch(console.error);
   }, []);
 
   const handleCancelar = async () => {
@@ -110,44 +109,36 @@ export default function EscreverPost() {
     );
   };
 
+  const writingHeaderActions = (
+    <>
+      <button 
+        onClick={() => Notificacao.toast.info("Rascunho salvo localmente.")}
+        className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-bold text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-lg transition-all"
+      >
+        <Save size={16} /> Salvar Rascunho
+      </button>
+      <button 
+        onClick={handlePublicar}
+        disabled={loading}
+        className="flex items-center gap-2 bg-[var(--accent-primary)] text-white px-6 py-2 rounded-lg font-bold text-sm shadow-md hover:shadow-lg active:scale-95 transition-all disabled:opacity-50"
+      >
+        {loading ? "Publicando..." : (
+          <>
+            <Send size={16} /> Publicar Agora
+          </>
+        )}
+      </button>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] font-sans">
-      {/* Header de Ações (Sólido) */}
-      <header className="sticky top-0 z-50 w-full h-16 bg-[var(--bg-card)] border-b border-[var(--border-color)] px-4 md:px-10 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={handleCancelar}
-            className="p-2 hover:bg-[var(--input-bg)] rounded-full transition-colors text-[var(--text-secondary)]"
-            title="Voltar"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div className="h-6 w-px bg-[var(--border-color)] mx-2" />
-          <h1 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-widest hidden sm:block">
-            Novo Pergaminho
-          </h1>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => Notificacao.toast.info("Rascunho salvo localmente.")}
-            className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-bold text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-lg transition-all"
-          >
-            <Save size={16} /> Salvar Rascunho
-          </button>
-          <button 
-            onClick={handlePublicar}
-            disabled={loading}
-            className="flex items-center gap-2 bg-[var(--accent-primary)] text-white px-6 py-2 rounded-lg font-bold text-sm shadow-md hover:shadow-lg active:scale-95 transition-all disabled:opacity-50"
-          >
-            {loading ? "Publicando..." : (
-              <>
-                <Send size={16} /> Publicar Agora
-              </>
-            )}
-          </button>
-        </div>
-      </header>
+      <Header 
+        perfil={perfil}
+        showSearch={false}
+        onBack={handleCancelar}
+        actions={writingHeaderActions}
+      />
 
       <main className="max-w-[1200px] mx-auto px-4 md:px-10 py-10 grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-10">
         {/* Coluna do Editor */}

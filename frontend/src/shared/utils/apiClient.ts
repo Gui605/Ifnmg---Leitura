@@ -111,7 +111,7 @@ api.interceptors.response.use(
       try { await Notificacao.modal.erro({ titulo: 'Sessão finalizada', texto: friendly }); } catch {}
       try { storageRemove('auth-token'); } catch {}
       try { broadcastUnauthorized(); } catch {}
-      try { window.location.assign('/login'); } catch {}
+      try { window.location.assign('/entrada'); } catch {}
     } else if (!isLoginAttempt) {
       // Exibe a mensagem "limpa" para o usuário
       Notificacao.toast.show(status && status >= 500 ? 'error' : 'warning', message);
