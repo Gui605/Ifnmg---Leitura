@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const perfil_controller_1 = __importDefault(require("./perfil.controller"));
 const authMiddleware_1 = require("../../shared/middlewares/authMiddleware");
+const optionalAuthMiddleware_1 = require("../../shared/middlewares/optionalAuthMiddleware");
 const validate_middleware_1 = require("../../shared/middlewares/validate.middleware");
 const perfil_types_1 = require("../../shared/types/perfil.types");
 /**
@@ -33,9 +34,13 @@ perfilRoutes.patch('/seguranca/senha', (0, validate_middleware_1.validate)({ bod
 /** * DELETE /seguranca/conta -> Encerramento de conta
  * 🛡️ Camada 2: Exige apenas a senha atual para confirmação.
  */
+perfilRoutes.get('/seguranca/check-exclusao', perfil_controller_1.default.checkPendenciasExclusao);
 perfilRoutes.delete('/seguranca/conta', (0, validate_middleware_1.validate)({ body: perfil_types_1.DeletarContaSchema }), perfil_controller_1.default.deletarPerfil);
 // --- 🤝 Sistema de Seguidores ---
 /** * POST /:id/seguir -> Toggle follow/unfollow
  */
 perfilRoutes.post('/:id/seguir', perfil_controller_1.default.toggleFollow);
+/** * GET /:id -> Busca perfil público de terceiros
+ */
+perfilRoutes.get('/:id', optionalAuthMiddleware_1.middlewareAutenticacaoOpcional, perfil_controller_1.default.getPerfilPublico);
 exports.default = perfilRoutes;

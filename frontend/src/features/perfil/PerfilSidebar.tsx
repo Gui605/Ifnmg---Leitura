@@ -1,6 +1,7 @@
-import { User, Mail, School, Globe } from 'lucide-react';
+import { User, Mail, School, Globe, Medal } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PerfilResumo } from '../../shared/types/perfil.types';
+import { ProgressBarXP, getPatentePorNivel } from '../../shared/components/ProgressBarXP';
 
 interface PerfilSidebarProps {
   perfil: PerfilResumo | null;
@@ -9,9 +10,11 @@ interface PerfilSidebarProps {
 export default function PerfilSidebar({ perfil }: PerfilSidebarProps) {
   if (!perfil) return null; // Ou um skeleton
 
+  const patente = perfil.titulo_ativo || getPatentePorNivel(perfil.level);
+
   return (
     <>
-      <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-slate-800/50 border border-primary/5">
+      <div className="rounded-xl bg-[var(--bg-card)] p-6 shadow-sm border border-[var(--border-color)]/5">
         <div className="flex flex-col items-center text-center">
           <Link to="/perfil/me" className="mb-4 h-32 w-32 rounded-full border-4 border-[var(--accent-primary)]/20 overflow-hidden bg-[#b6e3f4] transition-transform hover:scale-105 active:scale-95">
             <img 
@@ -20,29 +23,27 @@ export default function PerfilSidebar({ perfil }: PerfilSidebarProps) {
               className="h-full w-full object-cover" 
             />
           </Link>
-          <h1 className="text-2xl font-bold font-lexend">{perfil.nome_user}</h1>
-          <p className="text-[var(--accent-primary)] font-medium font-lexend">{perfil.titulo_ativo || 'Calouro'}</p>
+          <h1 className="text-2xl font-bold font-lexend text-[var(--text-primary)]">{perfil.nome_user}</h1>
+          <p className="text-[var(--accent-primary)] font-bold font-lexend uppercase tracking-wider text-sm mt-1">{patente}</p>
           <p className="mt-2 text-sm text-[var(--text-secondary)] font-lexend">{perfil.nome_campus}</p>
           
-          <div className="mt-4 flex w-full flex-col gap-2">
-            <div className="flex justify-between text-xs font-bold text-[var(--text-secondary)] px-1 font-lexend">
+          <div className="mt-6 flex w-full flex-col gap-2">
+            <div className="flex justify-between text-[10px] font-bold text-[var(--text-secondary)] px-1 font-lexend uppercase tracking-widest">
               <span>Nível {perfil.level}</span>
-              <span>{perfil.xp.toLocaleString()} XP</span>
+              <div className="flex items-center gap-1 text-[var(--accent-primary)]">
+                <Medal size={12} />
+                <span>RPG ACADÊMICO</span>
+              </div>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--input-bg)]">
-              <div 
-                className="h-full bg-[var(--accent-primary)] transition-all duration-500" 
-                style={{ width: `${Math.min((perfil.xp % 1000) / 10, 100)}%` }}
-              ></div>
-            </div>
+            <ProgressBarXP xp={perfil.xp} level={perfil.level} showLabels={true} />
           </div>
 
           <div className="mt-6 flex w-full flex-col gap-3">
-            <button className="w-full rounded-lg bg-[var(--accent-primary)] py-2 font-bold text-white transition-opacity hover:opacity-90 font-lexend">Editar Perfil</button>
+            <button className="w-full rounded-lg bg-[var(--accent-primary)] py-2 font-bold text-white transition-opacity hover:opacity-90 font-lexend shadow-sm active:scale-[0.98]">Editar Perfil</button>
             <div className="flex justify-center gap-4 text-[var(--text-secondary)]">
-              <Globe size={18} strokeWidth={1.5} className="cursor-pointer hover:text-[var(--accent-primary)]" />
-              <School size={18} strokeWidth={1.5} className="cursor-pointer hover:text-[var(--accent-primary)]" />
-              <Mail size={18} strokeWidth={1.5} className="cursor-pointer hover:text-[var(--accent-primary)]" />
+              <Globe size={18} strokeWidth={1.5} className="cursor-pointer hover:text-[var(--accent-primary)] transition-colors" />
+              <School size={18} strokeWidth={1.5} className="cursor-pointer hover:text-[var(--accent-primary)] transition-colors" />
+              <Mail size={18} strokeWidth={1.5} className="cursor-pointer hover:text-[var(--accent-primary)] transition-colors" />
             </div>
           </div>
         </div>

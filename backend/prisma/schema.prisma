@@ -7,19 +7,89 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Perfis {
-  perfil_id      Int      @id @default(autoincrement())
-  nome_user      String   @unique @db.VarChar(100)
-  bio            String?  @db.VarChar(255) // SOBRE
-  score_karma    Int      @default(0)
-  reading_points Int      @default(0)
-  level          Int      @default(1) // NÍVEL
-  xp             Int      @default(0) // XP ATUAL
-  titulo_ativo   String?  @db.VarChar(50)
-  data_criacao   DateTime @default(now())
+//////////////// ENUMS //////////////////
 
-  usuario     Usuarios?
-  posts       Posts[]
+enum VotoTipo {
+  UP
+  DOWN
+}
+
+enum PostStatus {
+  ANDAMENTO
+  CONCLUIDO
+}
+
+enum TipoReacao {
+  LIKE
+  LOVE
+  FIRE
+  SAD
+}
+
+enum TipoMidia {
+  IMAGE
+  VIDEO
+}
+
+enum TipoNotificacao {
+  LIKE
+  COMMENT
+  FOLLOW
+  REPOST
+}
+
+enum TipoRanking {
+  GLOBAL
+  SEMANAL
+  CURSO
+}
+
+enum ComunidadeRole {
+  MEMBRO
+  MODERADOR
+  ADMIN
+  DONO
+}
+
+enum DenunciaStatus {
+  PENDENTE
+  ANALISADO
+  REJEITADO
+}
+
+//////////////// PERFIS //////////////////
+
+model Perfis {
+  perfil_id Int @id @default(autoincrement())
+
+  nome_user String @unique @db.VarChar(100)
+  bio       String? @db.VarChar(255)
+
+  score_karma    Int @default(0)
+  reading_points Int @default(0)
+
+  level Int @default(1)
+  xp    Int @default(0)
+  
+  // XP por Categorias (Especialização IFNMG)
+  xp_escrita   Int @default(0)
+  xp_curadoria Int @default(0)
+  xp_social    Int @default(0)
+
+  streak_dias  Int @default(0)
+  ultimo_login DateTime?
+
+  titulo_ativo String? @db.VarChar(50)
+  curso        String? @db.VarChar(100)
+
+  data_criacao DateTime @default(now())
+
+  usuario Usuarios?
+
+  posts     Posts[]
+  obras     Obras[]
+  progresso LeituraProgresso[]
+
   interesses  Interesses[]
   votos       Votos[]
   comentarios Comentarios[]
@@ -29,29 +99,466 @@ model Perfis {
   seguidores Seguidores[] @relation("quem_segue")
   seguidos   Seguidores[] @relation("sendo_seguido")
 
-  titulos PerfisTitulos[]
+  titulos    PerfisTitulos[]
+  conquistas PerfisConquistas[]
+  rankings   Rankings[]
+
+  notificacoes Notificacoes[]
+  rascunho     Rascunhos?
+
+  reacoes   Reacoes[]
+  reposts   Reposts[]
+  favoritos Favoritos[]
+
+  bans_comunidade ComunidadeBans[] @relation("perfil_banido")
+
+  comunidades_criadas Comunidades[]
+  comunidades_membro  ComunidadeMembros[]
 
   @@map("perfis")
 }
 
-model Titulos {
-  titulo_id     Int      @id @default(autoincrement())
-  nome          String   @unique @db.VarChar(50)
-  descricao     String?  @db.VarChar(255)
-  categoria     String   @db.VarChar(30) // NIVEL | POSTS | LEITURA | GERAL
-  requisito     Int
-  data_criacao  DateTime @default(now())
+//////////////// USUARIOS //////////////////
 
-  perfis_ganhos PerfisTitulos[]
+model Usuarios {
+  usuario_id Int @id @default(autoincrement())
+
+  email         String @unique @db.VarChar(150)
+  password_hash String @db.VarChar(255)
+
+  data_criacao DateTime @default(now())
+
+  token_verificacao   String? @db.VarChar(100)
+  cadastro_confirmado Boolean @default(false)
+  token_version       Int     @default(0)
+
+  token_recuperacao String? @unique @db.VarChar(100)
+  expiracao_pendente          DateTime?
+  expiracao_token_recuperacao DateTime?
+  nome_completo               String?
+  data_nascimento             DateTime?
+  nome_campus                 String?
+  is_admin                    Boolean @default(false)
+  perfil_id Int    @unique
+  perfil    Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([token_verificacao])
+  @@index([token_recuperacao])
+  @@map("usuarios")
+}
+
+//////////////// COMUNIDADES //////////////////
+
+model Comunidades {
+  comunidade_id Int @id @default(autoincrement())
+
+  nome      String @unique @db.VarChar(100)
+  descricao String? @db.VarChar(255)
+
+  criador_id Int?
+  data_criacao DateTime @default(now())
+
+  criador Perfis? @relation(fields: [criador_id], references: [perfil_id], onDelete: SetNull)
+
+  membros ComunidadeMembros[]
+  posts   Posts[]
+
+  config ComunidadeConfig?
+  bans   ComunidadeBans[]
+
+  @@index([criador_id])
+}
+
+model ComunidadeMembros {
+  perfil_id     Int
+  comunidade_id Int
+
+  role ComunidadeRole @default(MEMBRO)
+  entrou_em DateTime @default(now())
+
+  perfil     Perfis      @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+  comunidade Comunidades @relation(fields: [comunidade_id], references: [comunidade_id], onDelete: Cascade)
+
+  @@id([perfil_id, comunidade_id])
+  @@index([comunidade_id, role])
+}
+
+model ComunidadeBans {
+  perfil_id     Int
+  comunidade_id Int
+
+  motivo String? @db.VarChar(255)
+  data   DateTime @default(now())
+
+  perfil     Perfis      @relation("perfil_banido", fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+  comunidade Comunidades @relation(fields: [comunidade_id], references: [comunidade_id], onDelete: Cascade)
+
+  @@id([perfil_id, comunidade_id])
+}
+
+model ComunidadeConfig {
+  comunidade_id Int @id 
+
+  privada Boolean @default(false)
+  somente_admin_post Boolean @default(false)
+
+  comunidade Comunidades @relation(fields: [comunidade_id], references: [comunidade_id], onDelete: Cascade)
+}
+
+//////////////// OBRAS //////////////////
+
+model Obras {
+  obra_id Int @id @default(autoincrement())
+
+  autor_id Int?
+
+  titulo String @db.VarChar(255)
+  descricao String? @db.LongText
+  imagem_capa String? @db.LongText
+
+  data_criacao DateTime @default(now())
+
+  autor Perfis? @relation(fields: [autor_id], references: [perfil_id], onDelete: SetNull)
+  capitulos Posts[]
+  categorias ObrasCategorias[]
+
+  @@index([autor_id])
+}
+
+model ObrasCategorias {
+  obra_id Int
+  categoria_id Int
+
+  obra      Obras      @relation(fields: [obra_id], references: [obra_id], onDelete: Cascade)
+  categoria Categorias @relation(fields: [categoria_id], references: [categoria_id], onDelete: Cascade)
+
+  @@id([obra_id, categoria_id])
+  @@index([categoria_id, obra_id])
+}
+
+//////////////// POSTS //////////////////
+
+model Posts {
+  post_id Int @id @default(autoincrement())
+
+  titulo   String @db.VarChar(255)
+  conteudo String @db.Text
+
+  idioma String? @db.VarChar(20)
+  status PostStatus @default(ANDAMENTO)
+
+  visualizacoes Int @default(0)
+
+  score_ranking  Float @default(0)
+  score_trending Float @default(0)
+
+  data_criacao DateTime @default(now())
+
+  total_upvotes     Int @default(0)
+  total_downvotes   Int @default(0)
+  total_comentarios Int @default(0)
+
+  autor_id        Int?
+  autor_nome_user String? @db.VarChar(100)
+  nome_campus     String? @db.VarChar(100)
+  autor    Perfis? @relation(fields: [autor_id], references: [perfil_id], onDelete: SetNull)
+
+  comunidade_id Int?
+  comunidade    Comunidades? @relation(fields: [comunidade_id], references: [comunidade_id], onDelete: Cascade)
+
+  obra_id Int?
+  ordem   Int?
+  obra    Obras? @relation(fields: [obra_id], references: [obra_id], onDelete: Cascade)
+
+  categorias  PostsCategorias[]
+  votos       Votos[]
+  comentarios Comentarios[]
+  denuncias   Denuncias[]
+  reacoes     Reacoes[]
+  midias      Midias[]
+  reposts     Reposts[]
+  favoritos   Favoritos[]
+  progresso   LeituraProgresso[]
+
+  @@index([autor_id, data_criacao])
+  @@index([comunidade_id, data_criacao])
+  @@index([comunidade_id, score_ranking])
+  @@index([comunidade_id, score_trending])
+  @@index([score_ranking])
+  @@index([score_trending])
+  @@index([obra_id, ordem])
+  @@index([data_criacao])
+  @@index([data_criacao, score_ranking])
+  
+}
+
+//////////////// INTERAÇÕES //////////////////
+
+model Votos {
+  voto_id Int @id @default(autoincrement())
+
+  perfil_id Int
+  post_id   Int
+  tipo      VotoTipo
+  data DateTime @default(now())
+
+  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+  post   Posts  @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+
+  @@unique([perfil_id, post_id])
+  @@index([post_id, tipo])
+  @@index([data])
+  @@index([perfil_id])
+}
+
+model Reacoes {
+  reacao_id Int @id @default(autoincrement())
+
+  perfil_id Int
+  post_id   Int
+  tipo      TipoReacao
+
+  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+  post   Posts  @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+
+  @@unique([perfil_id, post_id, tipo])
+  @@index([post_id, tipo])
+}
+
+model Reposts {
+  repost_id Int @id @default(autoincrement())
+
+  perfil_id Int
+  post_id   Int
+
+  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+  post   Posts  @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+
+  @@unique([perfil_id, post_id])
+}
+
+model Favoritos {
+  id Int @id @default(autoincrement())
+
+  perfil_id Int
+  post_id   Int
+
+  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+  post   Posts  @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+
+  @@unique([perfil_id, post_id])
+}
+
+//////////////// COMENTÁRIOS //////////////////
+
+model Comentarios {
+  comentario_id Int @id @default(autoincrement())
+
+  texto String @db.Text
+  is_spoiler Boolean @default(false)
+
+  perfil_id Int?
+  post_id   Int
+  parent_id Int?
+  data_criacao DateTime @default(now())
+
+  perfil Perfis? @relation(fields: [perfil_id], references: [perfil_id], onDelete: SetNull)
+  post   Posts  @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+
+  parent    Comentarios?  @relation("ComentarioPai", fields: [parent_id], references: [comentario_id], onDelete: Cascade)
+  respostas Comentarios[] @relation("ComentarioPai")
+
+  @@index([post_id])
+  @@index([parent_id])
+  @@index([data_criacao])
+  @@index([perfil_id])
+}
+
+//////////////// LEITURA //////////////////
+
+model LeituraProgresso {
+  perfil_id Int
+  post_id   Int
+
+  concluido Boolean @default(false)
+  data      DateTime @default(now())
+
+  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+  post   Posts  @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+
+  @@id([perfil_id, post_id])
+}
+
+//////////////// MIDIA //////////////////
+
+model Midias {
+  midia_id Int @id @default(autoincrement())
+
+  post_id Int
+  url     String
+  tipo    TipoMidia
+
+  post Posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+
+  @@index([post_id])
+}
+
+//////////////// NOTIFICAÇÕES //////////////////
+
+model Notificacoes {
+  notificacao_id Int @id @default(autoincrement())
+
+  perfil_id Int
+  tipo      TipoNotificacao
+
+  post_id       Int?
+  comentario_id Int?
+  autor_id      Int?
+
+  lida Boolean @default(false)
+  data DateTime @default(now())
+
+  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+
+  @@index([perfil_id, lida])
+}
+
+//////////////// RASCUNHO //////////////////
+
+model Rascunhos {
+  rascunho_id Int @id @default(autoincrement())
+
+  perfil_id Int @unique
+
+  titulo   String?
+  conteudo String?
+
+  atualizado_em DateTime @updatedAt
+
+  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+}
+
+//////////////// RANKING //////////////////
+
+model Rankings {
+  ranking_id Int @id @default(autoincrement())
+
+  perfil_id Int
+  score     Int
+  tipo      TipoRanking
+  data_ref  DateTime
+
+  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+
+  @@index([tipo, data_ref])
+}
+
+//////////////// RESTANTE //////////////////
+
+model Categorias {
+  categoria_id Int @id @default(autoincrement())
+  nome String @unique
+
+  posts PostsCategorias[]
+  obras ObrasCategorias[]
+  interessados Interesses[]
+}
+
+model Interesses {
+  perfil_id Int
+  categoria_id Int
+  data_interesse DateTime @default(now())
+
+  perfil    Perfis     @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+  categoria Categorias @relation(fields: [categoria_id], references: [categoria_id], onDelete: Cascade)
+
+  @@id([perfil_id, categoria_id])
+  @@index([categoria_id])
+}
+
+model PostsCategorias {
+  post_id Int
+  categoria_id Int
+
+  post      Posts      @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+  categoria Categorias @relation(fields: [categoria_id], references: [categoria_id], onDelete: Cascade)
+
+  @@id([post_id, categoria_id])
+  @@index([categoria_id, post_id])
+}
+
+model Denuncias {
+  denuncia_id Int @id @default(autoincrement())
+
+  denuncia_tipo     Int
+  descricao         String?
+  conteudo_snapshot String
+  status            DenunciaStatus @default(PENDENTE)
+  data_criacao      DateTime @default(now())
+
+  post_id   Int?
+  perfil_id Int?
+
+  post   Posts?  @relation(fields: [post_id], references: [post_id], onDelete: SetNull)
+  perfil Perfis? @relation(fields: [perfil_id], references: [perfil_id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([post_id])
+  @@index([perfil_id])
+}
+
+model LogAtividade {
+  log_id Int @id @default(autoincrement())
+
+  perfil_id Int
+  evento    String
+  data      DateTime @default(now())
+  detalhes Json?
+
+  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
+
+  @@index([evento])
+  @@index([data])
+  @@index([perfil_id])
+}
+
+model Seguidores {
+  seguidor_id Int
+  seguido_id  Int
+
+  data_criacao DateTime @default(now())
+
+  seguidor Perfis @relation("quem_segue", fields: [seguidor_id], references: [perfil_id], onDelete: Cascade)
+  seguido  Perfis @relation("sendo_seguido", fields: [seguido_id], references: [perfil_id], onDelete: Cascade)
+
+  @@id([seguidor_id, seguido_id])
+  @@index([seguido_id])
+}
+
+//////////////// TÍTULOS E CONQUISTAS //////////////////
+
+model Titulos {
+  titulo_id Int @id @default(autoincrement())
+
+  nome      String  @unique @db.VarChar(50)
+  descricao String? @db.VarChar(255)
+  categoria String  @db.VarChar(30)
+  requisito Int
+
+  data_criacao DateTime @default(now())
+
+  perfis PerfisTitulos[]
 
   @@map("titulos")
 }
 
 model PerfisTitulos {
-  perfil_id     Int
-  titulo_id     Int
-  atribuido_em  DateTime @default(now())
-  esta_ativo    Boolean  @default(false)
+  perfil_id Int
+  titulo_id Int
+
+  atribuido_em DateTime @default(now())
+  esta_ativo   Boolean  @default(false)
 
   perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
   titulo Titulos @relation(fields: [titulo_id], references: [titulo_id], onDelete: Cascade)
@@ -60,183 +567,27 @@ model PerfisTitulos {
   @@map("perfis_titulos")
 }
 
+model Conquistas {
+  conquista_id Int @id @default(autoincrement())
 
+  nome      String  @unique @db.VarChar(50)
+  descricao String? @db.VarChar(255)
+  icone     String? @db.VarChar(100)
 
-model Seguidores {
-  seguidor_id  Int
-  seguido_id   Int
-  data_criacao DateTime @default(now())
+  perfis PerfisConquistas[]
 
-  seguidor Perfis @relation("quem_segue", fields: [seguidor_id], references: [perfil_id], onDelete: Cascade)
-  seguido  Perfis @relation("sendo_seguido", fields: [seguido_id], references: [perfil_id], onDelete: Cascade)
-
-  @@id([seguidor_id, seguido_id])
-  @@index([seguido_id])
-  @@map("seguidores")
+  @@map("conquistas")
 }
 
-model Usuarios {
-  usuario_id                  Int       @id @default(autoincrement())
-  email                       String    @unique @db.VarChar(150)
-  password_hash               String    @db.VarChar(255)
-  data_criacao                DateTime  @default(now())
-  expiracao_pendente          DateTime?
-  token_verificacao           String?   @db.VarChar(100)
-  cadastro_confirmado         Boolean   @default(false)
-  token_version               Int       @default(0)
-  nome_completo               String?   @db.VarChar(150)
-  data_nascimento             DateTime?
-  nome_campus                 String?   @db.VarChar(100)
-  is_admin                    Boolean   @default(false)
-  token_recuperacao           String?   @unique @db.VarChar(100)
-  expiracao_token_recuperacao DateTime?
+model PerfisConquistas {
+  perfil_id    Int
+  conquista_id Int
 
-  perfil_id Int    @unique
-  perfil    Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
-
-  @@index([token_verificacao])
-  @@index([token_recuperacao])
-  @@index([email])
-  @@map("usuarios")
-}
-
-model Categorias {
-  categoria_id Int    @id @default(autoincrement())
-  nome         String @unique @db.VarChar(50)
-
-  posts        PostsCategorias[]
-  interessados Interesses[]
-
-  @@map("categorias")
-}
-
-model Interesses {
-  perfil_id      Int
-  categoria_id   Int
-  data_interesse DateTime @default(now())
+  ganha_em DateTime @default(now())
 
   perfil    Perfis     @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
-  categoria Categorias @relation(fields: [categoria_id], references: [categoria_id], onDelete: Cascade)
+  conquista Conquistas @relation(fields: [conquista_id], references: [conquista_id], onDelete: Cascade)
 
-  @@id([perfil_id, categoria_id])
-  @@index([categoria_id])
-  @@map("interesses")
-}
-
-model PostsCategorias {
-  post_id      Int
-  categoria_id Int
-
-  post      Posts      @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
-  categoria Categorias @relation(fields: [categoria_id], references: [categoria_id], onDelete: Cascade)
-
-  @@id([post_id, categoria_id])
-  @@index([categoria_id])
-  @@map("posts_categorias")
-}
-
-model Posts {
-  post_id      Int      @id @default(autoincrement())
-  titulo       String   @db.VarChar(255)
-  conteudo     String   @db.Text
-  data_criacao DateTime @default(now())
-
-  total_upvotes     Int @default(0)
-  total_downvotes   Int @default(0)
-  total_comentarios Int @default(0)
-
-  autor_id        Int
-  autor_nome_user String? @db.VarChar(100)
-  nome_campus     String? @db.VarChar(100)
-  autor           Perfis @relation(fields: [autor_id], references: [perfil_id], onDelete: Cascade)
-
-  categorias  PostsCategorias[]
-  votos       Votos[]
-  comentarios Comentarios[]
-  denuncias   Denuncias[]
-
-  @@index([autor_id])
-  @@index([data_criacao])
-  @@index([total_upvotes])
-  @@index([data_criacao, total_upvotes])
-  @@map("posts")
-}
-
-enum VotoTipo {
-  UP
-  DOWN
-}
-
-model Votos {
-  voto_id   Int      @id @default(autoincrement())
-  perfil_id Int
-  post_id   Int
-  tipo      VotoTipo
-  data      DateTime @default(now())
-
-  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
-  post   Posts  @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
-
-  @@unique([perfil_id, post_id])
-  @@index([post_id])
-  @@index([perfil_id])
-  @@index([post_id, tipo])
-  @@index([data])
-  @@map("votos")
-}
-
-model Comentarios {
-  comentario_id Int      @id @default(autoincrement())
-  texto         String   @db.Text
-  data_criacao  DateTime @default(now())
-  perfil_id     Int
-  post_id       Int
-
-  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
-  post   Posts  @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
-
-  @@index([post_id])
-  @@index([perfil_id])
-  @@index([data_criacao])
-  @@map("comentarios")
-}
-
-enum DenunciaStatus {
-  PENDENTE
-  ANALISADO
-  REJEITADO
-}
-
-model Denuncias {
-  denuncia_id       Int            @id @default(autoincrement())
-  denuncia_tipo     Int            // 1, 2, 3...
-  descricao         String?        @db.VarChar(500)
-  conteudo_snapshot String         @db.Text
-  status            DenunciaStatus @default(PENDENTE)
-  data_criacao      DateTime       @default(now())
-  post_id           Int
-  perfil_id         Int
-
-  post   Posts  @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
-  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
-
-  @@index([status])
-  @@index([post_id])
-  @@index([perfil_id])
-  @@map("denuncias")
-}
-
-model LogAtividade {
-  log_id    Int      @id @default(autoincrement())
-  perfil_id Int
-  evento    String   @db.VarChar(50)
-  detalhes  Json?
-  data      DateTime @default(now())
-
-  perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
-
-  @@index([perfil_id])
-  @@index([data])
-  @@index([evento])
-  @@map("log_atividade")
+  @@id([perfil_id, conquista_id])
+  @@map("perfis_conquistas")
 }

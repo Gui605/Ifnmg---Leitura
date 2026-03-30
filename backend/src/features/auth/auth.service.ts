@@ -90,6 +90,11 @@ async function registrarUsuario(data: RegistrarData, requestId?: string): Promis
             });
             novoPerfilId = novoPerfil.perfil_id;
 
+            /**
+             * 🛡️ BLINDAGEM DE PRIVILÉGIOS (Mass Assignment)
+             * Mesmo com Zod .strict(), forçamos 'is_admin: false' manualmente.
+             * Isso impede que qualquer injeção no payload eleve privilégios no banco.
+             */
             await tx.usuarios.create({
                 data: {
                     email: emailNormalizado,
@@ -101,6 +106,7 @@ async function registrarUsuario(data: RegistrarData, requestId?: string): Promis
                     nome_completo: nome_completo.trim(),
                     nome_campus: nome_campus.trim(),
                     data_nascimento: new Date(data_nascimento as unknown as Date),
+                    is_admin: false, // 🔒 Hardened: Nunca permite admin no registro público
                 },
             });
 

@@ -20,6 +20,7 @@ import postsRoutes from './features/posts/posts.routes';
 import categoriasRoutes from "./features/categorias/categorias.routes";
 import healthRoutes from './features/health/health.routes';
 import denunciasRoutes from './features/denuncias/denuncias.routes';
+import obrasRoutes from './features/obras/obras.routes';
 
 // Utils
 import { logger } from './shared/utils/logger';
@@ -68,6 +69,7 @@ app.use('/api/v1/posts', postsRoutes);
 app.use('/api/v1/categorias', categoriasRoutes);
 app.use('/api/v1/saude', healthRoutes);
 app.use('/api/v1/denuncias', denunciasRoutes);
+app.use('/api/v1/obras', obrasRoutes);
 
 // --- 5. FALLBACK E ERROS ---
 app.all('*', (req, _res, next) => next(AppError.notFound(`Rota ${req.originalUrl} não existe.`)));

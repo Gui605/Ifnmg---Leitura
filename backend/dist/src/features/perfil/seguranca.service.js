@@ -41,52 +41,74 @@ async function alterarSenha(usuarioId, senhaAntiga, novaSenha, requestId) {
     logger_1.logger.info('Senha alterada com sucesso', { evento: 'USER_PASSWORD_CHANGE_SUCCEEDED', usuario_id: usuarioId, requestId });
     return 'Sua senha foi alterada com sucesso.';
 }
+/**
+ * 🛡️ DIREITO AO ESQUECIMENTO (LGPD) - ANONIMIZAÇÃO ATÔMICA
+ * Refatorado para garantir que dados de auditoria permaneçam internamente
+ * enquanto a identidade pública é totalmente removida.
+ */
 async function deletarConta(usuarioId, senhaAtual, requestId) {
     const user = await prisma_client_1.default.usuarios.findUnique({
-        where: { usuario_id: usuarioId }
+        where: { usuario_id: usuarioId },
+        include: { perfil: true }
     });
     if (!user)
         throw AppError_1.AppError.notFound('Usuário não encontrado.');
-    // 1. Confirmação de Identidade para Operação Destrutiva
+    // 1. Confirmação de Identidade
     const isPasswordValid = await (0, hashing_1.compararSenha)(senhaAtual, user.password_hash);
     if (!isPasswordValid) {
         throw AppError_1.AppError.unauthorized('Senha incorreta. A exclusão da conta foi cancelada por segurança.');
     }
-    // 🛡️ Preservação de Conteúdo com Anonimização por Reatribuição
-    const anonProfile = await prisma_client_1.default.perfis.findFirst({
-        where: { nome_user: 'Usuário Excluído' },
-        select: { perfil_id: true }
-    });
-    let anonPerfilId = anonProfile?.perfil_id;
-    // Se não existir (ambiente sem seed), cria dinamicamente
-    if (!anonPerfilId) {
-        const created = await prisma_client_1.default.perfis.create({
-            data: {
-                nome_user: 'Usuário Excluído',
-                usuario: {
-                    create: {
-                        email: `excluido+${Date.now()}@system.local`,
-                        password_hash: user.password_hash,
-                        cadastro_confirmado: true,
-                        is_admin: false
-                    }
-                }
-            },
-            select: { perfil_id: true }
-        });
-        anonPerfilId = created.perfil_id;
+    // 2. Bloqueio de Segurança para Admins
+    if (user.is_admin) {
+        throw AppError_1.AppError.forbidden('Administradores não podem excluir a própria conta. Remova seu cargo primeiro.');
     }
-    // Transação: reatribui posts e exclui usuário (perfil é removido via CASCADE)
-    await prisma_client_1.default.$transaction([
-        prisma_client_1.default.posts.updateMany({
-            where: { autor_id: user.perfil_id },
-            data: { autor_id: anonPerfilId }
-        }),
-        prisma_client_1.default.usuarios.delete({
+    // 3. Transação de Anonimização (Padrão LGPD)
+    await prisma_client_1.default.$transaction(async (tx) => {
+        // A. Limpeza de Comunidades (Dono Solitário)
+        const comunidadesSolo = await tx.comunidades.findMany({
+            where: { criador_id: user.perfil_id },
+            include: { _count: { select: { membros: true } } }
+        });
+        for (const com of comunidadesSolo) {
+            if (com._count.membros <= 1) {
+                await tx.comunidades.delete({ where: { comunidade_id: com.comunidade_id } });
+            }
+        }
+        // B. Anonimização do Perfil (Identidade Pública)
+        await tx.perfis.update({
+            where: { perfil_id: user.perfil_id },
+            data: {
+                nome_user: `Membro Deletado #${user.perfil_id}`,
+                bio: null,
+                curso: null,
+                titulo_ativo: null,
+                streak_dias: 0,
+                xp: 0,
+                xp_escrita: 0,
+                xp_curadoria: 0,
+                xp_social: 0
+            }
+        });
+        // C. Anonimização do Usuário (Identidade de Acesso)
+        // Preservamos usuario_id, nome_completo e data_nascimento para auditoria interna.
+        await tx.usuarios.update({
             where: { usuario_id: usuarioId },
-        })
-    ]);
-    logger_1.logger.info('Conta excluída com sucesso', { evento: 'USER_ACCOUNT_DELETED', usuario_id: usuarioId, requestId });
-    return 'Sua conta foi excluída com sucesso. Suas publicações foram preservadas de forma anônima.';
+            data: {
+                email: `deletado_${usuarioId}@portal.local`,
+                password_hash: `DELETED_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+                token_version: { increment: 1 },
+                cadastro_confirmado: false,
+                token_verificacao: null,
+                token_recuperacao: null
+            }
+        });
+        // D. Limpeza de Relações Voláteis
+        await tx.seguidores.deleteMany({
+            where: { OR: [{ seguidor_id: user.perfil_id }, { seguido_id: user.perfil_id }] }
+        });
+        await tx.notificacoes.deleteMany({ where: { perfil_id: user.perfil_id } });
+    });
+    logger_1.logger.info('Conta anonimizada com sucesso', { evento: 'USER_ACCOUNT_ANONYMIZED', usuario_id: usuarioId, requestId });
+    return 'Sua conta foi excluída e seus dados foram anonimizados conforme a LGPD.';
 }
 exports.default = { alterarSenha, deletarConta };

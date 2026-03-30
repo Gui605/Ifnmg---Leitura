@@ -181,6 +181,30 @@ export const Notificacao = {
       return res.value;
     },
 
+    input: async (cfg: {
+      titulo: string;
+      texto?: string;
+      placeholder?: string;
+      valorInicial?: string;
+      inputType?: 'text' | 'password' | 'email' | 'number' | 'textarea';
+      confirmText?: string;
+      cancelText?: string;
+    }): Promise<SweetAlertResult> => {
+      const swal = await getSwal();
+      return swal.fire({
+        title: cfg.titulo,
+        text: cfg.texto,
+        input: cfg.inputType || 'text',
+        inputPlaceholder: cfg.placeholder || '',
+        inputValue: cfg.valorInicial || '',
+        showCancelButton: true,
+        confirmButtonText: cfg.confirmText || 'Confirmar',
+        cancelButtonText: cfg.cancelText || 'Cancelar',
+        ...BASE,
+        customClass: CLASSES,
+      });
+    },
+
     levelUp: async (cfg: { 
       novoNivel: number; 
       novoTitulo?: string; 
@@ -188,7 +212,7 @@ export const Notificacao = {
     }) => {
       const swal = await getSwal();
       return swal.fire({
-        title: `<div class="font-lexend text-[var(--accent-primary)] text-2xl font-black uppercase tracking-tighter">Level Up!</div>`,
+        title: `<div class="font-lexend text-[var(--accent-primary)] text-2xl font-black uppercase tracking-tighter">🎉 Nível Superior Alcançado!</div>`,
         html: `
           <div class="flex flex-col items-center gap-4 py-4">
             <div class="relative">
@@ -200,20 +224,22 @@ export const Notificacao = {
               </div>
             </div>
             <div class="text-center">
-              <p class="text-[var(--text-primary)] font-medium">Parabéns! Você alcançou o nível ${cfg.novoNivel}.</p>
+              <p class="text-[var(--text-primary)] font-medium">Parabéns! Você agora é Nível ${cfg.novoNivel}.</p>
               ${cfg.novoTitulo ? `
                 <div class="mt-4 p-3 bg-[var(--accent-primary)]/5 border border-[var(--accent-primary)]/20 rounded-xl">
-                  <p class="text-[10px] text-[var(--text-secondary)] uppercase font-bold tracking-widest">Novo Título Desbloqueado</p>
+                  <p class="text-[10px] text-[var(--text-secondary)] uppercase font-bold tracking-widest">Sua nova patente:</p>
                   <p class="text-lg font-black text-[var(--accent-primary)] font-lexend mt-1">${cfg.novoTitulo}</p>
                 </div>
               ` : ''}
             </div>
           </div>
         `,
-        showConfirmButton: !!cfg.novoTitulo,
-        confirmButtonText: 'Equipar Agora',
-        showCancelButton: true,
-        cancelButtonText: cfg.novoTitulo ? 'Depois' : 'Continuar',
+        timer: 5000,
+        timerProgressBar: true,
+        showConfirmButton: true,
+        confirmButtonText: cfg.novoTitulo ? 'Equipar Agora' : 'Continuar',
+        showCancelButton: !!cfg.novoTitulo,
+        cancelButtonText: 'Depois',
         confirmButtonColor: 'var(--accent-primary)',
         ...BASE,
         customClass: {

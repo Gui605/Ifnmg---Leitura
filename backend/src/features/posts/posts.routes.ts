@@ -3,7 +3,7 @@ import postsController from './posts.controller';
 import { middlewareAutenticacao } from '../../shared/middlewares/authMiddleware'; 
 import { middlewareAutenticacaoOpcional } from '../../shared/middlewares/optionalAuthMiddleware';
 import { validate} from '../../shared/middlewares/validate.middleware';
-import { PostCreateSchema, PostsQuerySchema, PostVoteSchema, PostCommentSchema } from '../../shared/types/post.types';
+import { PostCreateSchema, PostsQuerySchema, PostVoteSchema, PostCommentSchema, ReacaoSchema } from '../../shared/types/post.types';
 import { z } from 'zod';
 import { limitadorEngajamento, limitadorLeitura } from '../../shared/middlewares/rateLimiter';
 
@@ -79,6 +79,53 @@ postsRoutes.post('/:id/comentarios',
             body: PostCommentSchema
         }),
     postsController.comentarPost
+);
+
+/**
+ * GET /posts/:id/comentarios
+ * 🛡️ Público/Opcional
+ */
+postsRoutes.get('/:id/comentarios',
+    middlewareAutenticacaoOpcional,
+    validate({
+        params: PostIdParamsSchema
+    }),
+    postsController.listarComentarios
+);
+
+/**
+ * DELETE /posts/comentarios/:id
+ * 🛡️ Protegida - apenas autor ou admin
+ */
+postsRoutes.delete('/comentarios/:id',
+    middlewareAutenticacao,
+    validate({
+        params: PostIdParamsSchema
+    }),
+    postsController.deletarComentario
+);
+
+postsRoutes.post('/:id/reagir',
+    middlewareAutenticacao,
+    limitadorEngajamento,
+    validate({
+            params: PostIdParamsSchema,
+            body: ReacaoSchema
+        }),
+    postsController.reagirPost
+);
+
+/**
+ * GET /api/v1/posts/:id
+ * 🛡️ Híbrido: Acesso público, mas personaliza para logado
+ */
+postsRoutes.get('/:id',
+    middlewareAutenticacaoOpcional,
+    limitadorLeitura,
+    validate({
+        params: PostIdParamsSchema
+    }),
+    postsController.getPostById
 );
 
 export default postsRoutes;

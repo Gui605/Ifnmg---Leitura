@@ -1,5 +1,6 @@
-import { Medal, Star, History, Award, BookOpen, Target, ChevronDown } from 'lucide-react';
+import { Medal, Star, History, Award, BookOpen, Target } from 'lucide-react';
 import { PerfilResumo } from '../../shared/types/perfil.types';
+import { ProgressBarXP, getPatentePorNivel } from '../../shared/components/ProgressBarXP';
 
 interface PerfilConquistasProps {
   perfil: PerfilResumo | null;
@@ -8,19 +9,7 @@ interface PerfilConquistasProps {
 export default function PerfilConquistas({ perfil }: PerfilConquistasProps) {
   if (!perfil) return null;
 
-  // Lógica dinâmica de XP baseada no nível (1000 XP por nível conforme service)
-  const XP_POR_NIVEL = 1000;
-  const xpAtualNoNivel = perfil.xp % XP_POR_NIVEL;
-  const progresso = (xpAtualNoNivel / XP_POR_NIVEL) * 100;
-
-  // Função para determinar a Patente conforme gamificacao.config.ts
-  const getPatente = (nivel: number) => {
-    if (nivel >= 50) return "Mestre Lendário";
-    if (nivel >= 30) return "Erudito";
-    if (nivel >= 20) return "Pesquisador";
-    if (nivel >= 10) return "Explorador";
-    return "Calouro";
-  };
+  const patente = perfil.titulo_ativo || getPatentePorNivel(perfil.level);
 
   // Mapeamento de ícones por categoria de título
   const getIconeCategoria = (categoria: string) => {
@@ -33,27 +22,28 @@ export default function PerfilConquistas({ perfil }: PerfilConquistasProps) {
   };
 
   return (
-    <section className="rounded-xl bg-[var(--bg-card)] p-6 shadow-sm border border-[var(--border-color)]/20">
-      <div className="mb-6 flex items-end justify-between">
-        <div>
-          <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)] font-lexend">Status Acadêmico</h3>
-          <p className="text-3xl font-black text-[var(--accent-primary)] font-lexend">NÍVEL {perfil.level}</p>
-          <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-tight font-lexend">
-            Patente: <span className="text-[var(--accent-primary)]">{getPatente(perfil.level)}</span>
-          </span>
+    <section className="rounded-xl bg-[var(--bg-card)] p-8 shadow-sm border border-[var(--border-color)]/20">
+      <div className="mb-8 flex items-end justify-between">
+        <div className="space-y-1">
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] font-lexend opacity-70">Status de RPG Acadêmico</h3>
+          <p className="text-4xl font-black text-[var(--accent-primary)] font-lexend tracking-tighter">NÍVEL {perfil.level}</p>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] text-[10px] font-black uppercase tracking-wider rounded-md font-lexend">
+              Patente: {patente}
+            </span>
+          </div>
         </div>
-        <div className="text-right">
-          <p className="text-xs font-medium text-[var(--text-secondary)] font-lexend">{xpAtualNoNivel.toLocaleString()} / {XP_POR_NIVEL.toLocaleString()} XP</p>
+        <div className="text-right hidden sm:block">
+          <p className="text-[10px] font-bold text-[var(--text-secondary)] font-lexend uppercase tracking-widest opacity-50">Soma de XP Total</p>
+          <p className="text-xl font-black text-[var(--text-primary)] font-lexend">{perfil.xp.toLocaleString()} XP</p>
         </div>
       </div>
-      <div className="h-3 w-full overflow-hidden rounded-full bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/5">
-        <div 
-          className="h-full rounded-full bg-[var(--accent-primary)] transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(23,207,38,0.2)]" 
-          style={{ width: `${progresso}%` }}
-        ></div>
+      
+      <div className="p-4 bg-[var(--input-bg)]/30 rounded-2xl border border-[var(--border-color)]/10">
+        <ProgressBarXP xp={perfil.xp} level={perfil.level} showLabels={true} />
       </div>
 
-      <div className="mt-8">
+      <div className="mt-12">
         <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)] flex items-center gap-2 font-lexend">
           <Medal size={16} strokeWidth={1.5} className="text-[var(--accent-primary)]" /> Títulos e Conquistas
         </h4>

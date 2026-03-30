@@ -19,7 +19,9 @@ export function obterSegredoJwt(): string {
 export function gerarToken(payload: TokenPayload): string {
     // Removemos propriedades automáticas como 'iat' e 'exp' se existirem no objeto
     // para evitar conflitos com o novo token que será gerado.
-    const { iat, exp, ...cleanPayload } = payload;
+    const cleanPayload = { ...payload };
+    delete (cleanPayload as any).iat;
+    delete (cleanPayload as any).exp;
 
     return jwt.sign(cleanPayload, obterSegredoJwt(), { expiresIn: JWT_EXPIRES_IN });
 }

@@ -7,9 +7,9 @@ import { AppError } from '../../shared/utils/AppError';
 type PostIdParams = { postId: string };
 
 const criar = tratarAssincrono(async (req: Request<PostIdParams, any, DenunciaCreateBody>, res: Response) => {
-  const perfilId = req.perfil_id;
+  const perfilId = req.user.perfil_id;
   const postId = Number(req.params.postId);
-  if (!perfilId) throw AppError.unauthorized('Acesso não autorizado.');
+  
   if (isNaN(postId) || !Number.isSafeInteger(postId) || postId <= 0) {
     throw AppError.badRequest('ID inválido.');
   }

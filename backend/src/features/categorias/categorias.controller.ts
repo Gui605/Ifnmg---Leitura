@@ -71,10 +71,8 @@ export default { listar, criar, atualizar, excluir };
 
 // ====== Fusão de Interesses (Taxonomia) ======
 export const listarInteressesCategoria = tratarAssincrono(async (req: Request, res: Response) => {
-    const perfilId = req.perfil_id;
-    if (!perfilId || !Number.isSafeInteger(perfilId)) {
-        throw AppError.unauthorized("Usuário não autenticado.");
-    }
+    const perfilId = req.user.perfil_id;
+    
     const interesses = await listarInteresses(perfilId, req.requestId);
     return res.status(200).json({
         status: 'success',
@@ -85,22 +83,18 @@ export const listarInteressesCategoria = tratarAssincrono(async (req: Request, r
 });
 
 export const seguirCategoriaController = tratarAssincrono(async (req: Request<CategoriaIdParams, any, EmptyBody>, res: Response) => {
-    const perfilId = req.perfil_id;
+    const perfilId = req.user.perfil_id;
     const categoriaId = Number(req.params.id);
-    if (!perfilId || !Number.isSafeInteger(perfilId)) {
-        throw AppError.unauthorized("Sessão inválida ou perfil não identificado.");
-    }
+    
     ToggleInteresseSchema.parse({ categoria_id: categoriaId });
     await seguirCategoria(perfilId, categoriaId, req.requestId);
     return res.status(201).json({ status: 'success', message: "Agora você segue esta categoria.", data: null, meta: null });
 });
 
 export const deixarDeSeguirCategoriaController = tratarAssincrono(async (req: Request<CategoriaIdParams, any, EmptyBody>, res: Response) => {
-    const perfilId = req.perfil_id;
+    const perfilId = req.user.perfil_id;
     const categoriaId = Number(req.params.id);
-    if (!perfilId || !Number.isSafeInteger(perfilId)) {
-        throw AppError.unauthorized("Sessão expirada. Faça login novamente.");
-    }
+    
     ToggleInteresseSchema.parse({ categoria_id: categoriaId });
     await deixarDeSeguirCategoria(perfilId, categoriaId, req.requestId);
     return res.status(200).json({ status: 'success', message: "Você deixou de seguir esta categoria.", data: null, meta: null });

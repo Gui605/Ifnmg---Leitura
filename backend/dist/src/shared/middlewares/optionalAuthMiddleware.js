@@ -16,8 +16,7 @@ const middlewareAutenticacaoOpcional = (0, asyncHandler_1.tratarAssincrono)(asyn
     const authHeader = req.headers.authorization;
     // 🛡️ Se não houver token, define como undefined e segue (acesso público)
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        req.usuario_id = undefined;
-        req.perfil_id = undefined;
+        req.user = undefined;
         return next();
     }
     const token = authHeader.split(' ')[1];
@@ -28,22 +27,21 @@ const middlewareAutenticacaoOpcional = (0, asyncHandler_1.tratarAssincrono)(asyn
             select: { token_version: true }
         });
         if (!usuario || typeof decoded.token_version !== 'number' || usuario.token_version !== decoded.token_version) {
-            req.usuario_id = undefined;
-            req.perfil_id = undefined;
-            req.is_admin = undefined;
+            req.user = undefined;
         }
         else {
-            req.usuario_id = decoded.usuario_id;
-            req.perfil_id = decoded.perfil_id;
-            req.is_admin = decoded.is_admin;
+            req.user = {
+                usuario_id: decoded.usuario_id,
+                perfil_id: decoded.perfil_id,
+                is_admin: decoded.is_admin,
+                token_version: decoded.token_version
+            };
         }
     }
     catch (error) {
         // 🛡️ Em caso de erro (token expirado/inválido), apenas limpa os dados.
         // Diferente do authMiddleware, aqui não lançamos AppError.
-        req.usuario_id = undefined;
-        req.perfil_id = undefined;
-        req.is_admin = undefined;
+        req.user = undefined;
     }
     next();
 });

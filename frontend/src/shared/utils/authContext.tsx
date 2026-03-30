@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { storageGet, storageRemove, storageSet } from './storage';
 import { Notificacao } from './Notificacao';
-import { fazerLogout } from '../services/auth.service';
+import { fazerLogout, logoutLocal } from '../services/auth.service';
 import { getMeuPerfil } from '../services/perfil.service';
 import { PerfilResumo } from '../types/perfil.types';
 
@@ -78,27 +78,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     storageSet(TOKEN_KEY, t, ttlSeconds);
   }, []);
 
-  const logout = useCallback(async (silencioso: boolean = false) => {
+  const logout = useCallback(async (global: boolean = false) => {
     try {
-      if (!silencioso) {
+      if (global) {
         await fazerLogout();
+      } else {
+        logoutLocal();
       }
     } catch {
       // Falha no logout do backend não deve impedir a limpeza no frontend
+      logoutLocal();
     } finally {
       setToken(null);
       setPerfil(null);
-      storageRemove(TOKEN_KEY);
       
-      if (!silencioso) {
-        Notificacao.toast.info("Sessão encerrada com sucesso.");
-        // Pequeno delay para o usuário ler o toast antes do redirecionamento pesado
-        setTimeout(() => {
-          window.location.assign('/entrada');
-        }, 800);
-      } else {
+      const message = global ? "Sessão encerrada em todos os dispositivos." : "Sessão encerrada neste navegador.";
+      Notificacao.toast.info(message);
+      
+      // Pequeno delay para o usuário ler o toast antes do redirecionamento pesado
+      setTimeout(() => {
         window.location.assign('/entrada');
-      }
+      }, 800);
     }
   }, []);
 
@@ -106,10 +106,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleAuth = async () => {
       if (token) {
         try {
-          const p = await getMeuPerfil();
-          setPerfil(p);
+            const p = await getMeuPerfil();
+            setPerfil(p);
         } catch (error) {
-          logout(true);
+            console.error("Erro ao carregar perfil, mas mantendo sessão:", error);
+            // Em vez de logout(true), apenas defina um estado de erro ou 
+            // deixe o perfil como null, mas mantenha o token.
         }
       } 
       setLoading(false);
@@ -122,13 +124,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
     const onUnauthorized = () => logout(true);
+    const onPerfilUpdated = (e: any) => {
+      if (e.detail) setPerfil(e.detail);
+    };
 
     window.addEventListener('storage', onStorage);
     window.addEventListener('auth:unauthorized', onUnauthorized as EventListener);
+    window.addEventListener('auth:perfil_updated', onPerfilUpdated as EventListener);
 
     return () => {
       window.removeEventListener('storage', onStorage);
       window.removeEventListener('auth:unauthorized', onUnauthorized as EventListener);
+      window.removeEventListener('auth:perfil_updated', onPerfilUpdated as EventListener);
     };
   }, [token, logout]);
 
@@ -143,23 +150,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }), [token, loading, perfil, setPerfil, setSession, logout]);
 
   // Monitoramento de Level Up
-  const prevLevelRef = React.useRef<number | null>(perfil?.level || null);
+  const prevLevelRef = React.useRef<number | null>(null);
   useEffect(() => {
+    // Inicializa o ref na primeira vez que o perfil é carregado
+    if (prevLevelRef.current === null && perfil?.level) {
+      prevLevelRef.current = perfil.level;
+      return;
+    }
+
     if (perfil?.level && prevLevelRef.current && perfil.level > prevLevelRef.current) {
-      // Identifica se ganhou novo título (último na lista se for por level)
-      const novoTitulo = perfil.titulos?.find(t => t.esta_ativo)?.titulo.nome;
-      
+      // Dispara o modal de Level Up
       Notificacao.modal.levelUp({
         novoNivel: perfil.level,
-        novoTitulo: novoTitulo || undefined,
-        onEquipTitle: () => {
-          // Opcional: Se quiser forçar uma atualização ou ação ao equipar
-          Notificacao.toast.sucesso("Título Equipado!", `Você agora é reconhecido como ${novoTitulo}.`);
-        }
+        novoTitulo: perfil.titulo_ativo || undefined
       });
     }
-    prevLevelRef.current = perfil?.level || null;
-  }, [perfil?.level, perfil?.titulos]);
+    
+    // Atualiza o ref após a verificação para o próximo ciclo
+    if (perfil?.level) {
+      prevLevelRef.current = perfil.level;
+    }
+  }, [perfil?.level, perfil?.titulo_ativo]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

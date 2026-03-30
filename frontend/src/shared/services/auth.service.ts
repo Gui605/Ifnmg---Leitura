@@ -1,4 +1,7 @@
+//frontend/src/shared/services/auth.service.ts
+import { z } from 'zod';
 import { apiClient } from '../utils/apiClient';
+import { storageRemove } from '../utils/storage';
 import {
   LoginCredentials,
   AuthResponse,
@@ -14,8 +17,21 @@ export async function fazerLogin(credenciais: LoginCredentials): Promise<AuthRes
   })) as Promise<AuthResponse>;
 }
 
+/**
+ * 🛡️ LOGOUT LOCAL (Browser Only)
+ * Apenas limpa o token do armazenamento local.
+ * Útil para sair de um dispositivo sem invalidar outros.
+ */
+export function logoutLocal(): void {
+  storageRemove('auth-token');
+}
+
+/**
+ * 🛡️ LOGOUT GLOBAL (All Devices)
+ * Chama o backend para invalidar o token_version, deslogando de todos os lugares.
+ */
 export async function fazerLogout(): Promise<void> {
-  return apiClient.post('/auth/sair', {}, AuthResponseSchema.partial(), undefined, () => {}) as unknown as Promise<void>;
+  return apiClient.post('/auth/logout-all', {}, z.any(), undefined, () => {}) as unknown as Promise<void>;
 }
 
 export async function registrarUsuario(body: RegisterPayload): Promise<RegisterResponse> {

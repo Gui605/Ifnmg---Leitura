@@ -23,8 +23,20 @@ export function SubSeccionPerfil() {
     if (!perfil) return;
 
     try {
-      const updatedPerfil = await updateMeuPerfil({ nome_user: nomeUser, bio });
-      setPerfil(updatedPerfil.perfil);
+      const updatedPerfil = await updateMeuPerfil({ nome: nomeUser, bio });
+      
+      // Atualiza o estado global do perfil no AuthContext
+      // O backend retorna { perfil: PerfilResumo }
+      setPerfil(prev => {
+        if (!prev) return updatedPerfil.perfil;
+        return {
+          ...prev,
+          ...updatedPerfil.perfil,
+          // Garante que as estatísticas sejam preservadas se não vierem no update
+          estatisticas: prev.estatisticas
+        };
+      });
+
       Notificacao.toast.sucesso('Perfil atualizado com sucesso!');
     } catch (error) {
       Notificacao.toast.erro('Erro ao atualizar o perfil.');

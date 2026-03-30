@@ -89,10 +89,7 @@ const excluir = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
 exports.default = { listar, criar, atualizar, excluir };
 // ====== Fusão de Interesses (Taxonomia) ======
 exports.listarInteressesCategoria = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
-    const perfilId = req.perfil_id;
-    if (!perfilId || !Number.isSafeInteger(perfilId)) {
-        throw AppError_1.AppError.unauthorized("Usuário não autenticado.");
-    }
+    const perfilId = req.user.perfil_id;
     const interesses = await (0, categorias_service_1.listarInteresses)(perfilId, req.requestId);
     return res.status(200).json({
         status: 'success',
@@ -102,21 +99,15 @@ exports.listarInteressesCategoria = (0, asyncHandler_1.tratarAssincrono)(async (
     });
 });
 exports.seguirCategoriaController = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
-    const perfilId = req.perfil_id;
+    const perfilId = req.user.perfil_id;
     const categoriaId = Number(req.params.id);
-    if (!perfilId || !Number.isSafeInteger(perfilId)) {
-        throw AppError_1.AppError.unauthorized("Sessão inválida ou perfil não identificado.");
-    }
     categoria_types_1.ToggleInteresseSchema.parse({ categoria_id: categoriaId });
     await (0, categorias_service_1.seguirCategoria)(perfilId, categoriaId, req.requestId);
     return res.status(201).json({ status: 'success', message: "Agora você segue esta categoria.", data: null, meta: null });
 });
 exports.deixarDeSeguirCategoriaController = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
-    const perfilId = req.perfil_id;
+    const perfilId = req.user.perfil_id;
     const categoriaId = Number(req.params.id);
-    if (!perfilId || !Number.isSafeInteger(perfilId)) {
-        throw AppError_1.AppError.unauthorized("Sessão expirada. Faça login novamente.");
-    }
     categoria_types_1.ToggleInteresseSchema.parse({ categoria_id: categoriaId });
     await (0, categorias_service_1.deixarDeSeguirCategoria)(perfilId, categoriaId, req.requestId);
     return res.status(200).json({ status: 'success', message: "Você deixou de seguir esta categoria.", data: null, meta: null });

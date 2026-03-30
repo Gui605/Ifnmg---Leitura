@@ -12,6 +12,7 @@ import { CheckCircle, XCircle, Mail, Lock, BookOpen, AlertCircle, User, AtSign, 
 import { Notificacao } from '../../shared/utils/Notificacao';
 import { useNavigate, useLocation } from 'react-router-dom';
 import InputMask from 'react-input-mask';
+import { LISTA_CAMPUS } from '../../shared/utils/unidades';
 
 export default function Login() {
   const { modoEscuro } = useTema();
@@ -28,6 +29,11 @@ export default function Login() {
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [estaCarregando, setEstaCarregando] = useState(false);
   const [erroVisual, setErroVisual] = useState(false);
+
+  // Autocomplete de Campus
+  const [buscaCampus, setBuscaCampus] = useState('');
+  const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
+
   const [erroEmail, setErroEmail] = useState('');
   const [erroSenha, setErroSenha] = useState('');
   const [erroNome, setErroNome] = useState('');
@@ -59,7 +65,7 @@ export default function Login() {
   const confirmarOkNow = confirmarSenha.trim().length > 0 && confirmarSenha.trim() === senhaTrimNow;
   const nomeOkNow = (nome.trim().split(/\s+/).filter(Boolean)).length >= 2;
   const apelidoOkNow = apelido.trim().length >= 2 && apelido.trim().length <= 100;
-  const campusOkNow = campus.trim().length >= 2 && campus.trim().length <= 100;
+  const campusOkNow = LISTA_CAMPUS.includes(campus as any);
   const nascimentoOkNow = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(nascimento.trim());
   const podeMostrarSucesso = !erroEmail && !erroSenha && !erroNome && !erroApelido && !erroCampus && !erroNascimento && !erroConfirmar;
 
@@ -186,6 +192,7 @@ export default function Login() {
 
   const resetFormulario = (keepEmail?: boolean) => {
     setNome(''); setApelido(''); setCampus(''); setNascimento('');
+    setBuscaCampus(''); setMostrarSugestoes(false);
     setSenha(''); setConfirmarSenha('');
     if (!keepEmail) setEmail('');
     setMostraErroEmail(false); setMostraErroSenha(false); setMostraErroNome(false);
@@ -256,7 +263,7 @@ export default function Login() {
 
         if (!nomeOkNow) Notificacao.toast.aviso('Informe nome completo (nome e sobrenome).');
         else if (!apelidoOkNow) Notificacao.toast.aviso('Informe um apelido entre 2 e 100 caracteres.');
-        else if (!campusOkNow) Notificacao.toast.aviso('Informe o nome do campus (mín. 2 caracteres).');
+        else if (!campusOkNow) Notificacao.toast.aviso('Selecione um campus válido da lista.');
         else if (!nascimentoOkNow) Notificacao.toast.aviso('Informe a data de nascimento válida (DD/MM/YYYY).');
         else if (!senhaForteNow) Notificacao.toast.aviso('A senha deve ter 8+ caracteres, 1 maiúscula e 1 número.');
         else if (!confirmarOkNow) Notificacao.toast.aviso('As senhas não coincidem.');
@@ -384,8 +391,53 @@ export default function Login() {
                     Campus
                   </label>
                   <div className="relative">
-                    <input type="text" placeholder="ex: IFNMG - Campus Araçuaí" value={campus} onChange={(e) => setCampus(e.target.value)} className={`w-full px-4 py-3 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] focus:ring-2 focus:ring-[var(--accent-primary)] outline-none transition-all ${erroCampus ? 'input-erro' : ''}`} />
-                    {campus.length > 0 && campusOkNow && podeMostrarSucesso && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-green)]" size={18} />}
+                    <input 
+                      type="text" 
+                      placeholder="Buscar campus (ex: Januária)" 
+                      value={buscaCampus} 
+                      onFocus={() => setMostrarSugestoes(true)}
+                      onBlur={() => {
+                        // Delay para permitir o clique na sugestão
+                        setTimeout(() => setMostrarSugestoes(false), 200);
+                      }}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setBuscaCampus(val);
+                        setMostrarSugestoes(true);
+                        // Se o usuário apagar tudo, reseta o campus selecionado
+                        if (!val) setCampus('');
+                      }} 
+                      className={`w-full px-4 py-3 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] focus:ring-2 focus:ring-[var(--accent-primary)] outline-none transition-all ${erroCampus ? 'input-erro' : ''}`} 
+                    />
+                    
+                    {mostrarSugestoes && buscaCampus.trim().length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl animate-fade-in">
+                        {LISTA_CAMPUS.filter(c => c.toLowerCase().includes(buscaCampus.toLowerCase())).length > 0 ? (
+                          LISTA_CAMPUS
+                            .filter(c => c.toLowerCase().includes(buscaCampus.toLowerCase()))
+                            .map((c) => (
+                              <button
+                                key={c}
+                                type="button"
+                                onClick={() => {
+                                  setCampus(c);
+                                  setBuscaCampus(c);
+                                  setMostrarSugestoes(false);
+                                }}
+                                className="w-full text-left px-4 py-3 hover:bg-[var(--accent-primary)] hover:text-white transition-colors border-b border-[var(--border-color)] last:border-0"
+                              >
+                                {c}
+                              </button>
+                            ))
+                        ) : (
+                          <div className="px-4 py-3 text-sm text-[var(--text-secondary)] italic">
+                            Nenhum campus encontrado
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {campusOkNow && podeMostrarSucesso && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-green)]" size={18} />}
                     {mostraErroCampus && !campusOkNow && <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-if-red)]" size={18} />}
                   </div>
                   {erroCampus && <span className="text-[var(--color-if-red)] text-xs font-bold flex items-center gap-1"><AlertCircle size={14} />{erroCampus}</span>}

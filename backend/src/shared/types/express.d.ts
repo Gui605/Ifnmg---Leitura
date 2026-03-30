@@ -1,4 +1,5 @@
 import * as express from 'express';
+import { AuthUser } from './auth.types';
 
 /**
  * 💡 EXTENSÃO DE TIPAGEM DO EXPRESS
@@ -9,16 +10,16 @@ import * as express from 'express';
 declare global {
   namespace Express {
     interface Request {
-      // ID do registro na tabela 'Usuarios'
-      usuario_id?: number;
-      
-      // ID do registro na tabela 'Perfis'
-      perfil_id?: number;
+      /**
+       * 🛡️ METADADOS DE AUTENTICAÇÃO (IFNMG)
+       * O objeto 'user' é obrigatório em rotas protegidas pelo authMiddleware.
+       */
+      user: AuthUser;
 
-      // Flag opcional para verificar se é administrador
-      is_admin?: boolean;
-
-      // Correlacionador de requisição para observabilidade
+      /**
+       * 🔍 OBSERVABILIDADE
+       * ID único para rastreamento de logs (Breadcrumbs).
+       */
       requestId?: string;
     }
   }

@@ -1,7 +1,8 @@
 // frontend/src/features/feed/Feed.tsx
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useAuth } from '../../shared/utils/authContext';
 import { PerfilResumo } from '../../shared/types/perfil.types';
 import { PostResumo } from '../../shared/types/post.types';
 import { getMeuPerfil } from '../../shared/services/perfil.service';
@@ -25,10 +26,12 @@ import PostCard from './PostCard';
 import QuickPost from './QuickPost';
 import TrendingTags from './TrendingTags';
 import SuggestedUsers from './SuggestedUsers';
+import { ProgressBarXP, getPatentePorNivel } from '../../shared/components/ProgressBarXP';
 
 export default function Feed() {
   const navigate = useNavigate();
-  const [perfil, setPerfil] = useState<PerfilResumo | null>(null);
+  const { perfil: perfilAuth } = useAuth();
+  const [perfilLocal, setPerfilLocal] = useState<PerfilResumo | null>(null);
   const [posts, setPosts] = useState<PostResumo[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -39,6 +42,9 @@ export default function Feed() {
   const [isLeftVisible, setIsLeftVisible] = useState(true);
   const [isRightVisible, setIsRightVisible] = useState(true);
 
+  // Prioriza o perfil do AuthContext para reatividade global
+  const perfil = perfilAuth || perfilLocal;
+
   // 1. Carregamento Inicial (Perfil + Primeira Página)
   useEffect(() => {
     let cancelado = false;
@@ -47,11 +53,11 @@ export default function Feed() {
       try {
         const [perfilData, feedData] = await Promise.all([
           getMeuPerfil(),
-          getPosts(1)
+          getPosts({ page: 1 })
         ]);
 
         if (!cancelado) {
-          setPerfil(perfilData);
+          setPerfilLocal(perfilData);
           setPosts(feedData.posts);
           setHasMore(feedData.meta.page < feedData.meta.totalPages);
           setErro(null);
@@ -92,7 +98,7 @@ export default function Feed() {
     setLoadingMore(true);
     const nextPage = page + 1;
     try {
-      const feedData = await getPosts(nextPage);
+      const feedData = await getPosts({ page: nextPage });
       setPosts(prev => [...prev, ...feedData.posts]);
       setPage(nextPage);
       setHasMore(feedData.meta.page < feedData.meta.totalPages);
@@ -132,6 +138,7 @@ export default function Feed() {
       <Header 
         perfil={perfil}
         showSearch={true}
+        hideBack={true}
         navLinks={navLinks}
         actions={headerActions}
         toggleLeft={() => setIsLeftVisible(!isLeftVisible)}
@@ -154,11 +161,11 @@ export default function Feed() {
             <div className="bg-[var(--bg-card)] rounded-2xl shadow-[var(--shadow-elevation-1)] border border-[var(--border-color)] p-2">
               <nav className="flex flex-col gap-1">
                 <SidebarLink icon={<Home size={20} strokeWidth={2} />} label="Feed" active />
-                <SidebarLink icon={<Compass size={20} strokeWidth={2} />} label="Explorar" />
-                <SidebarLink icon={<Bell size={20} strokeWidth={2} />} label="Notificações" />
-                <SidebarLink icon={<UsersIcon size={20} strokeWidth={2} />} label="Comunidade" />
-                <SidebarLink icon={<Bookmark size={20} strokeWidth={2} />} label="Salvos" />
-                <SidebarLink icon={<BookOpen size={20} strokeWidth={2} />} label="Biblioteca" />
+                <SidebarLink icon={<Compass size={20} strokeWidth={2} />} label="Explorar" to="/explorar" />
+                <SidebarLink icon={<Bell size={20} strokeWidth={2} />} label="Notificações" to="/notificacoes" />
+                <SidebarLink icon={<UsersIcon size={20} strokeWidth={2} />} label="Comunidade" to="/comunidade" />
+                <SidebarLink icon={<Bookmark size={20} strokeWidth={2} />} label="Salvos" to="/salvos" />
+                <SidebarLink icon={<BookOpen size={20} strokeWidth={2} />} label="Minhas Obras" to="/minhas-obras" />
                 <SidebarLink 
                   icon={<Settings size={20} strokeWidth={2} />} 
                   label="Configurações" 
@@ -208,10 +215,7 @@ export default function Feed() {
 
             {/* Posts */}
             {!loading && posts.map((post) => (
-              <PostCard key={post.post_id} post={{
-                ...post,
-                autor_nome_user: post.autor_nome_user ?? "Usuario Desativado"
-              }} />
+              <PostCard key={post.post_id} post={post} />
             ))}
 
             {/* Loading More Indicator */}
@@ -246,25 +250,36 @@ export default function Feed() {
 function SidebarLink({
   icon,
   label,
+  to,
   active = false,
   onClick
 }: {
   icon: React.ReactNode;
   label: string;
+  to?: string;
   active?: boolean;
   onClick?: () => void;
 }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isActive = active || (to && location.pathname === to);
+
+  const handleClick = () => {
+    if (onClick) onClick();
+    if (to) navigate(to);
+  };
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className={`
       flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 w-full
-      ${active 
+      ${isActive 
         ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] font-bold' 
         : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)]'}
     `}
     >
-      <span className={active ? 'text-[var(--accent-primary)]' : ''}>
+      <span className={isActive ? 'text-[var(--accent-primary)]' : ''}>
         {icon}
       </span>
       <span className="text-sm font-lexend">{label}</span>
@@ -275,7 +290,7 @@ function SidebarLink({
 function GamificationPanel({ perfil }: { perfil: PerfilResumo | null }) {
   if (!perfil) return null;
 
-  const xpPercent = Math.min(100, (perfil.xp / (perfil.level * 1000)) * 100);
+  const patente = perfil.titulo_ativo || getPatentePorNivel(perfil.level);
 
   return (
     <div className="bg-[var(--bg-card)] rounded-2xl shadow-[var(--shadow-elevation-1)] border border-[var(--border-color)] p-5 space-y-4">
@@ -289,23 +304,14 @@ function GamificationPanel({ perfil }: { perfil: PerfilResumo | null }) {
         </span>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight">
-          <span className="text-[var(--text-secondary)]">Experiência</span>
-          <span className="text-[var(--accent-primary)]">{perfil.xp} / {perfil.level * 1000} XP</span>
-        </div>
-        <div className="h-2 bg-[var(--input-bg)] rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-[var(--accent-primary)] transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(26,128,57,0.3)]"
-            style={{ width: `${xpPercent}%` }}
-          />
-        </div>
+      <div className="space-y-3">
+        <ProgressBarXP xp={perfil.xp} level={perfil.level} />
       </div>
 
       <div className="pt-2 border-t border-[var(--border-color)]/10 flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-[10px] text-[var(--text-secondary)] font-medium uppercase tracking-tighter">Patente Atual</span>
-          <span className="text-xs font-bold text-[var(--text-primary)] font-lexend">{perfil.titulo_ativo || 'Calouro'}</span>
+          <span className="text-xs font-bold text-[var(--text-primary)] font-lexend">{patente}</span>
         </div>
         <div className="size-8 bg-[var(--accent-primary)]/10 rounded-lg flex items-center justify-center text-[var(--accent-primary)]">
           <Medal size={18} />

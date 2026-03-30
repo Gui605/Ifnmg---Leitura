@@ -9,41 +9,65 @@ import { PerfilResumo } from '../../shared/types/perfil.types';
 import Header from '../../shared/components/Header';
 import { Notificacao } from '../../shared/utils/Notificacao';
 
+import { useAuth } from '../../shared/utils/authContext';
+
 export default function PerfilPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { perfil: userLogado } = useAuth();
   const [perfil, setPerfil] = useState<PerfilResumo | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
-  const isOwnProfile = !id || id === 'me';
+  const isOwnProfile = !id || id === 'me' || Number(id) === userLogado?.perfil_id;
 
   useEffect(() => {
     setLoading(true);
-    const fetchPerfil = id 
-      ? getPerfilPublico(Number(id))
-      : getMeuPerfil();
+    const fetchPerfil = isOwnProfile 
+      ? getMeuPerfil()
+      : getPerfilPublico(Number(id));
 
     fetchPerfil
       .then(setPerfil)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, isOwnProfile]);
 
   const handleToggleFollow = async () => {
     if (!perfil?.perfil_id || isOwnProfile) return;
     
+    // Optimistic UI: Salva estado anterior para rollback
+    const previousPerfil = { ...perfil };
+    const isFollowing = !perfil.is_following;
+    
+    // Atualiza localmente antes da chamada
+    setPerfil(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        is_following: isFollowing,
+        estatisticas: prev.estatisticas ? {
+          ...prev.estatisticas,
+          seguidores: isFollowing 
+            ? prev.estatisticas.seguidores + 1 
+            : prev.estatisticas.seguidores - 1
+        } : undefined
+      };
+    });
+
     setActionLoading(true);
     try {
       const res = await toggleFollow(perfil.perfil_id);
-      // Atualiza o estado local do perfil para refletir a mudança nas estatísticas/seguindo
-      // Como o backend retorna { seguindo: boolean }, idealmente atualizaríamos o perfil completo ou apenas o contador
-      const updatedPerfil = id ? await getPerfilPublico(Number(id)) : await getMeuPerfil();
+      
+      // Sincroniza com o backend para garantir integridade (opcional, mas recomendado)
+      const updatedPerfil = await getPerfilPublico(perfil.perfil_id);
       setPerfil(updatedPerfil);
       
       Notificacao.toast.sucesso(res.seguindo ? `Seguindo @${perfil.nome_user}` : `Deixou de seguir @${perfil.nome_user}`);
     } catch (err: any) {
+      // Rollback em caso de erro
+      setPerfil(previousPerfil);
       Notificacao.toast.erro(err?.message || "Erro ao processar ação");
     } finally {
       setActionLoading(false);
@@ -62,7 +86,7 @@ export default function PerfilPage() {
     <div className="flex items-center gap-2">
       {isOwnProfile ? (
         <button 
-          onClick={() => Notificacao.toast.info("Configurações em breve")}
+          onClick={() => navigate('/configuracoes')}
           className="flex items-center gap-2 bg-[var(--input-bg)] text-[var(--text-primary)] px-4 py-2 rounded-lg font-bold text-sm hover:bg-[var(--border-color)] transition-all"
         >
           <Settings size={16} />
@@ -73,13 +97,11 @@ export default function PerfilPage() {
           onClick={handleToggleFollow}
           disabled={actionLoading}
           className={`flex items-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-md active:scale-95 disabled:opacity-50 ${
-            // Idealmente o PerfilResumo teria um campo 'is_following'
-            // Por enquanto simulamos via UI ou lógica de serviço
-            perfil?.is_admin ? 'bg-[var(--input-bg)] text-[var(--text-primary)]' : 'bg-[var(--accent-primary)] text-white'
+            perfil?.is_following ? 'bg-[var(--input-bg)] text-[var(--text-primary)]' : 'bg-[var(--accent-primary)] text-white'
           }`}
         >
-          {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
-          {perfil?.is_admin ? 'Seguindo' : 'Seguir'}
+          {actionLoading ? <Loader2 size={16} className="animate-spin" /> : (perfil?.is_following ? <UserMinus size={16} /> : <UserPlus size={16} />)}
+          {perfil?.is_following ? 'Seguindo' : 'Seguir'}
         </button>
       )}
     </div>

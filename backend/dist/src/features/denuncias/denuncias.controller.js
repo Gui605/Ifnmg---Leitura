@@ -7,10 +7,8 @@ const asyncHandler_1 = require("../../shared/utils/asyncHandler");
 const denuncias_service_1 = __importDefault(require("./denuncias.service"));
 const AppError_1 = require("../../shared/utils/AppError");
 const criar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
-    const perfilId = req.perfil_id;
+    const perfilId = req.user.perfil_id;
     const postId = Number(req.params.postId);
-    if (!perfilId)
-        throw AppError_1.AppError.unauthorized('Acesso não autorizado.');
     if (isNaN(postId) || !Number.isSafeInteger(postId) || postId <= 0) {
         throw AppError_1.AppError.badRequest('ID inválido.');
     }

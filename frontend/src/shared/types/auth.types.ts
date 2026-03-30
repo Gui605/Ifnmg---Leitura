@@ -21,6 +21,13 @@ export const RegisterPayloadSchema = z.object({
 });
 export type RegisterPayload = z.infer<typeof RegisterPayloadSchema>;
 
+export interface AuthUser {
+  usuario_id: number;
+  perfil_id: number;
+  is_admin: boolean;
+  token_version: number;
+}
+
 export const RegisterResponseSchema = z.object({
   status: z.number().int(),
   message: z.string(),

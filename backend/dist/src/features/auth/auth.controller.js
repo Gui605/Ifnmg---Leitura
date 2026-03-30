@@ -69,7 +69,7 @@ const redefinirSenha = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => 
     });
 });
 const logoutAll = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
-    const usuarioId = req.usuario_id;
+    const usuarioId = req.user.usuario_id;
     const message = await auth_service_1.default.logoutAll(usuarioId, req.requestId);
     return res.status(200).json({
         status: 'success',

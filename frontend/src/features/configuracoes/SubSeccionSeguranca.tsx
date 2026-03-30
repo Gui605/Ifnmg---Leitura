@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { updateSenha } from '../../shared/services/perfil.service';
 import { Notificacao } from '../../shared/utils/Notificacao';
 import { Laptop, Smartphone } from 'lucide-react';
+import { useAuth } from '../../shared/utils/authContext';
 
 export function SubSeccionSeguranca() {
+  const { logout } = useAuth();
   const [senhaAtual, setSenhaAtual] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarNovaSenha, setConfirmarNovaSenha] = useState('');
@@ -17,7 +19,7 @@ export function SubSeccionSeguranca() {
     }
 
     try {
-      await updateSenha(senhaAtual, novaSenha);
+      await updateSenha(senhaAtual, novaSenha, confirmarNovaSenha);
       Notificacao.toast.sucesso('Senha alterada com sucesso!');
       setSenhaAtual('');
       setNovaSenha('');
@@ -87,7 +89,10 @@ export function SubSeccionSeguranca() {
             </h2>
             <p className="text-[var(--text-secondary)] text-sm">Você está conectado em 2 dispositivos.</p>
           </div>
-          <button className="flex items-center gap-2 border-2 border-[var(--accent-primary)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/5 font-bold py-2 px-4 rounded-xl transition-all text-sm active:scale-95">
+          <button 
+            onClick={() => logout(true)}
+            className="flex items-center gap-2 border-2 border-[var(--accent-primary)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/5 font-bold py-2 px-4 rounded-xl transition-all text-sm active:scale-95"
+          >
             Sair de todos os dispositivos
           </button>
         </div>
@@ -113,7 +118,8 @@ export function SubSeccionSeguranca() {
                 <p className="text-xs text-[var(--text-secondary)]">Belo Horizonte, Brasil • <span className="text-[var(--accent-primary)] font-bold">Ativo há 3 horas</span></p>
               </div>
             </div>
-            <button className="text-xs font-bold text-[var(--color-if-red)] hover:underline active:scale-95 transition-all">Revogar</button>
+            
+              
           </div>
         </div>
       </section>

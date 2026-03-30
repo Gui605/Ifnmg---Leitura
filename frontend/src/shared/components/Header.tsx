@@ -1,3 +1,4 @@
+//frontend/src/shared/components/Header.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -21,6 +22,7 @@ export interface HeaderProps {
   perfil?: PerfilResumo | null;
   title?: string;
   showSearch?: boolean;
+  hideBack?: boolean;
   onBack?: () => void;
   navLinks?: { label: string; path: string; icon?: React.ReactNode }[];
   actions?: React.ReactNode;
@@ -31,9 +33,10 @@ export interface HeaderProps {
 }
 
 export default function Header({
-  perfil,
+  perfil: perfilProp,
   title,
   showSearch = true,
+  hideBack = false,
   onBack,
   navLinks,
   actions,
@@ -44,39 +47,52 @@ export default function Header({
 }: HeaderProps) {
   const navigate = useNavigate();
   const { modoEscuro, alternarTema } = useTema();
-  const { autenticado, logout } = useAuth();
+  const { autenticado, logout, perfil: perfilAuth } = useAuth();
   const [isLayoutMenuOpen, setIsLayoutMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Prioriza o perfil do AuthContext para garantir reatividade global
+  const perfil = perfilAuth || perfilProp;
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full h-16 bg-[var(--bg-card)] border-b border-[var(--accent-primary)]/10 px-4 md:px-10 flex items-center justify-between shadow-sm backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full h-16 bg-[var(--bg-card)]/80 border-b border-[var(--accent-primary)]/10 px-4 md:px-10 flex items-center justify-between shadow-sm backdrop-blur-md">
       <div className="flex items-center gap-8 flex-1">
-        {/* Logo ou Voltar */}
-        <div className="flex items-center gap-4">
-          {onBack ? (
+        {/* Logo e Voltar (Lado Esquerdo) */}
+        <div className="flex items-center gap-3">
+          {/* Ícone Campus (Sempre visível) */}
+          <Link to="/dashboard" className="flex items-center gap-2 text-[var(--accent-primary)] hover:scale-105 transition-transform active:scale-95 shrink-0">
+            <BookOpen size={28} strokeWidth={1.5} />
+            <h1 className="text-sm font-black tracking-tighter text-[var(--text-primary)] hidden sm:block font-lexend uppercase">
+              IFNMG
+            </h1>
+          </Link>
+
+          {/* Botão Voltar (À direita do Campus, dinâmico) */}
+          {!hideBack && (
             <button
-              onClick={onBack}
-              className="p-2 hover:bg-[var(--input-bg)] rounded-full transition-colors text-[var(--text-secondary)]"
+              onClick={handleBack}
+              className="p-2 hover:bg-[var(--input-bg)] rounded-xl transition-all active:scale-90 text-[var(--text-secondary)] border border-[var(--border-color)]/50"
               title="Voltar"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={18} strokeWidth={2.5} />
             </button>
-          ) : (
-            <>
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 hover:bg-[var(--input-bg)] rounded-lg md:hidden transition-colors"
-              >
-                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
-              <Link to="/dashboard" className="flex items-center gap-2 text-[var(--accent-primary)]">
-                <BookOpen size={28} strokeWidth={1.5} />
-                <h1 className="text-base font-bold tracking-tight text-[var(--text-primary)] hidden sm:block font-lexend">
-                  IFNMG LEITURA
-                </h1>
-              </Link>
-            </>
           )}
+
+          {/* Menu Mobile */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 hover:bg-[var(--input-bg)] rounded-lg md:hidden transition-colors"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
 
         {/* BUSCA OU TÍTULO */}

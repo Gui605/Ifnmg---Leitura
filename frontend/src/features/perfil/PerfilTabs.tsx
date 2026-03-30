@@ -1,3 +1,4 @@
+//frontend/src/features/perfil/PerfilTabs.tsx
 import { useState, useEffect } from 'react';
 import PostCard from '../feed/PostCard';
 import { getPostsByUserId, getPostsFavoritados } from '../../shared/services/post.service';
@@ -26,18 +27,16 @@ export default function PerfilTabs({ userId, isMeuPerfil }: PerfilTabsProps) {
   }, [activeTab, userId]);
 
   const fetchPosts = async (p: number, reset: boolean = false) => {
+    if (!userId) return;
     setLoading(true);
     try {
       const result = activeTab === 'pergaminhos' 
         ? await getPostsByUserId(userId, p)
         : await getPostsFavoritados(p);
       
-      // Filtro de segurança adicional no frontend (Isolamento de Dados)
-      const filteredPosts = activeTab === 'pergaminhos' 
-        ? result.posts.filter(post => post.autor_id === userId)
-        : result.posts;
+      const newPosts = result.posts || [];
 
-      setPosts(prev => reset ? filteredPosts : [...prev, ...filteredPosts]);
+      setPosts(prev => reset ? newPosts : [...prev, ...newPosts]);
       setHasMore(result.meta.page < result.meta.totalPages);
     } catch (error) {
       console.error('Erro ao buscar posts:', error);
@@ -85,10 +84,7 @@ export default function PerfilTabs({ userId, isMeuPerfil }: PerfilTabsProps) {
         {posts.map(post => (
           <div key={post.post_id} className="hover:border-[var(--accent-primary)]/30 transition-all border border-transparent rounded-2xl">
             <PostCard 
-              post={{
-                ...post,
-                autor_nome_user: post.autor_nome_user ?? "Acadêmico"
-              }} 
+              post={post} 
               disableProfileLink={true}
             />
           </div>

@@ -17,13 +17,9 @@ import {
  */
 
 const getPerfilInfo = tratarAssincrono(async (req: Request, res: Response) => {
-    const perfilId = req.perfil_id;
+    const perfilId = req.user.perfil_id;
 
-    if (!perfilId) {
-        throw AppError.unauthorized('Sessão inválida. Por favor, faça login novamente.');
-    }
-
-    const perfil = await perfilService.buscarPerfilCompleto(perfilId, req.requestId);
+    const perfil = await perfilService.buscarPerfilCompleto(perfilId, perfilId, req.requestId);
 
     return res.status(200).json({
         status: 'success',
@@ -33,14 +29,28 @@ const getPerfilInfo = tratarAssincrono(async (req: Request, res: Response) => {
     });
 });
 
+const getPerfilPublico = tratarAssincrono(async (req: Request<{ id: string }>, res: Response) => {
+    const perfilId = Number(req.params.id);
+    const visitanteId = req.user?.perfil_id;
+
+    if (isNaN(perfilId) || perfilId <= 0) {
+        throw AppError.badRequest('ID de perfil inválido.');
+    }
+
+    const perfil = await perfilService.buscarPerfilCompleto(perfilId, visitanteId, req.requestId);
+
+    return res.status(200).json({
+        status: 'success',
+        message: 'Perfil público recuperado com sucesso.',
+        data: perfil,
+        meta: null
+    });
+});
+
 const updatePerfil = tratarAssincrono(async (req: Request<{}, {}, PerfilPatchBody>, res: Response) => {
-    const perfilId = req.perfil_id;
+    const perfilId = req.user.perfil_id;
     // 🛡️ O Zod já garantiu que o body contém APENAS 'nome' e que ele é válido.
     const { nome } = req.body;
-    
-    if (!perfilId) {
-        throw AppError.unauthorized('Sessão expirada. Identificação do perfil não encontrada.');
-    }
 
     // O trim() também foi realizado automaticamente pelo Schema
     const perfilAtualizado = await perfilService.atualizarPerfil(perfilId, { nome }, req.requestId);
@@ -54,40 +64,28 @@ const updatePerfil = tratarAssincrono(async (req: Request<{}, {}, PerfilPatchBod
 });
 
 const alterarSenha = tratarAssincrono(async (req: Request<{}, any, SenhaPatchBody>, res: Response) => {
-    const usuarioId = req.usuario_id;
+    const usuarioId = req.user.usuario_id;
     // 🛡️ Validações de força de senha e "novaSenha === confirmarNovaSenha" 
     // agora ocorrem automaticamente no Zod Schema (.refine()).
     const { senhaAntiga, novaSenha } = req.body; 
     
-    if (!usuarioId) {
-        throw AppError.unauthorized('Sessão inválida. Identificação do usuário não encontrada.');
-    }
-
     const message = await segurancaService.alterarSenha(usuarioId, senhaAntiga, novaSenha, req.requestId);
     
     return res.status(200).json({ status: 'success', message, data: null, meta: null });
 });
 
 const deletarPerfil = tratarAssincrono(async (req: Request<{}, {}, DeletarContaBody>, res: Response) => {
-    const usuarioId = req.usuario_id;
+    const usuarioId = req.user.usuario_id;
     const { senhaAtual } = req.body;
     
-    if (!usuarioId) {
-        throw AppError.unauthorized('Não autorizado. Sessão de usuário não identificada.');
-    }
-
     const message = await segurancaService.deletarConta(usuarioId, senhaAtual, req.requestId);
     
     return res.status(200).json({ status: 'success', message, data: null, meta: null });
 });
 
 const toggleFollow = tratarAssincrono(async (req: Request<{ id: string }>, res: Response) => {
-    const seguidorId = req.perfil_id;
+    const seguidorId = req.user.perfil_id;
     const seguidoId = Number(req.params.id);
-
-    if (!seguidorId) {
-        throw AppError.unauthorized('Sessão inválida.');
-    }
 
     if (isNaN(seguidoId) || seguidoId <= 0) {
         throw AppError.badRequest('ID de perfil inválido.');
@@ -118,4 +116,22 @@ const toggleFollow = tratarAssincrono(async (req: Request<{ id: string }>, res: 
     }
 });
 
-export default { getPerfilInfo, updatePerfil, alterarSenha, deletarPerfil, toggleFollow };
+const checkPendenciasExclusao = tratarAssincrono(async (req: Request, res: Response) => {
+    const perfilId = req.user.perfil_id;
+    const check = await perfilService.checkPendenciasExclusao(perfilId);
+
+    return res.status(200).json({
+        status: 'success',
+        data: check
+    });
+});
+
+export default { 
+    getPerfilInfo, 
+    getPerfilPublico, 
+    updatePerfil, 
+    alterarSenha, 
+    deletarPerfil, 
+    toggleFollow,
+    checkPendenciasExclusao
+};

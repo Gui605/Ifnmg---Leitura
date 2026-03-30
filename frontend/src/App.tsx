@@ -5,6 +5,11 @@ import Redefinir from './features/auth/Redefinir';
 import Feed from './features/feed/Feed';
 import EscreverPost from './features/posts/EscreverPost';
 import PerfilPage from './features/perfil/PerfilPage';
+import MinhasObrasPage from './features/obras/MinhasObrasPage';
+import CriarObra from './features/obras/CriarObra';
+import EscritaCapitulo from './features/obras/EscritaCapitulo';
+import ObraDetalhesPage from './features/obras/ObraDetalhesPage';
+import PostDetalhesPage from './features/posts/PostDetalhesPage';
 import { useAuth } from './shared/utils/authContext';
 import { ProtectedRoute, PublicOnlyRoute } from './shared/guards';
 import { ConfigPage } from './features/configuracoes/ConfigPage';
@@ -12,6 +17,7 @@ import { SubSeccionPerfil } from './features/configuracoes/SubSeccionPerfil';
 import { SubSeccionSeguranca } from './features/configuracoes/SubSeccionSeguranca';
 import { SubSeccionPrivacidade } from './features/configuracoes/SubSeccionPrivacidade';
 import { ExplorarPage } from './features/explorar/ExplorarPage';
+import ScrollToTop from './shared/components/ScrollToTop';
 
 export default function App() {
   const { autenticado, loading } = useAuth();
@@ -22,6 +28,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Navigate to={autenticado ? '/dashboard' : '/entrada'} replace />} />
         
@@ -38,9 +45,15 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Feed />} />
           <Route path="/escrever" element={<EscreverPost />} />
+          <Route path="/posts/:id" element={<PostDetalhesPage />} />
           <Route path="/explorar" element={<ExplorarPage />} />
           <Route path="/perfil/me" element={<PerfilPage />} />
           <Route path="/perfil/:id" element={<PerfilPage />} />
+
+          <Route path="/minhas-obras" element={<MinhasObrasPage />} />
+          <Route path="/obras/nova" element={<CriarObra />} />
+          <Route path="/obras/:id" element={<ObraDetalhesPage />} />
+          <Route path="/escrever-capitulo/:obraId" element={<EscritaCapitulo />} />
 
           <Route path="/configuracoes" element={<ConfigPage />}>
             <Route index element={<Navigate to="perfil" replace />} />

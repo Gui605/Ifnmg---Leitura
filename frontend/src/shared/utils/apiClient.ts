@@ -43,32 +43,23 @@ api.interceptors.request.use((config) => {
 
 
 // Dicionário de Erros (UX)
-
 const ERROR_MESSAGES: Record<string, string> = {
-
-  [ErrorCodes.INVALID_CREDENTIALS]: 'E-mail ou senha incorretos.',
-
-  [ErrorCodes.TOKEN_EXPIRED]: 'Sua sessão expirou. Faça login novamente.',
-
+  [ErrorCodes.INVALID_CREDENTIALS]: 'E-mail ou senha incorretos. Verifique os dados.',
+  [ErrorCodes.TOKEN_EXPIRED]: 'Sua sessão expirou por segurança. Por favor, entre novamente.',
   [ErrorCodes.TOKEN_INVALID]: 'Token inválido. Faça login novamente.',
-
   [ErrorCodes.FORBIDDEN]: 'Acesso negado.',
-
   [ErrorCodes.UNAUTHENTICATED]: 'Você precisa estar autenticado para acessar.',
-
+  [ErrorCodes.INSUFFICIENT_PERMISSIONS]: 'Você não tem permissão para realizar esta ação.',
   [ErrorCodes.EMAIL_ALREADY_EXISTS]: 'Este e-mail já está em uso.',
-  [ErrorCodes.CONFLICT]: 'Solicitação recebida.',
+  [ErrorCodes.CONFLICT]: 'Conflito de dados. Verifique as informações.',
   [ErrorCodes.VALIDATION_ERROR]: 'Verifique os campos e tente novamente.',
   [ErrorCodes.FIELD_VALIDATION]: 'Verifique os campos e tente novamente.',
-
-  [ErrorCodes.RATE_LIMIT_EXCEEDED]: 'Muitas tentativas. Aguarde alguns minutos.',
-
+  [ErrorCodes.RATE_LIMIT_EXCEEDED]: 'Muitas tentativas em pouco tempo. Respire fundo e tente em um minuto.',
   [ErrorCodes.RESOURCE_NOT_FOUND]: 'Recurso não encontrado.',
-
   [ErrorCodes.EMAIL_SERVICE_UNAVAILABLE]: 'Serviço de e-mail indisponível no momento.',
-
   [ErrorCodes.DATABASE_CONNECTION_FAILED]: 'Falha ao conectar-se ao servidor.',
-
+  [ErrorCodes.INTERNAL_ERROR]: 'Erro interno no servidor. Tente novamente mais tarde.',
+  [ErrorCodes.SERVICE_UNAVAILABLE]: 'O serviço está temporariamente indisponível.',
 };
 
 
@@ -139,15 +130,25 @@ async function request<T>(
   select?: Selector<unknown>
 ): Promise<T> {
   let resp: AxiosResponse;
-  if (method === 'get' || method === 'delete') {
+  if (method === 'get') {
     resp = await api[method](url, config);
+  } else if (method === 'delete') {
+    // Axios delete com body exige data dentro de config.data
+    resp = await api.delete(url, { ...config, data });
   } else {
     resp = await api[method](url, data, config);
   }
   
-  // AQUI A MÁGICA: O backend envia { status, message, data, meta }
+  // AQUI A MÁGICA: O backend envia { status, message, data, meta, perfil_atualizado }
   if (!resp.data || !resp.data.hasOwnProperty('status') || !resp.data.hasOwnProperty('message')) {
     throw AppError.internal('Contrato da API inválido: Formato de resposta inesperado.');
+  }
+
+  // 🛡️ SINCRONIA DE PERFIL: Se o backend enviou perfil_atualizado, disparamos o evento global
+  if (resp.data.perfil_atualizado) {
+    window.dispatchEvent(new CustomEvent('auth:perfil_updated', { 
+      detail: resp.data.perfil_atualizado 
+    }));
   }
 
   // Validamos o 'data' (payload de negócio)
@@ -179,9 +180,9 @@ export const apiClient = {
 
     request('put', url, schema, data, config, select),
 
-  delete: <T>(url: string, schema: z.ZodType<T>, config?: AxiosRequestConfig, select?: Selector<unknown>) => 
+  delete: <T>(url: string, data: any, schema: z.ZodType<T>, config?: AxiosRequestConfig, select?: Selector<unknown>) => 
 
-    request('delete', url, schema, undefined, config, select),
+    request('delete', url, schema, data, config, select),
 
   patch: <T>(url: string, data: any, schema: z.ZodType<T>, config?: AxiosRequestConfig, select?: Selector<unknown>) => 
 

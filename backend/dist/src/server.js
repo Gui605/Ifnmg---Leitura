@@ -55,6 +55,7 @@ const posts_routes_1 = __importDefault(require("./features/posts/posts.routes"))
 const categorias_routes_1 = __importDefault(require("./features/categorias/categorias.routes"));
 const health_routes_1 = __importDefault(require("./features/health/health.routes"));
 const denuncias_routes_1 = __importDefault(require("./features/denuncias/denuncias.routes"));
+const obras_routes_1 = __importDefault(require("./features/obras/obras.routes"));
 // Utils
 const logger_1 = require("./shared/utils/logger");
 const serviceEmail_1 = require("./shared/utils/serviceEmail");
@@ -94,6 +95,7 @@ app.use('/api/v1/posts', posts_routes_1.default);
 app.use('/api/v1/categorias', categorias_routes_1.default);
 app.use('/api/v1/saude', health_routes_1.default);
 app.use('/api/v1/denuncias', denuncias_routes_1.default);
+app.use('/api/v1/obras', obras_routes_1.default);
 // --- 5. FALLBACK E ERROS ---
 app.all('*', (req, _res, next) => next(AppError_1.AppError.notFound(`Rota ${req.originalUrl} não existe.`)));
 app.use(errorHandler_middleware_1.tratadorDeErros);

@@ -55,7 +55,7 @@ export function CardTrabalho({ trabalho }: Props) {
           
           <div className="flex items-center gap-1.5 mb-4 text-sm font-bold text-[var(--accent-primary)]">
             <UserIcon size={14} strokeWidth={2.5} />
-            por <Link to={`/perfil/${trabalho.autor_id}`} className="hover:underline decoration-2 underline-offset-2">{trabalho.autor_nome_user || 'Autor Desconhecido'}</Link>
+            por <Link to={`/perfil/${trabalho.autor_id}`} className="hover:underline decoration-2 underline-offset-2">{trabalho.autor_display?.nome || 'Autor Desconhecido'}</Link>
           </div>
           
           <div className="flex flex-wrap gap-2 mb-5">

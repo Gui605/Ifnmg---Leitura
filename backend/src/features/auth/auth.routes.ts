@@ -1,3 +1,4 @@
+//backend/src/features/auth/auth.routes.ts
 import { Router } from 'express';
 import authController from './auth.controller';
 import { limitadorRegistro, limitadorLogin, limitadorSaude } from '../../shared/middlewares/rateLimiter';

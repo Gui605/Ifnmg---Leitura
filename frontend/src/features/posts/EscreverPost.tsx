@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Send, Save, X, MapPin, Hash, GraduationCap, Scroll, Check } from "lucide-react";
 import { Notificacao } from "../../shared/utils/Notificacao";
-import { getTodas as getCategorias } from "../../shared/services/categoria.service";
+import { listarCategorias as getCategorias } from "../../shared/services/categoria.service";
 import { criarPost } from "../../shared/services/post.service";
 import { getMeuPerfil } from "../../shared/services/perfil.service";
 import { Categoria } from "../../shared/types/categoria.types";
@@ -56,7 +56,10 @@ export default function EscreverPost() {
           score_karma: 1250,
           reading_points: 850,
           level: 10,
-          xp: 500
+          xp: 500,
+          xp_escrita: 200,
+          xp_social: 150,
+          xp_curadoria: 150
         });
       });
 

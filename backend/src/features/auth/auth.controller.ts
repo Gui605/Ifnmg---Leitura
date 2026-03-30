@@ -85,7 +85,7 @@ const redefinirSenha = tratarAssincrono(async (req: Request<{}, any, RedefinirSe
 });
 
 const logoutAll = tratarAssincrono(async (req: Request, res: Response) => {
-    const usuarioId = req.usuario_id!;
+    const usuarioId = req.user.usuario_id;
     const message = await authService.logoutAll(usuarioId, req.requestId);
     return res.status(200).json({
         status: 'success',

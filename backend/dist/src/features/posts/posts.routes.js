@@ -50,4 +50,29 @@ postsRoutes.post('/:id/comentarios', authMiddleware_1.middlewareAutenticacao, ra
     params: PostIdParamsSchema,
     body: post_types_1.PostCommentSchema
 }), posts_controller_1.default.comentarPost);
+/**
+ * GET /posts/:id/comentarios
+ * 🛡️ Público/Opcional
+ */
+postsRoutes.get('/:id/comentarios', optionalAuthMiddleware_1.middlewareAutenticacaoOpcional, (0, validate_middleware_1.validate)({
+    params: PostIdParamsSchema
+}), posts_controller_1.default.listarComentarios);
+/**
+ * DELETE /posts/comentarios/:id
+ * 🛡️ Protegida - apenas autor ou admin
+ */
+postsRoutes.delete('/comentarios/:id', authMiddleware_1.middlewareAutenticacao, (0, validate_middleware_1.validate)({
+    params: PostIdParamsSchema
+}), posts_controller_1.default.deletarComentario);
+postsRoutes.post('/:id/reagir', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validate)({
+    params: PostIdParamsSchema,
+    body: post_types_1.ReacaoSchema
+}), posts_controller_1.default.reagirPost);
+/**
+ * GET /api/v1/posts/:id
+ * 🛡️ Híbrido: Acesso público, mas personaliza para logado
+ */
+postsRoutes.get('/:id', optionalAuthMiddleware_1.middlewareAutenticacaoOpcional, rateLimiter_1.limitadorLeitura, (0, validate_middleware_1.validate)({
+    params: PostIdParamsSchema
+}), posts_controller_1.default.getPostById);
 exports.default = postsRoutes;

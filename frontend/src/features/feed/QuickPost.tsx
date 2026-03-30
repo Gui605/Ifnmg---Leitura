@@ -1,23 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { getMeuPerfil } from "../../shared/services/perfil.service";
-import { PerfilResumo } from "../../shared/types/perfil.types";
+import React from "react";
+import { useAuth } from "../../shared/utils/authContext";
 
 export default function QuickPost() {
-  const [perfil, setPerfil] = useState<PerfilResumo | null>(null);
-
-  useEffect(() => {
-    getMeuPerfil()
-      .then(setPerfil)
-      .catch(() => {
-        setPerfil({
-          nome_user: "Visitante",
-          score_karma: 0,
-          reading_points: 0,
-          level: 1,
-          xp: 0
-        });
-      });
-  }, []);
+  const { perfil } = useAuth();
 
   const inicial = perfil ? perfil.nome_user.charAt(0).toUpperCase() : "?";
 

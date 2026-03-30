@@ -28,10 +28,17 @@ export const PerfilResumoSchema = z.object({
   nome_campus: z.string().optional().nullable(),
   score_karma: z.number(),
   reading_points: z.number(),
+  
+  // Gamificação V2
   level: z.number().default(1),
   xp: z.number().default(0),
+  xp_escrita: z.number().default(0),
+  xp_social: z.number().default(0),
+  xp_curadoria: z.number().default(0),
   titulo_ativo: z.string().optional().nullable(),
+  
   is_admin: z.boolean().optional(),
+  is_following: z.boolean().optional(),
   estatisticas: EstatisticasSchema.optional(),
   titulos: z.array(PerfilTituloSchema).optional(),
 });

@@ -262,6 +262,12 @@ export const tratadorDeErros = (
 
   if (statusCode >= 500) {
     message = 'Erro interno do servidor. Tente novamente mais tarde.';
+    // 🔍 DEBUG: Exibe stack trace no terminal durante desenvolvimento
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('\x1b[31m%s\x1b[0m', '--- [DEBUG] INTERNAL SERVER ERROR STACK ---');
+      console.error(err);
+      console.error('\x1b[31m%s\x1b[0m', '-------------------------------------------');
+    }
   }
 
   return res.status(statusCode).json({
@@ -270,6 +276,8 @@ export const tratadorDeErros = (
     error: reason,
     errorCode,
     message,
+    // 🔍 DEBUG: Envia stack trace no payload para facilitar a vida do desenvolvedor (APENAS EM DEV)
+    ...(process.env.NODE_ENV !== 'production' && { stack: err instanceof Error ? err.stack : String(err) }),
     path: req.originalUrl,
     requestId
   });

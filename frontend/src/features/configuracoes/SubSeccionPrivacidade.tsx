@@ -1,27 +1,64 @@
 
-import { deleteMinhaConta } from '../../shared/services/perfil.service';
+import { deleteMinhaConta, checkPendenciasExclusao } from '../../shared/services/perfil.service';
 import { Notificacao } from '../../shared/utils/Notificacao';
 import { useAuth } from '../../shared/utils/authContext';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, Users, AlertTriangle } from 'lucide-react';
 
 export function SubSeccionPrivacidade() {
   const { logout } = useAuth();
 
   const handleDeleteAccount = async () => {
-    const isConfirmed = await Notificacao.modal.confirmar({
-      titulo: 'Excluir Conta',
-      texto: 'Esta ação é irreversível. Todos os seus dados serão anonimizados. Deseja continuar?',
-      isDestructive: true,
-    });
+    try {
+      // 1. Pre-flight check
+      const pendencias = await checkPendenciasExclusao();
 
-    if (isConfirmed) {
-      try {
-        await deleteMinhaConta();
-        Notificacao.toast.sucesso('Conta excluída com sucesso.');
-        logout();
-      } catch (error) {
-        Notificacao.toast.erro('Erro ao excluir a conta.');
+      // CENÁRIO C: Bloqueio por ser Admin ou Dono de Comunidades Ativas
+      if (!pendencias.podeExcluir) {
+        let mensagem = "";
+        if (pendencias.isRootAdmin) {
+          mensagem = "Administradores não podem excluir a própria conta. Solicite a remoção do seu cargo antes de prosseguir.";
+        } else if (pendencias.comunidadesImpeditivas.length > 0) {
+          const nomesComunidades = pendencias.comunidadesImpeditivas.map(c => `"${c.nome}"`).join(", ");
+          mensagem = `Você é dono das comunidades ${nomesComunidades}, que possuem outros membros ativos. Transfira a posse ou encerre os grupos antes de excluir sua conta.`;
+        }
+
+        await Notificacao.modal.aviso({
+          titulo: 'Ação Bloqueada',
+          texto: mensagem,
+          icon: 'warning'
+        });
+        return;
       }
+
+      // CENÁRIO B: Dono Solitário (Aviso de exclusão de comunidades)
+      let textoConfirmacao = 'Esta ação é irreversível. Todos os seus dados pessoais serão anonimizados e seu acesso será desativado permanentemente.';
+      if (pendencias.comunidadesImpeditivas.length === 0) {
+        // Se houver comunidades onde ele é o único membro, avisar que serão apagadas
+        // (No backend, a lógica apaga se membros <= 1)
+      }
+
+      const isConfirmed = await Notificacao.modal.confirmar({
+        titulo: 'Excluir Conta',
+        texto: textoConfirmacao,
+        isDestructive: true,
+      });
+
+      if (isConfirmed) {
+        const { value: senhaAtual } = await Notificacao.modal.input({
+          titulo: 'Confirme sua Senha',
+          texto: 'Por segurança, digite sua senha atual para confirmar a exclusão.',
+          placeholder: 'Sua senha atual',
+          inputType: 'password'
+        });
+
+        if (!senhaAtual) return;
+
+        await deleteMinhaConta(senhaAtual);
+        Notificacao.toast.sucesso('Conta excluída com sucesso.');
+        logout(true); // Global Logout imediato
+      }
+    } catch (error) {
+      // Erro já tratado pelo apiClient
     }
   };
 
