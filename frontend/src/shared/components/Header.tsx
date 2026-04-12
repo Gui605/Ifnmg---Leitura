@@ -1,6 +1,6 @@
 //frontend/src/shared/components/Header.tsx
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Search, 
   Menu, 
@@ -46,10 +46,13 @@ export default function Header({
   isRightVisible
 }: HeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { modoEscuro, alternarTema } = useTema();
   const { autenticado, logout, perfil: perfilAuth } = useAuth();
   const [isLayoutMenuOpen, setIsLayoutMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const isAuthPage = location.pathname.startsWith('/entrada');
 
   // Prioriza o perfil do AuthContext para garantir reatividade global
   const perfil = perfilAuth || perfilProp;
@@ -68,10 +71,16 @@ export default function Header({
         {/* Logo e Voltar (Lado Esquerdo) */}
         <div className="flex items-center gap-3">
           {/* Ícone Campus (Sempre visível) */}
-          <Link to="/dashboard" className="flex items-center gap-2 text-[var(--accent-primary)] hover:scale-105 transition-transform active:scale-95 shrink-0">
-            <BookOpen size={28} strokeWidth={1.5} />
-            <h1 className="text-sm font-black tracking-tighter text-[var(--text-primary)] hidden sm:block font-lexend uppercase">
-              IFNMG
+          <Link to="/feed" className="flex items-center gap-2 hover:scale-105 transition-transform active:scale-95 shrink-0">
+            <BookOpen 
+              size={28} 
+              strokeWidth={1.5} 
+              className={`transition-colors duration-300 ${isAuthPage ? 'text-white' : 'text-[var(--accent-primary)]'}`}
+            />
+            <h1 className={`text-sm font-black tracking-tighter hidden sm:block font-lexend uppercase transition-colors duration-300 ${
+              isAuthPage ? 'text-white' : 'text-[var(--text-primary)]'
+            }`}>
+              PAPIRUS
             </h1>
           </Link>
 

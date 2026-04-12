@@ -30,7 +30,7 @@ export default function App() {
     <BrowserRouter>
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<Navigate to={autenticado ? '/dashboard' : '/entrada'} replace />} />
+        <Route path="/" element={<Navigate to={autenticado ? '/feed' : '/entrada'} replace />} />
         
         {/* Rotas Públicas (Somente para não autenticados) */}
         <Route element={<PublicOnlyRoute />}>
@@ -43,7 +43,7 @@ export default function App() {
 
         {/* Rotas Protegidas */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Feed />} />
+          <Route path="/feed" element={<Feed />} />
           <Route path="/escrever" element={<EscreverPost />} />
           <Route path="/posts/:id" element={<PostDetalhesPage />} />
           <Route path="/explorar" element={<ExplorarPage />} />

@@ -26,13 +26,17 @@ export default function PostDetalhesPage() {
   const [post, setPost] = useState<PostResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [votos, setVotos] = useState({ up: 0, down: 0 });
-  const viewIncremented = useRef(false);
+  const lastFetchedId = useRef<number | null>(null);
 
   useEffect(() => {
-    if (id && !viewIncremented.current) {
-      // 🛡️ Previne incremento duplo em React.StrictMode
-      viewIncremented.current = true;
-      loadPost(Number(id));
+    if (id) {
+      const postId = Number(id);
+      
+      // 🛡️ Previne múltiplas chamadas (incluindo StrictMode) para o mesmo ID
+      if (lastFetchedId.current !== postId) {
+        lastFetchedId.current = postId;
+        loadPost(postId);
+      }
     }
   }, [id]);
 

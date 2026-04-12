@@ -5,6 +5,7 @@ import { criarObra } from '../../shared/services/obra.service';
 import { listarCategorias } from '../../shared/services/categoria.service';
 import { Categoria } from '../../shared/types/categoria.types';
 import { Notificacao } from '../../shared/utils/Notificacao';
+import Header from '../../shared/components/Header';
 
 export default function CriarObra() {
   const navigate = useNavigate();
@@ -68,22 +69,17 @@ export default function CriarObra() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-8">
-      <div className="flex items-center gap-4">
-        <button 
-          onClick={() => navigate('/minhas-obras')}
-          className="p-3 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl hover:bg-[var(--accent-primary)]/10 text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-all active:scale-95"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h1 className="text-3xl font-black font-lexend text-[var(--text-primary)] tracking-tighter">Criar Nova Obra</h1>
-          <p className="text-[var(--text-secondary)] font-medium">Defina a base do seu projeto literário ou acadêmico.</p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[var(--bg-primary)]">
+      <Header title="Nova Obra" showSearch={false} />
 
-      <form onSubmit={handleSubmit} className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-3xl p-8 shadow-xl space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="max-w-3xl mx-auto p-6 space-y-8">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-black font-lexend text-[var(--text-primary)] tracking-tighter">Criar Nova Obra</h1>
+          <p className="text-[var(--text-secondary)] font-medium text-sm">Defina a base do seu projeto literário ou acadêmico.</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-3xl p-8 shadow-xl space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Preview da Capa */}
           <div className="space-y-4">
             <div className="aspect-[3/4] rounded-2xl bg-[var(--input-bg)] overflow-hidden border-2 border-dashed border-[var(--border-color)] flex flex-col items-center justify-center text-[var(--text-secondary)] group relative">
@@ -174,6 +170,7 @@ export default function CriarObra() {
           </button>
         </div>
       </form>
+    </div>
     </div>
   );
 }

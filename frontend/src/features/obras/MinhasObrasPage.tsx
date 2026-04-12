@@ -4,6 +4,7 @@ import { Plus, Book, MoreVertical, PenTool, Trash2, LayoutGrid, List } from 'luc
 import { listarMinhasObras, deletarObra } from '../../shared/services/obra.service';
 import { ObraResponse } from '../../shared/types/obra.types';
 import { Notificacao } from '../../shared/utils/Notificacao';
+import Header from '../../shared/components/Header';
 
 export default function MinhasObrasPage() {
   const [obras, setObras] = useState<ObraResponse[]>([]);
@@ -44,24 +45,32 @@ export default function MinhasObrasPage() {
     }
   }
 
-  return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black font-lexend text-[var(--text-primary)] tracking-tighter">Minha Biblioteca</h1>
-          <p className="text-[var(--text-secondary)] font-medium">Gerencie suas obras e publique novos capítulos.</p>
-        </div>
-        <button 
-          onClick={() => navigate('/obras/nova')}
-          className="flex items-center justify-center gap-2 bg-[var(--accent-primary)] hover:opacity-90 text-white font-bold py-3 px-6 rounded-2xl transition-all active:scale-95 shadow-lg shadow-[var(--accent-primary)]/20"
-        >
-          <Plus size={20} strokeWidth={3} />
-          <span>Criar Nova Obra</span>
-        </button>
-      </div>
+  const headerActions = (
+    <button 
+      onClick={() => navigate('/obras/nova')}
+      className="flex items-center justify-center gap-2 bg-[var(--accent-primary)] hover:opacity-90 text-white font-bold py-2 px-4 rounded-xl transition-all active:scale-95 shadow-sm"
+    >
+      <Plus size={18} strokeWidth={3} />
+      <span className="text-sm">Criar Nova Obra</span>
+    </button>
+  );
 
-      {/* Grid de Obras */}
+  return (
+    <div className="min-h-screen bg-[var(--bg-primary)]">
+      <Header 
+        title="Minha Biblioteca" 
+        showSearch={true}
+        actions={headerActions}
+      />
+
+      <div className="max-w-6xl mx-auto p-6 space-y-8">
+        {/* Subheader Informativo */}
+        <div className="space-y-1">
+          <h2 className="text-2xl font-black font-lexend text-[var(--text-primary)] tracking-tighter">Suas Obras</h2>
+          <p className="text-[var(--text-secondary)] font-medium text-sm">Gerencie seus projetos literários e acadêmicos.</p>
+        </div>
+
+        {/* Grid de Obras */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map(i => (
@@ -143,6 +152,7 @@ export default function MinhasObrasPage() {
           ))}
         </div>
       )}
+    </div>
     </div>
   );
 }

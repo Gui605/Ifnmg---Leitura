@@ -6,6 +6,7 @@ import { criarPost } from '../../shared/services/post.service';
 import { ObraResponse } from '../../shared/types/obra.types';
 import { Notificacao } from '../../shared/utils/Notificacao';
 import EditorTexto from '../posts/EditorTexto';
+import Header from '../../shared/components/Header';
 
 export default function EscritaCapitulo() {
   const { obraId } = useParams();
@@ -69,34 +70,40 @@ export default function EscritaCapitulo() {
   if (loading) return <div className="h-screen flex items-center justify-center animate-pulse">Carregando obra...</div>;
   if (!obra) return null;
 
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <div className="hidden sm:flex flex-col items-end">
+        <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Obra Selecionada</span>
+        <span className="text-[10px] font-bold text-[var(--accent-primary)] truncate max-w-[120px]">{obra.titulo}</span>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header Fixo de Herança */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-3xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => navigate('/minhas-obras')}
-            className="p-3 bg-[var(--input-bg)] rounded-2xl hover:bg-[var(--accent-primary)]/10 text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-all active:scale-95"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-[var(--accent-primary)]">
-              <Book size={16} strokeWidth={2.5} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] font-lexend opacity-70">Escrevendo para</span>
+    <div className="min-h-screen bg-[var(--bg-primary)]">
+      <Header title="Escrevendo Capítulo" showSearch={false} actions={headerActions} />
+
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        {/* Banner de Contexto */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-3xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-[var(--input-bg)] rounded-2xl text-[var(--accent-primary)]">
+              <Book size={20} strokeWidth={2.5} />
             </div>
-            <h1 className="text-xl font-bold font-lexend text-[var(--text-primary)] leading-tight">{obra.titulo}</h1>
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] font-lexend opacity-70 text-[var(--accent-primary)]">Escrevendo capítulo para</span>
+              <h1 className="text-xl font-bold font-lexend text-[var(--text-primary)] leading-tight">{obra.titulo}</h1>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 md:justify-end">
+            {obra.categorias?.map(c => (
+              <span key={c.categoria.categoria_id} className="px-2.5 py-1 bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] text-[10px] font-black uppercase tracking-wider rounded-lg border border-[var(--accent-primary)]/10">
+                {c.categoria.nome}
+              </span>
+            ))}
           </div>
         </div>
-
-        <div className="flex flex-wrap gap-1.5 md:justify-end">
-          {obra.categorias?.map(c => (
-            <span key={c.categoria.categoria_id} className="px-2.5 py-1 bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] text-[10px] font-black uppercase tracking-wider rounded-lg border border-[var(--accent-primary)]/10">
-              {c.categoria.nome}
-            </span>
-          ))}
-        </div>
-      </div>
 
       {/* Editor de Capítulo */}
       <form onSubmit={handleSubmit} className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-3xl p-8 shadow-xl space-y-8">
@@ -142,6 +149,7 @@ export default function EscritaCapitulo() {
           </button>
         </div>
       </form>
+    </div>
     </div>
   );
 }

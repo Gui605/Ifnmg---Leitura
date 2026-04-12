@@ -14,6 +14,7 @@ import {
 import { buscarObraPorId } from '../../shared/services/obra.service';
 import { ObraResponse } from '../../shared/types/obra.types';
 import { Notificacao } from '../../shared/utils/Notificacao';
+import Header from '../../shared/components/Header';
 
 export default function ObraDetalhesPage() {
   const { id } = useParams();
@@ -62,6 +63,8 @@ export default function ObraDetalhesPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-lexend">
+      <Header showSearch={false} />
+
       {/* Hero Section com Background Blur */}
       <div className="relative h-[450px] w-full overflow-hidden">
         {/* Camada de Background Blur */}
@@ -73,13 +76,6 @@ export default function ObraDetalhesPage() {
 
         {/* Conteúdo do Hero */}
         <div className="relative max-w-6xl mx-auto px-6 h-full flex flex-col justify-end pb-12">
-          <button 
-            onClick={() => navigate(-1)}
-            className="absolute top-8 left-6 p-3 bg-[var(--bg-card)]/50 backdrop-blur-md border border-white/10 rounded-2xl hover:bg-[var(--accent-primary)]/20 transition-all active:scale-95 group"
-          >
-            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-          </button>
-
           <div className="flex flex-col md:flex-row gap-8 items-end">
             {/* Capa em Destaque */}
             <div className="shrink-0 w-48 md:w-64 aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl border-4 border-white/10 group relative">

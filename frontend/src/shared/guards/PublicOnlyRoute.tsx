@@ -9,7 +9,7 @@ export function PublicOnlyRoute() {
   if (loading) return <AuthLoadingScreen />;
 
   if (autenticado) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/feed" replace />;
   }
 
   return <Outlet />;

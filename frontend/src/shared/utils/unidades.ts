@@ -2,6 +2,7 @@
  * 🏛️ LISTA OFICIAL DE UNIDADES (CAMPUS) DO IFNMG
  */
 export const LISTA_CAMPUS = [
+  "Teste",
   "Almenara", 
   "Araçuaí", 
   "Arinos", 
@@ -12,7 +13,7 @@ export const LISTA_CAMPUS = [
   "Porteirinha", 
   "Salinas", 
   "Teófilo Otoni", 
-  "Teu de Janeiro"
+  "Janaúba"
 ] as const;
 
 /**

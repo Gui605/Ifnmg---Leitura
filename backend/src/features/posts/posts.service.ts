@@ -381,6 +381,7 @@ async function getPostById(postId: number, perfilId?: number) {
   // 🛡️ NAVEGAÇÃO ENTRE CAPÍTULOS
   let navegacao = { anterior_id: null as number | null, proximo_id: null as number | null };
   if (post.obra_id && post.ordem !== null) {
+    console.log(`[DEBUG] Buscando navegação para Obra ${post.obra_id}, Ordem ${post.ordem}`);
     const [anterior, proximo] = await Promise.all([
       prisma.posts.findFirst({
         where: { obra_id: post.obra_id, ordem: { lt: post.ordem } },
@@ -397,6 +398,9 @@ async function getPostById(postId: number, perfilId?: number) {
       anterior_id: anterior?.post_id ?? null,
       proximo_id: proximo?.post_id ?? null
     };
+    console.log(`[DEBUG] Navegação encontrada:`, navegacao);
+  } else {
+    console.log(`[DEBUG] Post sem obra_id ou ordem. Obra: ${post.obra_id}, Ordem: ${post.ordem}`);
   }
 
   // 📊 AGRUPAMENTO DE REAÇÕES

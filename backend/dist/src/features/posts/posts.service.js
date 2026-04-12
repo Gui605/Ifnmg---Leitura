@@ -346,6 +346,7 @@ async function getPostById(postId, perfilId) {
     // 🛡️ NAVEGAÇÃO ENTRE CAPÍTULOS
     let navegacao = { anterior_id: null, proximo_id: null };
     if (post.obra_id && post.ordem !== null) {
+        console.log(`[DEBUG] Buscando navegação para Obra ${post.obra_id}, Ordem ${post.ordem}`);
         const [anterior, proximo] = await Promise.all([
             prisma_client_1.default.posts.findFirst({
                 where: { obra_id: post.obra_id, ordem: { lt: post.ordem } },
@@ -362,6 +363,10 @@ async function getPostById(postId, perfilId) {
             anterior_id: anterior?.post_id ?? null,
             proximo_id: proximo?.post_id ?? null
         };
+        console.log(`[DEBUG] Navegação encontrada:`, navegacao);
+    }
+    else {
+        console.log(`[DEBUG] Post sem obra_id ou ordem. Obra: ${post.obra_id}, Ordem: ${post.ordem}`);
     }
     // 📊 AGRUPAMENTO DE REAÇÕES
     const reacoesAgrupadas = post.reacoes.reduce((acc, curr) => {

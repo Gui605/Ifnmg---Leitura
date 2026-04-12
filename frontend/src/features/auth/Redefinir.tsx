@@ -6,6 +6,7 @@ import { useTema } from '../../shared/utils/themeHandler';
 import { redefinirSenha } from '../../shared/services/auth.service';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { Notificacao } from '../../shared/utils/Notificacao';
+import Header from '../../shared/components/Header';
 
 export default function Redefinir() {
   const { modoEscuro } = useTema();
@@ -72,6 +73,7 @@ export default function Redefinir() {
 
   return (
     <div className="relative min-h-screen login-page-container bg-transparent text-[var(--text-primary)]">
+      <Header hideBack={true} showSearch={false} />
       <ThemeToggle />
       <CenarioLogin />
       <main className="relative z-30 flex items-center justify-center min-h-screen p-4">

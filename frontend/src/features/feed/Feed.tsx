@@ -118,7 +118,7 @@ export default function Feed() {
         : 'md:grid-cols-[1fr,320px]';
 
   const navLinks = [
-    { label: 'Início', path: '/dashboard' },
+    { label: 'Início', path: '/feed' },
     { label: 'Explorar', path: '/explorar' },
     { label: 'Comunidade', path: '/comunidade' }
   ];

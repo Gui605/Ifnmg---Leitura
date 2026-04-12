@@ -1,6 +1,7 @@
 //frontend/src/features/auth/Login.tsx 
 import React, { useEffect, useState } from 'react';
-import logo from '../../shared/assets/ifnmg-logo-vertical.svg';
+import logomc from '../../shared/assets/ifnmg-logo-vertical.svg';
+import logome from '../../shared/assets/logome.jpeg';
 import ThemeToggle from '../../shared/components/ThemeToggle';
 import { fazerLogin, registrarUsuario, solicitarRecuperacao } from '../../shared/services/auth.service';
 import { CenarioLogin } from '../../shared/utils/Cenario';
@@ -13,6 +14,7 @@ import { Notificacao } from '../../shared/utils/Notificacao';
 import { useNavigate, useLocation } from 'react-router-dom';
 import InputMask from 'react-input-mask';
 import { LISTA_CAMPUS } from '../../shared/utils/unidades';
+import Header from '../../shared/components/Header';
 
 export default function Login() {
   const { modoEscuro } = useTema();
@@ -230,7 +232,7 @@ export default function Login() {
         } else {
           localStorage.removeItem('portal_ifnmg_email');
         }
-        navigate('/dashboard', { replace: true });
+        navigate('/feed', { replace: true });
       } catch (err: unknown) {
         if (err instanceof AppError) {
           switch (err.errorCode) {
@@ -328,8 +330,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex flex-col">
+      <Header hideBack={true} showSearch={false} />
       <CenarioLogin />
-      <header className="relative z-30 flex items-center justify-between px-6 md:px-20 py-4 border-b border-[var(--border-color)] bg-[var(--bg-card)]">
+      <header className="relative z-30 flex items-center justify-between px-6 md:px-20 py-4 border-b border-[var(--border-color)] bg-[var(--bg-card)] hidden">
         <div className="flex items-center gap-3">
           <div className="text-[var(--accent-primary)]"><BookOpen size={28} strokeWidth={1.5} /></div>
           <h2 className="text-xl font-bold tracking-tight font-lexend">Portal IFNMG</h2>
@@ -351,7 +354,7 @@ export default function Login() {
       <main className="relative z-30 flex-1 flex items-center justify-center p-4">
         <section className="card w-full max-w-[520px] p-8 md:p-10 shadow-xl">
           <div className="flex flex-col items-center gap-2 mb-8">
-            <img src={logo} alt="IFNMG" className="h-16 w-auto" style={{ filter: modoEscuro ? 'brightness(0) invert(1)' : 'none' }} />
+            <img src={modoEscuro ? logome : logomc} alt="IFNMG" className="h-16 w-auto object-contain" />
             <h1 className="text-3xl font-bold font-lexend">{ehLogin ? 'Bem-vindo' : 'Criar Conta'}</h1>
             <p className="text-[var(--text-secondary)] font-lexend">{ehLogin ? 'Acesse sua conta para continuar' : 'Preencha os dados abaixo'}</p>
           </div>
@@ -393,7 +396,7 @@ export default function Login() {
                   <div className="relative">
                     <input 
                       type="text" 
-                      placeholder="Buscar campus (ex: Januária)" 
+                      placeholder="Buscar campus (ex: Teste)" 
                       value={buscaCampus} 
                       onFocus={() => setMostrarSugestoes(true)}
                       onBlur={() => {
