@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-//////////////// ENUMS //////////////////
+//ENUMS
 
 enum VotoTipo {
   UP
@@ -118,7 +118,7 @@ model Perfis {
   @@map("perfis")
 }
 
-//////////////// USUARIOS //////////////////
+//USUARIOS
 
 model Usuarios {
   usuario_id Int @id @default(autoincrement())
@@ -148,7 +148,7 @@ model Usuarios {
   @@map("usuarios")
 }
 
-//////////////// COMUNIDADES //////////////////
+//COMUNIDADES
 
 model Comunidades {
   comunidade_id Int @id @default(autoincrement())
@@ -206,7 +206,7 @@ model ComunidadeConfig {
   comunidade Comunidades @relation(fields: [comunidade_id], references: [comunidade_id], onDelete: Cascade)
 }
 
-//////////////// OBRAS //////////////////
+//OBRAS
 
 model Obras {
   obra_id Int @id @default(autoincrement())
@@ -240,7 +240,7 @@ model ObrasCategorias {
   @@index([categoria_id, obra_id])
 }
 
-//////////////// POSTS //////////////////
+//POSTS
 
 model Posts {
   post_id Int @id @default(autoincrement())
@@ -296,7 +296,7 @@ model Posts {
   
 }
 
-//////////////// INTERAÇÕES //////////////////
+//INTERAÇÕES
 
 model Votos {
   voto_id Int @id @default(autoincrement())
@@ -353,7 +353,7 @@ model Favoritos {
   @@unique([perfil_id, post_id])
 }
 
-//////////////// COMENTÁRIOS //////////////////
+//COMENTÁRIOS
 
 model Comentarios {
   comentario_id Int @id @default(autoincrement())
@@ -378,7 +378,7 @@ model Comentarios {
   @@index([perfil_id])
 }
 
-//////////////// LEITURA //////////////////
+//LEITURA
 
 model LeituraProgresso {
   perfil_id Int
@@ -393,7 +393,7 @@ model LeituraProgresso {
   @@id([perfil_id, post_id])
 }
 
-//////////////// MIDIA //////////////////
+//MIDIA
 
 model Midias {
   midia_id Int @id @default(autoincrement())
@@ -407,7 +407,7 @@ model Midias {
   @@index([post_id])
 }
 
-//////////////// NOTIFICAÇÕES //////////////////
+//NOTIFICAÇÕES
 
 model Notificacoes {
   notificacao_id Int @id @default(autoincrement())
@@ -427,7 +427,7 @@ model Notificacoes {
   @@index([perfil_id, lida])
 }
 
-//////////////// RASCUNHO //////////////////
+//RASCUNHO
 
 model Rascunhos {
   rascunho_id Int @id @default(autoincrement())
@@ -442,7 +442,7 @@ model Rascunhos {
   perfil Perfis @relation(fields: [perfil_id], references: [perfil_id], onDelete: Cascade)
 }
 
-//////////////// RANKING //////////////////
+//RANKING
 
 model Rankings {
   ranking_id Int @id @default(autoincrement())
@@ -457,7 +457,7 @@ model Rankings {
   @@index([tipo, data_ref])
 }
 
-//////////////// RESTANTE //////////////////
+//RESTANTE
 
 model Categorias {
   categoria_id Int @id @default(autoincrement())
@@ -539,7 +539,7 @@ model Seguidores {
   @@index([seguido_id])
 }
 
-//////////////// TÍTULOS E CONQUISTAS //////////////////
+//TÍTULOS E CONQUISTAS
 
 model Titulos {
   titulo_id Int @id @default(autoincrement())
