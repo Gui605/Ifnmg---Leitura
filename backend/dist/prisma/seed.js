@@ -88,9 +88,26 @@ async function main() {
             titulo: 'Boas-vindas à Comunidade',
             conteudo: 'Este é o post inicial para testes de robustez e integridade.',
             autor_id: userSenior.perfil_id,
+            idioma: 'Português',
+            status: 'CONCLUIDO',
             categorias: {
                 create: [
                     { categoria_id: catGeral.categoria_id },
+                    { categoria_id: catTec.categoria_id }
+                ]
+            }
+        }
+    });
+    // --- 6.1 OBRAS INICIAIS ---
+    await prisma_client_1.default.obras.create({
+        data: {
+            titulo: 'A Jornada do Código',
+            descricao: 'Uma obra épica sobre a evolução do desenvolvimento de software.',
+            autor_id: userSenior.perfil_id,
+            idioma: 'Português',
+            status: 'ANDAMENTO',
+            categorias: {
+                create: [
                     { categoria_id: catTec.categoria_id }
                 ]
             }

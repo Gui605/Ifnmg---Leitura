@@ -26,9 +26,19 @@ postsRoutes.get(
     middlewareAutenticacaoOpcional, 
     limitadorLeitura,
     validate({
-            body: PostsQuerySchema
+            query: PostsQuerySchema
         }), // Valida e limpa os parâmetros de busca
     postsController.listarPosts
+);
+
+/**
+ * GET /api/v1/posts/pesquisa
+ * 🛡️ Busca unificada entre posts e obras
+ */
+postsRoutes.get(
+    '/pesquisa',
+    middlewareAutenticacaoOpcional,
+    postsController.pesquisar
 );
 
 

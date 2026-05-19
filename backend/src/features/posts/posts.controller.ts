@@ -17,7 +17,7 @@ const criarPost = tratarAssincrono(async (req: Request<{}, any, PostCreateBody>,
     // 🔍 DEBUG: Log do payload recebido no backend
     console.log("[DEBUG] Recebendo payload para criação de post/capítulo:", req.body);
     
-    const { titulo, conteudo, tags } = req.body; 
+    const { titulo, conteudo, tags, idioma } = req.body; 
 
     // Garante integridade referencial removendo duplicatas de tags
     const tagsUnicas = tags ? [...new Set(tags)] : [];
@@ -25,6 +25,7 @@ const criarPost = tratarAssincrono(async (req: Request<{}, any, PostCreateBody>,
     const novoPost = await postsService.criarPost(perfilId, { 
         titulo, 
         conteudo, 
+        idioma,
         tags: tagsUnicas,
         status: req.body.status || 'ANDAMENTO',
         obra_id: req.body.obra_id,
@@ -190,4 +191,24 @@ const getPostById = tratarAssincrono(async (req: Request<PostIdParams>, res: Res
     });
 });
 
-export default { criarPost, listarPosts, deletarPost, votarPost, comentarPost, reagirPost, listarComentarios, deletarComentario, getPostById };
+const pesquisar = tratarAssincrono(async (req: Request, res: Response) => {
+    const { termo, tipo, idioma, status } = req.query;
+
+    const resultados = await postsService.pesquisarUnificado({
+        termo: termo as string,
+        tipo: tipo as any,
+        idioma: idioma as string,
+        status: status as string
+    });
+
+    return res.status(200).json({
+        status: 'success',
+        message: 'Pesquisa realizada com sucesso.',
+        data: resultados,
+        meta: {
+            total: resultados.length
+        }
+    });
+});
+
+export default { criarPost, listarPosts, deletarPost, votarPost, comentarPost, reagirPost, listarComentarios, deletarComentario, getPostById, pesquisar };

@@ -34,20 +34,44 @@ export function CardTrabalho({ trabalho }: Props) {
     }
   };
 
+  const isObra = (trabalho as any).tipo === 'OBRA';
+  const tipoLabel = isObra ? 'Obra Literária' : 'Artigo';
+  const tipoColor = isObra 
+    ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' 
+    : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-6 hover:border-[var(--accent-primary)]/30 transition-all duration-300 group shadow-[var(--shadow-elevation-1)]">
-      <div className="flex flex-col md:flex-row justify-between gap-4">
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Thumbnail lateral para Obras */}
+        {isObra && (trabalho as any).imagem_capa && (
+          <div className="shrink-0 w-full md:w-32 aspect-[3/4] rounded-xl overflow-hidden border border-[var(--border-color)] shadow-sm">
+            <img 
+              src={(trabalho as any).imagem_capa} 
+              alt={trabalho.titulo}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          </div>
+        )}
+
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {/* Badge de Tipo */}
+            <span className={`text-[9px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded border ${tipoColor}`}>
+              {tipoLabel}
+            </span>
+
+            <div className="h-3 w-px bg-[var(--border-color)] mx-1" />
+
             {trabalho.curso && (
-              <span className="text-[10px] font-black bg-[var(--accent-primary)] text-white px-2.5 py-1 rounded-md uppercase tracking-widest shadow-sm shadow-green-500/20">
+              <span className="text-[10px] font-black text-[var(--accent-primary)] uppercase tracking-widest">
                 {trabalho.curso}
               </span>
             )}
-            <span className="text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-tight italic opacity-70">Publicado em {dataFormatada}</span>
+            <span className="text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-tight italic opacity-70"> • {dataFormatada}</span>
           </div>
           
-          <Link to={`/posts/${trabalho.post_id}`} className="block mb-1">
+          <Link to={isObra ? `/obras/${trabalho.post_id}` : `/posts/${trabalho.post_id}`} className="block mb-1">
             <h3 className="text-xl font-black font-lexend text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors leading-tight">
               {trabalho.titulo}
             </h3>
@@ -55,7 +79,7 @@ export function CardTrabalho({ trabalho }: Props) {
           
           <div className="flex items-center gap-1.5 mb-4 text-sm font-bold text-[var(--accent-primary)]">
             <UserIcon size={14} strokeWidth={2.5} />
-            por <Link to={`/perfil/${trabalho.autor_id}`} className="hover:underline decoration-2 underline-offset-2">{trabalho.autor_display?.nome || 'Autor Desconhecido'}</Link>
+            por <Link to={`/perfil/${trabalho.autor_id}`} className="hover:underline decoration-2 underline-offset-2">{(trabalho.autor_display as any)?.nome || (trabalho as any).autor || 'Autor Desconhecido'}</Link>
           </div>
           
           <div className="flex flex-wrap gap-2 mb-5">
@@ -70,14 +94,14 @@ export function CardTrabalho({ trabalho }: Props) {
             ))}
           </div>
           
-          <p className="text-sm text-[var(--text-secondary)] line-clamp-2 leading-relaxed font-medium">
-            {trabalho.conteudo}
+          <p className="text-sm text-[var(--text-secondary)] line-clamp-3 leading-relaxed font-medium italic opacity-80">
+            {trabalho.conteudo || (trabalho as any).resumo}
           </p>
         </div>
 
         <div className="flex md:flex-col justify-between items-end gap-2 shrink-0 border-t md:border-t-0 md:border-l border-[var(--border-color)]/50 pt-4 md:pt-0 md:pl-6">
           <div className="flex items-center gap-1.5 text-[var(--accent-primary)] bg-[var(--accent-primary)]/5 px-3 py-1.5 rounded-full border border-[var(--accent-primary)]/10 shadow-sm">
-            {trabalho.status_trabalho === 'Concluído' ? (
+            {String(trabalho.status_trabalho).toUpperCase() === 'CONCLUIDO' || (trabalho as any).status === 'CONCLUIDO' ? (
               <>
                 <CheckCircle size={14} strokeWidth={3} />
                 <span className="text-[10px] font-black uppercase tracking-widest">Concluído</span>

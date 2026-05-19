@@ -24,7 +24,9 @@ async function criarPost(perfilId, data, requestId) {
         throw AppError_1.AppError.notFound('Perfil do autor não encontrado.');
     const post = await prisma_client_1.default.$transaction(async (tx) => {
         let categoriasIds = [];
-        // 🛡️ SEGURANÇA: Se houver obra_id, valida se o perfilId é o autor da obra e herda categorias
+        let idiomaPersistir = data.idioma;
+        let statusPersistir = data.status || 'ANDAMENTO';
+        // 🛡️ SEGURANÇA: Se houver obra_id, valida se o perfilId é o autor da obra e herda categorias/idioma
         if (data.obra_id) {
             const obra = await tx.obras.findUnique({
                 where: { obra_id: data.obra_id },
@@ -36,13 +38,17 @@ async function criarPost(perfilId, data, requestId) {
             });
             if (!obra)
                 throw AppError_1.AppError.notFound('Obra vinculada não encontrada.');
-            // TODO: Considerar implementação de Co-autoria no futuro para permitir que outros perfis postem nesta Obra
             const isAutor = obra.autor_id === perfilId;
             if (!isAutor) {
                 throw AppError_1.AppError.forbidden('Você não tem permissão para adicionar capítulos a esta obra.');
             }
-            // Herança de categorias da obra
+            // Herança de categorias e idioma da obra
             categoriasIds = obra.categorias.map(c => c.categoria_id);
+            if (!idiomaPersistir)
+                idiomaPersistir = obra.idioma ?? undefined;
+            // Capítulos de obra SEMPRE herdam o status da obra ou são ANDAMENTO por padrão?
+            // Pela instrução, o status é propriedade da Obra, então capítulos podem ser simplificados.
+            statusPersistir = obra.status;
         }
         else {
             // 1. Converter tags (nomes) em IDs de categorias (apenas se não for obra)
@@ -72,13 +78,14 @@ async function criarPost(perfilId, data, requestId) {
             data: {
                 titulo: data.titulo,
                 conteudo: data.conteudo,
+                idioma: idiomaPersistir,
                 autor_id: perfilId,
                 autor_nome_user: perfil.nome_user, // Snapshot
                 nome_campus: perfil.usuario?.nome_campus, // Snapshot
                 obra_id: data.obra_id,
                 ordem, // Sequencial se for obra
                 comunidade_id: data.comunidade_id,
-                status: data.status || 'ANDAMENTO'
+                status: statusPersistir
             }
         });
         // 4. Vincular categorias (Herdadas ou novas)
@@ -392,4 +399,96 @@ async function getPostById(postId, perfilId) {
         tags: post.categorias.map(c => c.categoria.nome)
     };
 }
-exports.default = { criarPost, deletarPost, listar, votarPost, reagirPost, getPostById };
+async function pesquisarUnificado(filtros) {
+    const { termo, tipo = 'TODOS', idioma, status } = filtros;
+    const where = {};
+    if (idioma)
+        where.idioma = idioma;
+    if (status)
+        where.status = status;
+    if (termo) {
+        where.OR = [
+            { titulo: { contains: termo } },
+            { conteudo: { contains: termo } }
+        ];
+    }
+    const includeAutor = {
+        autor: {
+            select: {
+                nome_user: true,
+                curso: true
+            }
+        }
+    };
+    let postsPromise = Promise.resolve([]);
+    let obrasPromise = Promise.resolve([]);
+    if (tipo === 'TODOS' || tipo === 'POST') {
+        postsPromise = prisma_client_1.default.posts.findMany({
+            where,
+            orderBy: { data_criacao: 'desc' },
+            include: includeAutor
+        });
+    }
+    if (tipo === 'TODOS' || tipo === 'OBRA') {
+        const whereObra = { ...where };
+        // Obras não têm 'conteudo', então ajustamos o OR
+        if (termo) {
+            whereObra.OR = [
+                { titulo: { contains: termo } },
+                { descricao: { contains: termo } }
+            ];
+        }
+        obrasPromise = prisma_client_1.default.obras.findMany({
+            where: whereObra,
+            orderBy: { data_criacao: 'desc' },
+            include: includeAutor
+        });
+    }
+    const [posts, obras] = await Promise.all([postsPromise, obrasPromise]);
+    const resultadosPosts = posts.map(p => ({
+        post_id: p.post_id,
+        titulo: p.titulo,
+        conteudo: p.conteudo,
+        resumo: p.conteudo.substring(0, 200),
+        tipo: 'POST',
+        autor_id: p.autor_id,
+        autor_display: {
+            nome: p.autor?.nome_user ?? p.autor_nome_user ?? "Usuário Deletado",
+            campus: p.autor?.curso ?? p.nome_campus ?? "IFNMG",
+            deletado: !p.autor
+        },
+        data_criacao: p.data_criacao,
+        idioma: p.idioma,
+        status: p.status,
+        total_upvotes: p.total_upvotes || 0,
+        total_downvotes: p.total_downvotes || 0,
+        total_comentarios: p.total_comentarios || 0,
+        visualizacoes: p.visualizacoes || 0,
+        tags: []
+    }));
+    const resultadosObras = obras.map(o => ({
+        post_id: o.obra_id, // Usamos post_id para paridade no frontend
+        titulo: o.titulo,
+        conteudo: o.descricao ?? '',
+        resumo: o.descricao?.substring(0, 200) ?? '',
+        tipo: 'OBRA',
+        autor_id: o.autor_id,
+        autor_display: {
+            nome: o.autor?.nome_user ?? "Usuário Deletado",
+            campus: o.autor?.curso ?? "IFNMG",
+            deletado: !o.autor
+        },
+        data_criacao: o.data_criacao,
+        idioma: o.idioma,
+        status: o.status,
+        total_upvotes: 0,
+        total_downvotes: 0,
+        total_comentarios: 0,
+        visualizacoes: 0,
+        tags: [],
+        imagem_capa: o.imagem_capa
+    }));
+    const todosResultados = [...resultadosPosts, ...resultadosObras].sort((a, b) => b.data_criacao.getTime() - a.data_criacao.getTime());
+    return todosResultados;
+}
+exports.default = { criarPost, deletarPost, listar, votarPost, reagirPost, getPostById, pesquisarUnificado };

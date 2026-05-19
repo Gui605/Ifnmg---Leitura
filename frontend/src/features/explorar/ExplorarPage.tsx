@@ -25,6 +25,7 @@ export function ExplorarPage() {
     curso: searchParams.get('curso') || '',
     idioma: searchParams.get('idioma') || '',
     status: searchParams.get('status') || '',
+    tipo: (searchParams.get('tipo') as any) || 'TODOS',
     ordenar_por: (searchParams.get('sort') as any) || 'recentes',
     page: parseInt(searchParams.get('page') || '1')
   });
@@ -37,19 +38,27 @@ export function ExplorarPage() {
     if (filtros.curso) newSearchParams.set('curso', filtros.curso);
     if (filtros.idioma) newSearchParams.set('idioma', filtros.idioma);
     if (filtros.status) newSearchParams.set('status', filtros.status);
+    if (filtros.tipo && filtros.tipo !== 'TODOS') newSearchParams.set('tipo', filtros.tipo);
     if (filtros.ordenar_por) newSearchParams.set('sort', filtros.ordenar_por);
     if (filtros.page) newSearchParams.set('page', String(filtros.page));
-    setSearchParams(newSearchParams);
+    
+    // Evita loop infinito se setSearchParams for síncrono ou causar re-render desnecessário
+    if (searchParams.toString() !== newSearchParams.toString()) {
+      setSearchParams(newSearchParams, { replace: true });
+    }
 
   }, [filtros]);
 
   const fetchTrabalhos = async () => {
+    console.log("🔍 Tentando buscar trabalhos com os filtros:", filtros);
     setLoading(true);
     try {
       const response = await pesquisarTrabalhos(filtros);
+      console.log("✅ Resposta recebida:", response);
       setTrabalhos(response.trabalhos);
       setMeta(response.meta);
     } catch (err) {
+      console.error("❌ Erro na busca:", err);
       Notificacao.toast.erro('Falha ao carregar trabalhos', 'Não foi possível buscar os pergaminhos acadêmicos.');
     } finally {
       setLoading(false);

@@ -18,13 +18,16 @@ export async function getPosts(filtros: { page?: number; categoriaId?: number; a
 
 export async function pesquisarTrabalhos(filtros: FiltrosBusca): Promise<{ trabalhos: TrabalhoResumo[]; meta: any }> {
   const params = new URLSearchParams();
-  if (filtros.query) params.append('q', filtros.query);
+  if (filtros.query) params.append('termo', filtros.query);
   if (filtros.curso) params.append('curso', filtros.curso);
   if (filtros.idioma) params.append('idioma', filtros.idioma);
   if (filtros.status) params.append('status', filtros.status);
+  if (filtros.tipo) params.append('tipo', filtros.tipo.toUpperCase());
   if (filtros.ordenar_por) params.append('sort', filtros.ordenar_por);
   params.append('page', String(filtros.page || 1));
   params.append('limit', '10');
+
+  console.log("📡 Chamando API URL:", `/posts/pesquisa?${params.toString()}`);
 
   return apiClient.get(`/posts/pesquisa?${params.toString()}`, z.any(), undefined, (raw) => ({
     trabalhos: raw?.data || [],

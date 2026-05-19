@@ -217,6 +217,9 @@ model Obras {
   descricao String? @db.LongText
   imagem_capa String? @db.LongText
 
+  idioma String? @db.VarChar(20)
+  status PostStatus @default(ANDAMENTO)
+
   data_criacao DateTime @default(now())
 
   autor Perfis? @relation(fields: [autor_id], references: [perfil_id], onDelete: SetNull)

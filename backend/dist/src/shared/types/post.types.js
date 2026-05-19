@@ -15,14 +15,23 @@ exports.PostCreateSchema = zod_1.z.object({
     conteudo: zod_1.z.string()
         .min(10, "O conteúdo deve ter pelo menos 10 caracteres")
         .max(10000, "O post excedeu o limite de 10.000 caracteres"),
+    idioma: zod_1.z.string().max(20, "O idioma é muito longo").optional(),
     tags: zod_1.z.array(zod_1.z.string().min(1).max(30))
         .min(0, "O post pode não ter tags se for capítulo de obra")
         .max(5, "Um post pode ter no máximo 5 tags")
         .default([]),
-    status: zod_1.z.enum(["ANDAMENTO", "CONCLUIDO"]).default("ANDAMENTO"),
+    status: zod_1.z.enum(["ANDAMENTO", "CONCLUIDO"]).optional().default("ANDAMENTO"),
     obra_id: zod_1.z.number().int().positive().nullable().optional(),
     comunidade_id: zod_1.z.number().int().positive().nullable().optional()
-}).strict();
+}).strict().refine(data => {
+    // Se não for obra, o idioma é obrigatório
+    if (!data.obra_id && !data.idioma)
+        return false;
+    return true;
+}, {
+    message: "O idioma é obrigatório para publicações independentes",
+    path: ["idioma"]
+});
 /**
  * 🛡️ SCHEMA DE FILTRAGEM E PAGINAÇÃO
  * Valida os parâmetros de URL (Query Strings).

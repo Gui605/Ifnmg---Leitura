@@ -157,8 +157,18 @@ async function request<T>(
   // Mantemos o seletor para casos especiais (ex: ler o meta)
   const target = select ? select(resp.data, resp) : payload;
   
+  // 🔍 DEBUG: Log para identificar falha de contrato
+  console.log(`[DEBUG] Validando schema para URL: ${url}`, {
+    target: Array.isArray(target) ? `Array(${target.length})` : target
+  });
+
   const parsed = schema.safeParse(target);
   if (!parsed.success) {
+    console.error("[DEBUG] Erro de Validação Zod:", {
+      url,
+      errors: parsed.error.format(),
+      target: target
+    });
     throw AppError.internal('Falha na validação do contrato da API');
   }
   return parsed.data as T;

@@ -17,6 +17,8 @@ async function criarObra(perfilId: number, data: ObraCreateBody, requestId?: str
                 titulo: data.titulo,
                 descricao: data.descricao,
                 imagem_capa: data.imagem_capa,
+                idioma: data.idioma,
+                status: data.status,
                 autor_id: perfilId,
                 categorias: {
                     create: data.categorias.map(catId => ({

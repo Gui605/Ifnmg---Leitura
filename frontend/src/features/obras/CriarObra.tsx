@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Book, ArrowLeft, Send, PenTool, Layout, Image as ImageIcon } from 'lucide-react';
+import { Book, ArrowLeft, Send, PenTool, Layout, Image as ImageIcon, Languages, Activity } from 'lucide-react';
 import { criarObra } from '../../shared/services/obra.service';
 import { listarCategorias } from '../../shared/services/categoria.service';
 import { Categoria } from '../../shared/types/categoria.types';
@@ -14,6 +14,8 @@ export default function CriarObra() {
   
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
+  const [idioma, setIdioma] = useState('');
+  const [status, setStatus] = useState<'ANDAMENTO' | 'CONCLUIDO'>('ANDAMENTO');
   const [imagemCapa, setImagemCapa] = useState('');
   const [selectedCats, setSelectedCats] = useState<number[]>([]);
   const [enviando, setEnviando] = useState(false);
@@ -46,8 +48,8 @@ export default function CriarObra() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!titulo.trim() || selectedCats.length === 0) {
-      return Notificacao.toast.aviso('Preencha o título e selecione pelo menos uma categoria.');
+    if (!titulo.trim() || selectedCats.length === 0 || !idioma) {
+      return Notificacao.toast.aviso('Preencha o título, idioma e selecione pelo menos uma categoria.');
     }
 
     try {
@@ -55,6 +57,8 @@ export default function CriarObra() {
       await criarObra({
         titulo: titulo.trim(),
         descricao: descricao.trim() || undefined,
+        idioma,
+        status,
         imagem_capa: imagemCapa.trim() || undefined,
         categorias: selectedCats
       });
@@ -124,6 +128,42 @@ export default function CriarObra() {
                 className="w-full bg-[var(--input-bg)] px-5 py-4 rounded-2xl border-none outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/20 text-sm text-[var(--text-primary)] resize-none"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Idioma e Status */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] font-lexend flex items-center gap-2">
+              <Languages size={14} className="text-[var(--accent-primary)]" />
+              Idioma
+            </label>
+            <select 
+              value={idioma}
+              onChange={(e) => setIdioma(e.target.value)}
+              className="w-full bg-[var(--input-bg)] px-5 py-4 rounded-2xl border-none outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/20 text-sm font-bold text-[var(--text-primary)] appearance-none cursor-pointer"
+            >
+              <option value="" disabled>Selecione o idioma...</option>
+              <option value="Português">Português</option>
+              <option value="Inglês">Inglês</option>
+              <option value="Espanhol">Espanhol</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] font-lexend flex items-center gap-2">
+              <Activity size={14} className="text-[var(--accent-primary)]" />
+              Status da Obra
+            </label>
+            <select 
+              value={status}
+              onChange={(e) => setStatus(e.target.value as 'ANDAMENTO' | 'CONCLUIDO')}
+              className="w-full bg-[var(--input-bg)] px-5 py-4 rounded-2xl border-none outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/20 text-sm font-bold text-[var(--text-primary)] appearance-none cursor-pointer"
+            >
+              <option value="ANDAMENTO">Em Andamento</option>
+              <option value="CONCLUIDO">Concluído</option>
+            </select>
           </div>
         </div>
 

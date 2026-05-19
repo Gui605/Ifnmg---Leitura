@@ -34,10 +34,14 @@ export type PostResumo = z.infer<typeof PostResumoSchema>;
 
 export const TrabalhoResumoSchema = PostResumoSchema.extend({
   idioma: z.string().optional(),
+  status: z.enum(["ANDAMENTO", "CONCLUIDO"]).optional(),
   status_trabalho: z.enum(['Em Andamento', 'Concluído', 'Revisado']).optional(),
   numero_citacoes: z.number().int().default(0),
   visualizacoes: z.number().int().default(0),
   curso: z.string().optional(),
+  tipo: z.enum(['POST', 'OBRA']).optional(),
+  resumo: z.string().optional(),
+  imagem_capa: z.string().optional(),
 });
 
 export type TrabalhoResumo = z.infer<typeof TrabalhoResumoSchema>;
@@ -45,6 +49,8 @@ export type TrabalhoResumo = z.infer<typeof TrabalhoResumoSchema>;
 export const PostCreateBodySchema = z.object({
   titulo: z.string().min(5).max(150),
   conteudo: z.string().min(10).max(10000),
+  idioma: z.string().min(1, "Selecione o idioma").optional(),
+  status: z.enum(["ANDAMENTO", "CONCLUIDO"]).optional(),
   tags: z.array(z.string()).min(0).max(5),
   obra_id: z.number().int().positive().nullable().optional(),
   comunidade_id: z.number().int().positive().nullable().optional()
@@ -69,6 +75,7 @@ export interface FiltrosBusca {
   curso?: string;
   idioma?: string;
   status?: string;
+  tipo?: 'TODOS' | 'POST' | 'OBRA';
   tags?: string[];
   ordenar_por?: 'recentes' | 'populares' | 'citacoes';
   page?: number;

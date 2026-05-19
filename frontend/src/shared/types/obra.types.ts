@@ -12,6 +12,8 @@ export const ObraCreateSchema = z.object({
   descricao: z.string()
     .max(1000, "A descrição é muito longa (máximo 1000)")
     .optional(),
+  idioma: z.string().min(1, "Selecione o idioma"),
+  status: z.enum(["ANDAMENTO", "CONCLUIDO"]),
   imagem_capa: z.string().url("A imagem de capa deve ser uma URL válida").optional().or(z.literal("")),
   categorias: z.array(z.number().int()).min(1, "Selecione pelo menos uma categoria").max(3, "Máximo 3 categorias permitidas")
 }).strict();

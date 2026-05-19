@@ -1,7 +1,7 @@
 // src/features/posts/EscreverPost.tsx
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Save, X, MapPin, Hash, GraduationCap, Scroll, Check } from "lucide-react";
+import { Send, Save, X, MapPin, Hash, GraduationCap, Scroll, Check, Languages, Activity } from "lucide-react";
 import { Notificacao } from "../../shared/utils/Notificacao";
 import { listarCategorias as getCategorias } from "../../shared/services/categoria.service";
 import { criarPost } from "../../shared/services/post.service";
@@ -21,6 +21,7 @@ export default function EscreverPost() {
   // Estados do Post
   const [titulo, setTitulo] = useState("");
   const [conteudo, setConteudo] = useState("");
+  const [idioma, setIdioma] = useState("");
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<number[]>([]);
   const [exibirCampus, setExibirCampus] = useState(true);
   const [tagBusca, setTagBusca] = useState("");
@@ -81,8 +82,8 @@ export default function EscreverPost() {
   };
 
   const handlePublicar = async () => {
-    if (!titulo.trim() || !conteudo.trim()) {
-      Notificacao.toast.erro("Título e conteúdo são obrigatórios.");
+    if (!titulo.trim() || !conteudo.trim() || !idioma) {
+      Notificacao.toast.aviso("Título, conteúdo e idioma são obrigatórios.");
       return;
     }
 
@@ -95,10 +96,11 @@ export default function EscreverPost() {
       await criarPost({
         titulo,
         conteudo,
+        idioma,
         tags: tagsNomes
       });
       Notificacao.toast.sucesso("Pergaminho publicado com sucesso!");
-      navigate("/dashboard");
+      navigate("/feed");
     } catch (err: any) {
       Notificacao.toast.erro(err?.message || "Erro ao publicar pergaminho.");
     } finally {
@@ -244,6 +246,27 @@ export default function EscreverPost() {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Idioma */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-[var(--border-color)]/30">
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                  <Languages size={16} className="text-[var(--accent-primary)]" />
+                  Idioma
+                </label>
+                <select 
+                  className="w-full bg-[var(--input-bg)] border-none rounded-lg px-4 py-1.5 text-sm font-semibold text-[var(--text-secondary)] focus:ring-2 focus:ring-[var(--accent-primary)] transition-all"
+                  value={idioma}
+                  onChange={(e) => setIdioma(e.target.value)}
+                >
+                  <option value="" disabled>Selecione o idioma...</option>
+                  <option value="Português">Português</option>
+                  <option value="Inglês">Inglês</option>
+                  <option value="Espanhol">Espanhol</option>
+                  <option value="Outros">Outros</option>
+                </select>
               </div>
             </div>
 
