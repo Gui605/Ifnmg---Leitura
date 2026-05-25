@@ -2,10 +2,7 @@ import { RequestHandler } from 'express';
 import { AppError } from '../utils/AppError';
 import { ErrorCodes } from '../../errors/ErrorCodes';
 
-/**
- * Calcula a profundidade máxima de um objeto recursivamente.
- * Utiliza um WeakSet para detectar referências circulares (prevenção de DoS).
- */
+//Calcula quantos níveis de profundidade um objeto possui.
 function calcularProfundidade(input: unknown, seen: WeakSet<object>): number {
     if (input === null || typeof input !== 'object') return 0;
     
@@ -14,7 +11,7 @@ function calcularProfundidade(input: unknown, seen: WeakSet<object>): number {
     seen.add(input);
 
     let max = 0;
-    // Pega todos os valores (seja Array ou Objeto simples)
+    // Pega todos os valores seja Array ou Objeto simples
     const values = Object.values(input);
 
     for (const val of values) {
@@ -25,11 +22,11 @@ function calcularProfundidade(input: unknown, seen: WeakSet<object>): number {
     return 1 + max;
 }
 
-/**
- * Middleware de Segurança: Limite de Profundidade JSON
- * Protege o servidor contra ataques de "JSON Bomb" ( payloads profundamente aninhados 
- * que poderiam causar estouro de pilha ou exaustão de CPU).
- * * @param maxDepth Profundidade máxima permitida (Padrão: 7)
+/*
+Middleware de Segurança: Limite de Profundidade JSON
+Protege o servidor contra ataques de payloads profundamente aninhados 
+que poderiam causar estouro de pilha ou exaustão de CPU.
+ @param maxDepth Profundidade máxima permitida é 7
  */
 export const jsonDepthMiddleware = (maxDepth: number = 7): RequestHandler => {
     return (req, _res, next) => {

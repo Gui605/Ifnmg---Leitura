@@ -3,15 +3,15 @@ import { tratarAssincrono } from '../utils/asyncHandler';
 import { verificarToken } from '../utils/jwtUtils';
 import prisma from '../prisma/prisma.client';
 
-/**
- * 💡 PADRÃO ENTERPRISE: Autenticação Opcional
- * Permite que rotas públicas identifiquem o usuário se o token existir, 
- * mas não bloqueia a requisição caso o token seja inválido ou ausente.
+/*
+Middleware de Segurança: Autenticação Opcional
+Permite que rotas públicas identifiquem o usuário se o token existir, 
+ mas não bloqueia a requisição caso o token seja inválido ou ausente.
  */
 const middlewareAutenticacaoOpcional = tratarAssincrono(async (req: Request, _res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
 
-    // 🛡️ Se não houver token, define como undefined e segue (acesso público)
+    // Se não houver token, define como undefined e segue acesso público
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         req.user = undefined as any;
         return next();
@@ -36,8 +36,8 @@ const middlewareAutenticacaoOpcional = tratarAssincrono(async (req: Request, _re
             };
         }
     } catch (error) {
-        // 🛡️ Em caso de erro (token expirado/inválido), apenas limpa os dados.
-        // Diferente do authMiddleware, aqui não lançamos AppError.
+        // Em caso de erro token expirado/inválido, apenas limpa os dados.
+        // Diferente do authMiddleware, aqui não lançamos AppError para evitar bloqueio do usuário.
         req.user = undefined as any;
     }
     

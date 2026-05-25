@@ -8,9 +8,9 @@ export const DenunciaCreateSchema = z.object({
 
 export type DenunciaCreateBody = z.infer<typeof DenunciaCreateSchema>;
 
-/**
- * 🛡️ SCHEMA DE RESPOSTA (Refletindo SetNull)
- */
+/*
+Schema de Resposta (Reflectando SetNull)
+  */
 export const DenunciaResponseSchema = z.object({
     denuncia_id: z.number(),
     post_id: z.number().nullable(),

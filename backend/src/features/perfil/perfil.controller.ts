@@ -10,11 +10,7 @@ import {
     DeletarContaBody 
 } from '../../shared/types/perfil.types'; 
 
-/**
- * 💡 PADRÃO ENTERPRISE EVOLUÍDO:
- * A lógica de "Gatekeeper" contra Mass Assignment foi movida para o Zod (.strict()).
- * O Controller foca exclusivamente na orquestração dos serviços.
- */
+
 
 const getPerfilInfo = tratarAssincrono(async (req: Request, res: Response) => {
     const perfilId = req.user.perfil_id;
@@ -49,7 +45,7 @@ const getPerfilPublico = tratarAssincrono(async (req: Request<{ id: string }>, r
 
 const updatePerfil = tratarAssincrono(async (req: Request<{}, {}, PerfilPatchBody>, res: Response) => {
     const perfilId = req.user.perfil_id;
-    // 🛡️ O Zod já garantiu que o body contém APENAS 'nome' e que ele é válido.
+    // O Zod já garantiu que o body contém apenas 'nome' e que ele é válido.
     const { nome } = req.body;
 
     // O trim() também foi realizado automaticamente pelo Schema
@@ -65,7 +61,7 @@ const updatePerfil = tratarAssincrono(async (req: Request<{}, {}, PerfilPatchBod
 
 const alterarSenha = tratarAssincrono(async (req: Request<{}, any, SenhaPatchBody>, res: Response) => {
     const usuarioId = req.user.usuario_id;
-    // 🛡️ Validações de força de senha e "novaSenha === confirmarNovaSenha" 
+    // Validações de força de senha e "novaSenha === confirmarNovaSenha" 
     // agora ocorrem automaticamente no Zod Schema (.refine()).
     const { senhaAntiga, novaSenha } = req.body; 
     
@@ -91,7 +87,7 @@ const toggleFollow = tratarAssincrono(async (req: Request<{ id: string }>, res: 
         throw AppError.badRequest('ID de perfil inválido.');
     }
 
-    // Lógica de Toggle: Tenta deletar primeiro, se falhar (não segue), tenta seguir.
+    //  Tenta deletar primeiro, se falhar (não segue), tenta seguir.
     // Isso economiza uma query de 'find' e mantém a atomicidade.
     try {
         await perfilService.deixarDeSeguirPerfil(seguidorId, seguidoId, req.requestId);

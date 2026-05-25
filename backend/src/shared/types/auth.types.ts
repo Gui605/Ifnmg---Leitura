@@ -2,9 +2,7 @@ import { z } from 'zod';
 import { LISTA_CAMPUS } from '../constants/unidades';
 
 /**
- * 🛡️ SCHEMA DE REGISTRO
- * Implementa validações rigorosas de formato e segurança.
- * O .strict() impede a injeção de campos como 'is_admin' ou 'cadastro_confirmado'.
+ Schema de Registro de Usuário
  */
 export const RegistrarSchema = z.object({
     nome_user: z.string()
@@ -35,7 +33,7 @@ export const RegistrarSchema = z.object({
 }).strict();
 
 /**
- * 🛡️ SCHEMA DE LOGIN
+ Schema de Login de Usuário
  */
 export const LoginSchema = z.object({
     email: z.string().email("E-mail inválido").trim(),
@@ -59,16 +57,16 @@ export const RedefinirSenhaSchema = z.object({
         .regex(/[0-9]/, "A senha deve conter ao menos um número"),
 }).strict();
 
-/**
- * 💡 INFERÊNCIA DE TIPOS
+/*
+Inferência de Tipos
  */
 export type RegistrarData = z.infer<typeof RegistrarSchema>;
 export type LoginData = z.infer<typeof LoginSchema>;
 export type SolicitarRecuperacaoBody = z.infer<typeof SolicitarRecuperacaoSchema>;
 export type RedefinirSenhaBody = z.infer<typeof RedefinirSenhaSchema>;
 
-/**
- * 🛡️ SCHEMA DE METADADOS JWT (iat, exp)
+/*
+ Schema de Metadados de JWT (iat, exp)
  */
 export const JwtMetaSchema = z.object({
     iat: z.number().optional(),
@@ -84,8 +82,8 @@ export const TokenPayloadSchema = JwtMetaSchema.extend({
 
 export type TokenPayload = z.infer<typeof TokenPayloadSchema>;
 
-/**
- * 💡 TIPO DE USUÁRIO AUTENTICADO (Request User)
+/*
+ Tipo de Usuário Autenticado (Request User)
  */
 export interface AuthUser {
     usuario_id: number;

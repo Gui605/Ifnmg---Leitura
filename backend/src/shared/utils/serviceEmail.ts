@@ -7,10 +7,9 @@ import { logger } from './logger';
 // Estado de cache para Health/Probes
 let smtpStatus: 'UP' | 'DOWN' | 'CHECKING' = 'CHECKING';
 
-/**
- * 🛠️ CONFIGURAÇÃO DE TRANSPORTE COM FAIL-FAST
- * Timeouts de 10 segundos garantem que o servidor não fique travado
- * esperando uma resposta de um servidor SMTP lento ou offline.
+/*
+ Timeouts de 10 segundos garantem que o servidor não fique travado
+ esperando uma resposta de um servidor SMTP lento ou offline.
  */
 function getTransporter() {
     const EMAIL_HOST = process.env.EMAIL_HOST;
@@ -44,9 +43,9 @@ function getTransporter() {
     return nodemailer.createTransport(transporterOptions);
 }
 
-/**
- * Inicializa monitoramento assíncrono do SMTP em background.
- * Executa um verify() inicial e agenda revalidações a cada 30s.
+/*
+ Inicializa monitoramento assíncrono do SMTP em background.
+ Executa um verify() inicial e agenda revalidações a cada 30s.
  */
 export async function iniciarMonitoramentoSMTP(): Promise<void> {
     const EMAIL_HOST = process.env.EMAIL_HOST;
@@ -87,9 +86,7 @@ export async function iniciarMonitoramentoSMTP(): Promise<void> {
     }, 30_000);
 }
 
-/**
- * [Health Check] Diagnostica o status do serviço de e-mail.
- */
+//Diagnostica o status do serviço de e-mail.
 export async function diagnosticarSMTP(): Promise<'UP' | 'DOWN' | 'DISABLED'> {
     const EMAIL_HOST = process.env.EMAIL_HOST;
     const EMAIL_USER = process.env.EMAIL_USER;
@@ -97,13 +94,11 @@ export async function diagnosticarSMTP(): Promise<'UP' | 'DOWN' | 'DISABLED'> {
     if (!EMAIL_HOST || !EMAIL_USER || !EMAIL_PASS) {
         return 'DISABLED';
     }
-    // Resposta instantânea baseada em cache (evita latência de verify em probes)
+    // Resposta instantânea baseada em cache, evita latência de verify em probes
     return smtpStatus === 'CHECKING' ? 'DOWN' : smtpStatus;
 }
 
-/**
- * Centralizador de e-mails transacionais.
- */
+// Centralizador de e-mails transacionais.
 export async function enviarEmailComToken(
     email: string, 
     token: string, 

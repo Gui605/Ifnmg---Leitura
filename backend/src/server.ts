@@ -31,14 +31,13 @@ import { AppError } from './shared/utils/AppError';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- 1. INFRAESTRUTURA ---
 app.set('trust proxy', 1);
 
-// --- 2. MIDDLEWARES DE SEGURANÇA E PARSING ---
-// 1. Rastreamento deve ser o primeiro para logar tudo
+// Middlewares de segurança 
+// Rastreamento deve ser o primeiro para logar tudo
 app.use(middlewareRequestId);
 
-// 2. CORS deve vir antes de qualquer middleware que possa bloquear a requisição (como Helmet ou Security)
+// CORS deve vir antes de qualquer middleware que possa bloquear a requisição (como Helmet ou Security)
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -46,10 +45,10 @@ app.use(cors({
     credentials: true
 }));
 
-// 3. Tratamento explícito de Preflight para evitar 401/403 antes de chegar no CORS
+// Tratamento explícito de requisições OPTIONS para evitar 401/403 antes de chegar no CORS
 app.options('*', cors());
 
-// 4. Segurança e Parsers (Agora em ambiente seguro pois o CORS já passou)
+// Agora em ambiente seguro pois o CORS já passou
 app.use(helmet());
 app.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true, preload: true }));
 app.use(express.json({ limit: '100kb' }));
@@ -57,12 +56,12 @@ app.use(jsonDepthMiddleware(7));
 app.use(enforceSecurity); // Proteção contra requisições maliciosas
 app.use(responseEnveloper); 
 
-// --- 3. VALIDAÇÃO DE SEGURANÇA DE PRODUÇÃO ---
+// Validação de segurança em produção
 if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
     throw new Error('CONFIGURAÇÃO FATAL: JWT_SECRET não configurado em produção.');
 }
 
-// --- 4. ROTAS ---
+// Rotas
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/perfil', perfilRoutes);
 app.use('/api/v1/posts', postsRoutes);
@@ -71,11 +70,11 @@ app.use('/api/v1/saude', healthRoutes);
 app.use('/api/v1/denuncias', denunciasRoutes);
 app.use('/api/v1/obras', obrasRoutes);
 
-// --- 5. FALLBACK E ERROS ---
+// Fallback e erros
 app.all('*', (req, _res, next) => next(AppError.notFound(`Rota ${req.originalUrl} não existe.`)));
 app.use(tratadorDeErros);
 
-// --- 6. INICIALIZAÇÃO ---
+// Inicialização
 const iniciarServidor = async () => {
     try {
         app.listen(Number(PORT), '0.0.0.0', () => {

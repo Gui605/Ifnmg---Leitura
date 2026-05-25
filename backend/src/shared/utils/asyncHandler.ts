@@ -1,11 +1,10 @@
 // backend/src/shared/utils/asyncHandler.ts
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 
-/**
- * 💡 EXPLICAÇÃO SÊNIOR:
- * Este wrapper elimina a necessidade de usar try/catch em todos os Controllers.
- * Se uma Promise falhar (rejeitar), o .catch() captura o erro e chama o next(error),
- * enviando-o automaticamente para o seu errorHandler.middleware.ts.
+/*
+ Isso elimina a necessidade de usar try/catch em todos os Controllers.
+ Se uma Promise falhar/rejeitar, o .catch() captura o erro e chama o next(error),
+ enviando-o automaticamente para o seu errorHandler.middleware.ts.
  */
 
 type AsyncController = (

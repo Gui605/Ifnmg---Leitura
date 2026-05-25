@@ -3,18 +3,10 @@ import prisma from '../../shared/prisma/prisma.client';
 import { PerfilPatchBody } from '../../shared/types/perfil.types';
 import { AppError } from '../../shared/utils/AppError';
 
-/**
- * 💡 PADRÃO ENTERPRISE: Camada de Serviço de Perfil
- * Implementa defesa multicamadas contra Mass Assignment (CWE-915).
- */
+
 
 async function atualizarPerfil(perfilId: number, data: PerfilPatchBody, _requestId?: string) {
     try {
-        /**
-         * 🛡️ BLINDAGEM DE SEGURANÇA: Mapeamento Explícito
-         * Extraímos APENAS o que é permitido. Mesmo que o 'data' venha poluído
-         * por um ataque concorrente, as variáveis locais garantem a pureza do update.
-         */
         const { nome } = data;
 
         // Se o nome não foi enviado ou é inválido, não tentamos atualizar
@@ -35,7 +27,7 @@ async function atualizarPerfil(perfilId: number, data: PerfilPatchBody, _request
             }
         });
     } catch (error: any) {
-        // Erro P2025: Record to update not found (Prisma Error Handling)
+        // Erro P2025: registra a ser atualizado não encontrado
         if (error.code === 'P2025') {
             throw AppError.notFound('Não foi possível atualizar o perfil. Usuário não encontrado.');
         }
@@ -69,7 +61,7 @@ async function buscarPerfilCompleto(perfilId: number, visitanteId?: number, _req
         throw AppError.notFound('As informações do perfil solicitado não foram encontradas.');
     }
 
-    // 🛡️ AGREGAÇÃO DE ESTATÍSTICAS E RELAÇÕES (Execução em Paralelo via Promise.all)
+    // AGREGAÇÃO DE ESTATÍSTICAS E RELAÇÕES (Execução em Paralelo via Promise.all)
     const [totalPosts, totalCurtidas, totalSeguidores, totalSeguindo, isFollowing] = await Promise.all([
         prisma.posts.count({ where: { autor_id: perfilId } }),
         prisma.votos.count({ where: { post: { autor_id: perfilId }, tipo: 'UP' } }),
@@ -99,10 +91,7 @@ async function buscarPerfilCompleto(perfilId: number, visitanteId?: number, _req
     };
 }
 
-/**
- * 💡 FOLLOW SYSTEM: Lógica de Grafo Social
- * Implementa idempotência e validação de auto-seguimento.
- */
+
 async function seguirPerfil(seguidorId: number, seguidoId: number, requestId?: string) {
     if (seguidorId === seguidoId) {
         throw AppError.badRequest('Você não pode seguir a si mesmo.');
@@ -124,7 +113,7 @@ async function seguirPerfil(seguidorId: number, seguidoId: number, requestId?: s
                 seguido_id: seguidoId
             }
         },
-        update: {}, // Idempotência: se já segue, não faz nada
+        update: {}, // se já segue, não faz nada
         create: {
             seguidor_id: seguidorId,
             seguido_id: seguidoId
@@ -163,16 +152,18 @@ import {
 import { registrar as registrarLog } from '../../shared/utils/logService';
 
 /**
- * 🚀 MOTOR DE XP (Versão 2.0)
+ * Deve ter uma implementação dedicada na função processarGanhoXP
+ *  MOTOR DE XP
  * Implementa decaimento temporal, limites diários e especialização por categoria.
  */
+
 async function processarGanhoXP(
   perfilId: number, 
   evento: string, 
   requestId?: string, 
   dataCriacaoPost?: Date
 ) {
-  // 1. Identifica a categoria e o valor base
+  // Identifica a categoria e o valor base
   let xpBase = 0;
   let categoria: 'xp_escrita' | 'xp_curadoria' | 'xp_social' = 'xp_social';
 
@@ -189,13 +180,13 @@ async function processarGanhoXP(
     return; // Evento não mapeado
   }
 
-  // 2. Aplica Decaimento Temporal (Apenas para Categoria Social/Karma)
+  // Aplica Decaimento Temporal (Apenas para Categoria Social/Karma)
   let xpFinal = xpBase;
   if (categoria === 'xp_social' && dataCriacaoPost) {
     xpFinal = calcularXpComDecaimento(xpBase, dataCriacaoPost);
   }
 
-  // 3. Verifica Limite Diário (Anti-Spam/Viral)
+  // Verifica Limite Diário (Anti-Spam/Viral)
   const inicioDia = new Date();
   inicioDia.setHours(0, 0, 0, 0);
 
@@ -220,7 +211,7 @@ async function processarGanhoXP(
   const restoParaLimite = LIMITES_DIARIOS.MAX_XP_POR_DIA - xpHoje;
   xpFinal = Math.min(xpFinal, restoParaLimite);
 
-  // 4. ATOMICIDADE: Atualiza XP Total, XP por Categoria e Level
+  // Atualiza XP Total, XP por Categoria e Level
   const perfilAtualizado = await prisma.$transaction(async (tx) => {
     const pAntigo = await tx.perfis.findUnique({
       where: { perfil_id: perfilId },
@@ -250,12 +241,10 @@ async function processarGanhoXP(
     return { ...finalPerfil, xpSocialAntigo: pAntigo?.xp_social || 0 };
   });
 
-  // 5. Registro e Verificação de Títulos (Otimizado)
+  //Registro e Verificação de Títulos (Otimizado)
   await registrarLog(perfilId, evento, { xpGanho: xpFinal, categoria }, requestId);
   console.log(`[GAMIFICACAO] Perfil ${perfilId} recebeu ${xpFinal} XP na categoria ${categoria} via evento ${evento}`);
   
-  // 🚀 PERFORMANCE: Só verifica títulos se for categoria de ESCRITA ou se atingir marco de 100 em SOCIAL
-  // Lógica de 'transição de faixa' para evitar pular marcos de títulos
   const cruzouFaixaSocial = Math.floor(perfilAtualizado.xpSocialAntigo / 100) < Math.floor(perfilAtualizado.xp_social / 100);
   
   const deveVerificarTitulos = 
@@ -263,12 +252,10 @@ async function processarGanhoXP(
     (categoria === 'xp_social' && cruzouFaixaSocial);
 
   if (deveVerificarTitulos) {
-    // 🛡️ PROTEÇÃO CONTRA CRASH: Gamificação não deve quebrar a ação principal (ex: criar obra)
     try {
       await atribuirTitulosPorMerito(perfilId, requestId);
     } catch (error) {
       console.error(`[GAMIFICACAO] Falha ao atribuir títulos para perfil ${perfilId}:`, error);
-      // Não re-throw: o usuário deve ganhar sua obra mesmo que o título falhe
     }
   }
 
@@ -287,12 +274,12 @@ function getPatentePorNivel(level: number): string {
   return patente;
 }
 
-/**
- * 🏆 GERENCIADOR DE TÍTULOS (Meritocracia IFNMG)
- * Busca o XP das categorias do perfil e compara com TITULOS_ESPECIALIDADE.
+/*
+ GERENCIADOR DE TÍTULOS 
+ Busca o XP das categorias do perfil e compara com TITULOS_ESPECIALIDADE.
  */
 async function atribuirTitulosPorMerito(perfilId: number, requestId?: string) {
-  // 1. Busca XP atual por categorias
+  // Busca XP atual por categorias
   const perfil = await prisma.perfis.findUnique({
     where: { perfil_id: perfilId },
     select: { xp_escrita: true, xp_curadoria: true, xp_social: true }
@@ -300,29 +287,29 @@ async function atribuirTitulosPorMerito(perfilId: number, requestId?: string) {
 
   if (!perfil) return;
 
-  // 2. Busca títulos que o usuário já possui
+  // Busca títulos que o usuário já possui
   const titulosGanhos = await prisma.perfisTitulos.findMany({ 
     where: { perfil_id: perfilId },
     select: { titulo: { select: { nome: true } } }
   });
   
-  // 🛡️ NUL-SAFETY: Garante que titulosGanhos e seus itens existam antes de mapear
+  //Garantir que titulosGanhos e seus itens existam antes de mapear
   const nomesTitulosGanhos = (titulosGanhos || [])
     .filter(tg => tg && tg.titulo && tg.titulo.nome)
     .map(tg => tg.titulo.nome);
 
-  // 3. Itera sobre a configuração de títulos de especialidade
+  //Itera sobre a configuração de títulos de especialidade
   for (const tConfig of TITULOS_ESPECIALIDADE) {
     if (nomesTitulosGanhos.includes(tConfig.nome)) continue;
 
-    // Mapeia a categoria da config para o campo do banco
+    //Mapear a categoria da config para o campo do banco
     const campoXp = tConfig.categoria === 'ESCRITA' ? 'xp_escrita' : 
                     tConfig.categoria === 'CURADORIA' ? 'xp_curadoria' : 'xp_social';
 
     const xpNaCategoria = perfil[campoXp as keyof typeof perfil] || 0;
 
     if (xpNaCategoria >= tConfig.exigenciaXp) {
-      // 🛡️ TRANSACAO: Garante integridade ao atribuir título
+      //TRANSACAO: Garante integridade ao atribuir título
       try {
         await prisma.$transaction(async (tx) => {
           // Busca ou cria o título no banco de dados
@@ -360,9 +347,8 @@ async function atribuirTitulosPorMerito(perfilId: number, requestId?: string) {
   }
 }
 
-/**
- * 🛡️ PRE-FLIGHT CHECK DE EXCLUSÃO (LGPD)
- * Verifica se o usuário possui impedimentos para deletar a conta.
+/*
+ Verifica se o usuário possui impedimentos para deletar a conta.
  */
 async function checkPendenciasExclusao(perfilId: number) {
     const usuario = await prisma.usuarios.findUnique({
@@ -372,7 +358,7 @@ async function checkPendenciasExclusao(perfilId: number) {
 
     if (!usuario) throw AppError.notFound('Usuário não encontrado.');
 
-    // 1. Verifica se é Dono de comunidades com outros membros
+    //Verifica se é Dono de comunidades com outros membros
     const comunidadesComoDono = await prisma.comunidades.findMany({
         where: { criador_id: perfilId },
         include: {

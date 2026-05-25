@@ -10,26 +10,18 @@ import {
     DeletarContaSchema 
 } from '../../shared/types/perfil.types';
 
-/**
- * 💡 PADRÃO ENTERPRISE EVOLUÍDO:
- * Substituímos listas manuais de strings por Schemas de Validação (Zod).
- * Isso garante que o contrato da API seja a "Única Fonte de Verdade".
- */
 
 const perfilRoutes = Router();
 
-// 🛡️ Camada 1: Identidade (Token JWT deve ser válido)
+// Identidade: O Token JWT deve ser válido
 perfilRoutes.use(middlewareAutenticacao); 
 
-// --- 👤 Gestão de Informações Pessoais ---
+// Gestão de Informações Pessoais
 
-/** * GET /me -> Recupera dados do perfil logado
- */
+//GET /me -> Recupera dados do perfil logado
 perfilRoutes.get('/me', perfilController.getPerfilInfo);
 
-/** * PATCH /me -> Atualização de dados básicos
- * 🛡️ Camada 2: Validação de Contrato (Apenas campos permitidos pelo Zod)
- */
+// PATCH /me -> Atualização de dados básicos
 perfilRoutes.patch(
     '/me', 
     validate({ body: PerfilPatchSchema }),
@@ -37,20 +29,17 @@ perfilRoutes.patch(
 );
 
 
-// --- 🔐 Operações de Segurança Crítica ---
+// Operações de Segurança Crítica
 
-/** * PATCH /seguranca/senha -> Troca de credenciais
- * 🛡️ Camada 2: O Zod valida força da senha e se a confirmação é idêntica.
- */
+// PATCH /seguranca/senha -> Troca de credenciais
 perfilRoutes.patch(
     '/seguranca/senha', 
     validate({ body: SenhaPatchSchema }),
     perfilController.alterarSenha
 );
 
-/** * DELETE /seguranca/conta -> Encerramento de conta
- * 🛡️ Camada 2: Exige apenas a senha atual para confirmação.
- */
+// DELETE /seguranca/conta -> Encerramento de conta
+// Exige a senha atual para confirmação.
 perfilRoutes.get(
     '/seguranca/check-exclusao',
     perfilController.checkPendenciasExclusao
@@ -62,17 +51,17 @@ perfilRoutes.delete(
     perfilController.deletarPerfil
 );
 
-// --- 🤝 Sistema de Seguidores ---
+// Sistema de Seguidores
 
-/** * POST /:id/seguir -> Toggle follow/unfollow
- */
+// POST /:id/seguir
+// Validação de Contrato (Apenas campo 'id' é permitido)
 perfilRoutes.post(
     '/:id/seguir',
     perfilController.toggleFollow
 );
 
-/** * GET /:id -> Busca perfil público de terceiros
- */
+// GET /:id -> Busca perfil público de terceiros
+// Validação de Contrato (Apenas campo 'id' é permitido)
 perfilRoutes.get(
     '/:id',
     middlewareAutenticacaoOpcional,

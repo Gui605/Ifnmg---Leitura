@@ -3,24 +3,18 @@ import prisma from '../../shared/prisma/prisma.client';
 import { AppError } from '../../shared/utils/AppError';
 import { PostCommentBody } from '../../shared/types/post.types';
 
-/**
- * 🛡️ SERVIÇO DE COMENTÁRIOS (IFNMG)
- * Centraliza a lógica de interação social com trava de profundidade.
- */
+
 class ComentariosService {
-    /**
-     * 🛡️ CRIAR COMENTÁRIO
-     * Implementa a trava "Anti-Inception" de 2 níveis e persistência de snapshot.
-     */
+    //Implementa a trava "Anti-Inception" de 2 níveis e persistência atômica
     async criarComentario(perfilId: number, postId: number, data: PostCommentBody, requestId?: string) {
-        // 1. Validar existência do post
+        // Validar existência do post
         const postExistente = await prisma.posts.findUnique({
             where: { post_id: postId },
             select: { post_id: true }
         });
         if (!postExistente) throw AppError.notFound('Publicação não encontrada.');
 
-        // 2. Trava de Profundidade (Máximo 2 níveis: Post -> Comentário -> Resposta)
+        // Trava de Profundidade (Máximo 2 níveis: Post -> Comentário -> Resposta)
         if (data.parent_id) {
             const pai = await prisma.comentarios.findUnique({
                 where: { comentario_id: data.parent_id },
@@ -30,13 +24,13 @@ class ComentariosService {
             if (!pai) throw AppError.notFound('Comentário pai não encontrado.');
             if (pai.post_id !== postId) throw AppError.badRequest('O comentário pai não pertence a este post.');
             
-            // Se o pai já tem um pai, então este novo seria o 3º nível (Proibido)
+            // Se o pai já tem um pai, então este novo seria o 3º nível - proibido
             if (pai.parent_id) {
                 throw AppError.badRequest('Apenas dois níveis de profundidade permitidos (Resposta de resposta não autorizada).');
             }
         }
 
-        // 3. Busca metadados do autor para Snapshot (Null-Safety futura)
+        // Busca os dados do autor (com proteção caso o perfil não seja encontrado)
         const autor = await prisma.perfis.findUnique({
             where: { perfil_id: perfilId },
             select: { 
@@ -46,7 +40,7 @@ class ComentariosService {
         });
         if (!autor) throw AppError.notFound('Perfil do autor não encontrado.');
 
-        // 4. Persistência Atômica
+        // Persistência Atômica
         console.log(`[DEBUG] Criando comentário para post ${postId} por perfil ${perfilId}`, data);
         
         return await prisma.$transaction(async (tx) => {
@@ -57,9 +51,9 @@ class ComentariosService {
                     perfil_id: perfilId,
                     parent_id: data.parent_id,
                     is_spoiler: data.is_spoiler || false,
-                    // Snapshot de autoria se as colunas existirem no banco
-                    // TODO: Se o schema.prisma for atualizado com autor_nome_user e nome_campus nos Comentarios, 
-                    // descomentar as linhas abaixo para snapshot real.
+                    //Refatorar / implementar
+                    // quando o schema.prisma for atualizado com autor_nome_user e nome_campus nos Comentarios, 
+                    // descomentar as linhas abaixo para variavel real de autoria.
                     // autor_nome_user: autor.nome_user,
                     // nome_campus: autor.usuario?.nome_campus || 'Campus desconhecido'
                 },
@@ -85,10 +79,7 @@ class ComentariosService {
         });
     }
 
-    /**
-     * 🛡️ LISTAR COMENTÁRIOS
-     * Retorna a árvore de comentários (limitada a 2 níveis).
-     */
+    // Retorna a árvore de comentários (limitada a 2 níveis)
     async listarPorPost(postId: number) {
         const comentarios = await prisma.comentarios.findMany({
             where: { post_id: postId, parent_id: null },
@@ -120,10 +111,7 @@ class ComentariosService {
         }));
     }
 
-    /**
-     * 🛡️ DELETAR COMENTÁRIO
-     * Apenas autor ou admin.
-     */
+    //deletar comentario, apenas autor ou admin
     async deletarComentario(comentarioId: number, perfilId: number, isAdmin: boolean = false) {
         const comentario = await prisma.comentarios.findUnique({
             where: { comentario_id: comentarioId },
@@ -149,10 +137,7 @@ class ComentariosService {
         return { message: 'Comentário removido com sucesso.' };
     }
 
-    /**
-     * 🛡️ FORMATADOR (Null-Safety)
-     * Garante que se o perfil for null (deletado), usemos os dados de snapshot.
-     */
+    // Garante que se o perfil for null (deletado), usemos os dados do autor.
     private formatarComentario(c: any) {
         return {
             comentario_id: c.comentario_id,

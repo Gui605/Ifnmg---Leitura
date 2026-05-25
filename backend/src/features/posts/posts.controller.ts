@@ -7,14 +7,13 @@ import perfilService from '../perfil/perfil.service';
 import { PostCreateBody, PostsQuery, PostVoteBody, PostCommentBody, ReacaoBody } from '../../shared/types/post.types';
 import { AppError } from '../../shared/utils/AppError';
 
-// 🛡️ Tipagem de parâmetros da URL para evitar 'undefined'
+// Tipagem de parâmetros da URL para evitar 'undefined'
 type PostIdParams = { id: string };
 type EmptyBody = Record<string, never>;
 
 const criarPost = tratarAssincrono(async (req: Request<{}, any, PostCreateBody>, res: Response) => {
     const perfilId = req.user.perfil_id; 
     
-    // 🔍 DEBUG: Log do payload recebido no backend
     console.log("[DEBUG] Recebendo payload para criação de post/capítulo:", req.body);
     
     const { titulo, conteudo, tags, idioma } = req.body; 
@@ -32,7 +31,7 @@ const criarPost = tratarAssincrono(async (req: Request<{}, any, PostCreateBody>,
         comunidade_id: req.body.comunidade_id
     }, req.requestId);
 
-    // 🛡️ ENRIQUECIMENTO: Busca perfil atualizado após ganho de XP
+    // Busca perfil atualizado após ganho de XP
     const perfilAtualizado = await perfilService.buscarPerfilCompleto(perfilId, perfilId, req.requestId);
 
     return res.status(201).json({
@@ -71,7 +70,6 @@ const deletarPost = tratarAssincrono(async (req: Request<PostIdParams, any, Empt
     const postId = Number(req.params.id);
     const perfilId = req.user.perfil_id;
 
-    // 🛡️ Validação robusta de tipos numéricos para prevenir SQL Errors
     if (isNaN(postId) || !Number.isSafeInteger(postId) || postId <= 0) {
         throw AppError.badRequest("ID da publicação inválido.");
     }
@@ -96,7 +94,6 @@ const votarPost = tratarAssincrono(async (req: Request<PostIdParams, any, PostVo
     
     const postAtualizado = await postsService.votarPost(perfilId, postId, tipo, req.requestId);
 
-    // 🛡️ ENRIQUECIMENTO: Busca perfil atualizado após voto
     const perfilLogado = await perfilService.buscarPerfilCompleto(perfilId, perfilId, req.requestId);
 
     return res.status(200).json({ 
@@ -118,7 +115,6 @@ const comentarPost = tratarAssincrono(async (req: Request<PostIdParams, any, Pos
     
     const novoComentario = await comentariosService.criarComentario(perfilId, postId, req.body, req.requestId);
 
-    // 🛡️ ENRIQUECIMENTO: Busca perfil atualizado após comentário
     const perfilLogado = await perfilService.buscarPerfilCompleto(perfilId, perfilId, req.requestId);
 
     return res.status(201).json({ 
@@ -165,7 +161,6 @@ const reagirPost = tratarAssincrono(async (req: Request<PostIdParams, any, Reaca
     
     const postAtualizado = await postsService.reagirPost(perfilId, postId, tipo, req.requestId);
 
-    // 🛡️ ENRIQUECIMENTO: Busca perfil atualizado após reação
     const perfilLogado = await perfilService.buscarPerfilCompleto(perfilId, perfilId, req.requestId);
 
     return res.status(200).json({ 
@@ -179,7 +174,7 @@ const reagirPost = tratarAssincrono(async (req: Request<PostIdParams, any, Reaca
 
 const getPostById = tratarAssincrono(async (req: Request<PostIdParams>, res: Response) => {
     const postId = Number(req.params.id);
-    const perfilId = (req as any).user?.perfil_id; // Opcional
+    const perfilId = (req as any).user?.perfil_id;
 
     const post = await postsService.getPostById(postId, perfilId);
 

@@ -19,7 +19,7 @@ const listar = tratarAssincrono(async (req: Request, res: Response) => {
 });
 
 const criar = tratarAssincrono(async (req: Request<{}, {}, CategoriaCreateBody>, res: Response) => {
-    // 🛡️ Extração limpa: O Middleware Zod já garantiu que 'nome' existe e é válido.
+    // Extração limpa: O Middleware Zod já garantiu que 'nome' existe e é válido.
     const { nome } = req.body;
     const nova = await categoriasService.criar({ nome }, req.requestId);
     
@@ -35,7 +35,7 @@ const atualizar = tratarAssincrono(async (req: Request<CategoriaIdParams, any, C
     const id = Number(req.params.id);
     const { nome } = req.body;
 
-    // 🛡️ Proteção contra IDs malformados ou ataques de estouro de inteiro
+    // Proteção contra IDs malformados ou ataques de estouro de inteiro
     if (isNaN(id) || !Number.isSafeInteger(id) || id <= 0) {
         throw AppError.badRequest("ID de categoria inválido.");
     }
@@ -69,7 +69,7 @@ const excluir = tratarAssincrono(async (req: Request<CategoriaIdParams, any, Emp
 
 export default { listar, criar, atualizar, excluir };
 
-// ====== Fusão de Interesses (Taxonomia) ======
+// Fusão de Interesses
 export const listarInteressesCategoria = tratarAssincrono(async (req: Request, res: Response) => {
     const perfilId = req.user.perfil_id;
     

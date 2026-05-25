@@ -13,13 +13,8 @@ const categoriasRoutes = Router();
 
 const EmptyBodySchema = z.object({}).strict();
 
-/**
- * 💡 PADRÃO ENTERPRISE EVOLUÍDO:
- * 1. Pipeline de Segurança: Auth -> Admin -> Validate -> Controller.
- * 2. Whitelist: Apenas o campo 'nome' passa pelo filtro do Zod.
- */
 
-// --- Leitura Pública ---
+// Leitura Pública
 categoriasRoutes.get('/', categoriasController.listar);
 
 // GET /api/v1/categorias/trending
@@ -30,13 +25,14 @@ categoriasRoutes.get(
     getTrending
 );
 
-// --- Escrita Protegida (Exige privilégios de Administrador) ---
+/* Escrita Protegida Exige privilégios de Administrador
+ Mas ainda não foi sincronizada por está em faze de desenvolvimento */
 
 // POST /api/v1/categorias
 categoriasRoutes.post('/', 
     middlewareAutenticacao, 
     // middlewareAdministrador, 
-    validate({ body: CategoriaCreateSchema }), // 🛡️ Bloqueia qualquer campo extra (Mass Assignment)
+    validate({ body: CategoriaCreateSchema }), // Bloqueia qualquer campo extra
     categoriasController.criar
 );
 
@@ -48,7 +44,7 @@ categoriasRoutes.patch('/:id',
     validate({
         params: CategoriaIdParamsSchema,
         body: CategoriaUpdateSchema
-    }), // 🛡️ Garante que apenas o campo 'nome' seja editado
+    }), // Garante que apenas o campo 'nome' seja editado
     categoriasController.atualizar
 );
 
@@ -65,7 +61,7 @@ categoriasRoutes.delete('/:id',
 
 export default categoriasRoutes;
 
-// ====== Fusão de Interesses (Taxonomia) ======
+// Fusão de Interesses
 const CategoriaIdParamsSchema2 = z.object({ id: z.coerce.number().positive() }).strict();
 
 categoriasRoutes.get(

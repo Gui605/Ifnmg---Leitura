@@ -1,11 +1,7 @@
+// backend/src/shared/types/post.types.ts
 import { z } from 'zod';
 
-// backend/src/shared/types/post.types.ts
-
-/**
- * 🛡️ SCHEMA DE CRIAÇÃO DE POST
- * O .strict() impede que o usuário envie autor_id, data_criacao ou posts_id.
- */
+//Schema de criação de post
 export const PostCreateSchema = z.object({
     titulo: z.string()
         .min(5, "O título deve ter pelo menos 5 caracteres")
@@ -31,10 +27,7 @@ export const PostCreateSchema = z.object({
     path: ["idioma"]
 });
 
-/**
- * 🛡️ SCHEMA DE FILTRAGEM E PAGINAÇÃO
- * Valida os parâmetros de URL (Query Strings).
- */
+//Schema de filtragem e paginação
 export const PostsQuerySchema = z.object({
     page: z.coerce.number().min(1).default(1),
     limit: z.coerce.number().min(1).max(50).default(10),
@@ -43,9 +36,7 @@ export const PostsQuerySchema = z.object({
     ordenarPor: z.enum(['score','data']).optional()
 });
 
-/**
- * 💡 INFERÊNCIA DE TIPOS AUTOMÁTICA
- */
+//Interfaces de tipos 
 export type PostCreateBody = z.infer<typeof PostCreateSchema>;
 export type PostsQuery = z.infer<typeof PostsQuerySchema>;
 
@@ -63,18 +54,14 @@ export const PostCommentSchema = z.object({
 
 export type PostCommentBody = z.infer<typeof PostCommentSchema>;
 
-/**
- * 🛡️ SCHEMA DE REAÇÃO
- */
+//Schema de reação
 export const ReacaoSchema = z.object({
     tipo: z.enum(['LIKE', 'LOVE', 'FIRE', 'SAD'])
 }).strict();
 
 export type ReacaoBody = z.infer<typeof ReacaoSchema>;
 
-/**
- * 🛡️ SCHEMA DE RESPOSTA DE POST (Refletindo SetNull)
- */
+//Schema de resposta de post
 export const AutorDisplaySchema = z.object({
     nome: z.string(),
     campus: z.string(),

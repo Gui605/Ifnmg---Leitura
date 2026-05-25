@@ -1,10 +1,10 @@
+// backend/src/shared/types/categoria.types.ts
 import { z } from 'zod';
 
-// backend/src/shared/types/categoria.types.ts
 
 /**
- * 🛡️ SCHEMA DE CRIAÇÃO DE CATEGORIA
- * O .strict() impede que o usuário tente injetar IDs manuais.
+Schema de Criação de Categoria
+ O .strict() impede que o usuário tente injetar IDs manuais.
  */
 export const CategoriaCreateSchema = z.object({
     nome: z.string()
@@ -13,19 +13,22 @@ export const CategoriaCreateSchema = z.object({
         .trim()
 }).strict();
 
-/**
- * 🛡️ SCHEMA DE ATUALIZAÇÃO DE CATEGORIA
- * No update, o campo nome também é obrigatório se a rota for chamada.
+/*
+Schema de Atualização de Categoria
+ No update, o campo nome também é obrigatório se a rota for chamada.
  */
 export const CategoriaUpdateSchema = CategoriaCreateSchema;
 
-/**
- *  INFERÊNCIA DE TIPOS AUTOMÁTICA
+/*
+Inferência Automática de Tipos
  */
 export type CategoriaCreateBody = z.infer<typeof CategoriaCreateSchema>;
 export type CategoriaUpdateBody = z.infer<typeof CategoriaUpdateSchema>;
 
-// ====== Fusão de Interesses (Taxonomia) ======
+
+/*
+Schema de Fusão de Interesses
+ */
 export const ToggleInteresseSchema = z.object({
     categoria_id: z.number().positive("ID da categoria inválido")
 }).strict();

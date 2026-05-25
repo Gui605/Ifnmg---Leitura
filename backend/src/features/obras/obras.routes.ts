@@ -12,7 +12,7 @@ const obrasRoutes = Router();
 
 const ObraIdParamsSchema = z.object({ id: z.coerce.number().positive() });
 
-// --- ROTAS DE LEITURA (Acesso Público) ---
+// ROTAS DE LEITURA (Acesso Público)
 
 obrasRoutes.get(
     '/',
@@ -29,7 +29,7 @@ obrasRoutes.get(
     obrasController.buscarObraPorId
 );
 
-// --- ROTAS DE ESCRITA (Acesso Restrito) ---
+// ROTAS DE ESCRITA (Acesso Restrito)
 
 obrasRoutes.post(
     '/',

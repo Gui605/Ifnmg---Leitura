@@ -12,13 +12,11 @@ export function obterSegredoJwt(): string {
     return JWT_SECRET;
 }
 
-/**
- * Gera um Token Web JSON (JWT) para o usuário autenticado.
- * Recebe o payload tipado conforme o contrato do sistema.
+/*
+Gera um Token Web JSON (JWT) para o usuário autenticado.
+Recebe o payload tipado conforme o contrato do sistema.
  */
 export function gerarToken(payload: TokenPayload): string {
-    // Removemos propriedades automáticas como 'iat' e 'exp' se existirem no objeto
-    // para evitar conflitos com o novo token que será gerado.
     const cleanPayload = { ...payload };
     delete (cleanPayload as any).iat;
     delete (cleanPayload as any).exp;
@@ -26,9 +24,9 @@ export function gerarToken(payload: TokenPayload): string {
     return jwt.sign(cleanPayload, obterSegredoJwt(), { expiresIn: JWT_EXPIRES_IN });
 }
 
-/**
- * Verifica e decodifica o Token JWT.
- * O erro disparado aqui será capturado pelo authMiddleware ou optionalAuthMiddleware.
+/*
+Verifica e decodifica o Token JWT.
+O erro disparado aqui será capturado pelo authMiddleware ou optionalAuthMiddleware.
  */
 export function verificarToken(token: string): TokenPayload {
     const decoded = jwt.verify(token, obterSegredoJwt());

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-/**
- * 🛡️ SCHEMA DE CRIAÇÃO DE COMUNIDADE
+/*
+Schema de Criação de Comunidade
  */
 export const ComunidadeCreateSchema = z.object({
     nome: z.string()
@@ -15,8 +15,8 @@ export const ComunidadeCreateSchema = z.object({
 
 export type ComunidadeCreateBody = z.infer<typeof ComunidadeCreateSchema>;
 
-/**
- * 🛡️ SCHEMA DE CONFIGURAÇÃO DE COMUNIDADE
+/*
+Schema de Configuração de Comunidade
  */
 export const ComunidadeConfigSchema = z.object({
     privada: z.boolean().default(false),
@@ -25,14 +25,14 @@ export const ComunidadeConfigSchema = z.object({
 
 export type ComunidadeConfigBody = z.infer<typeof ComunidadeConfigSchema>;
 
-/**
- * 🛡️ ENUMS DE MEMBROS
+/*
+Enum de Membros de Comunidade
  */
 export const ComunidadeRoleEnum = z.enum(['MEMBRO', 'MODERADOR', 'ADMIN', 'DONO']);
 export type ComunidadeRole = z.infer<typeof ComunidadeRoleEnum>;
 
-/**
- * 🛡️ SCHEMA DE MEMBRO
+/*
+Schema de Membro de Comunidade  
  */
 export const ComunidadeMembroSchema = z.object({
     perfil_id: z.number().int().positive(),

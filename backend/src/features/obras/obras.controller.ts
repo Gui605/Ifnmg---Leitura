@@ -6,7 +6,7 @@ import perfilService from '../perfil/perfil.service';
 import { ObraCreateBody, ObraUpdateBody } from '../../shared/types/obra.types';
 import { AppError } from '../../shared/utils/AppError';
 
-// 🛡️ Tipagem de parâmetros da URL para evitar 'undefined'
+//Tipagem de parâmetros da URL para evitar 'undefined'
 type ObraIdParams = { id: string };
 
 const criarObra = tratarAssincrono(async (req: Request<{}, any, ObraCreateBody>, res: Response) => {
@@ -14,7 +14,7 @@ const criarObra = tratarAssincrono(async (req: Request<{}, any, ObraCreateBody>,
 
     const novaObra = await obrasService.criarObra(perfilId, req.body, req.requestId);
 
-    // 🛡️ ENRIQUECIMENTO: Busca perfil atualizado após ganho de XP
+    // Busca perfil atualizado após ganho de XP
     const perfilAtualizado = await perfilService.buscarPerfilCompleto(perfilId, perfilId, req.requestId);
 
     return res.status(201).json({

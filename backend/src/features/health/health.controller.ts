@@ -4,10 +4,6 @@ import { diagnosticarSMTP } from '../../shared/utils/serviceEmail';
 import { logger } from '../../shared/utils/logger';
 import { ErrorCodes } from '../../errors/ErrorCodes';
 
-/**
- * 💡 PADRÃO ENTERPRISE: Health Check Controller
- * Centraliza diagnósticos profundos da infraestrutura.
- */
 
 interface HealthStatus {
     status: 'UP' | 'DEGRADED' | 'DOWN';
@@ -30,7 +26,7 @@ function formatUptime(seconds: number): string {
 export const checkHealth = async (req: Request, res: Response) => {
     const requestId = req.requestId || 'unknown';
     
-    // 1. Diagnóstico do Banco de Dados (Deep Check)
+    // Diagnóstico do Banco de Dados
     let dbStatus: 'UP' | 'DOWN' = 'UP';
     try {
         // Executa query leve para testar conexão real
@@ -46,10 +42,10 @@ export const checkHealth = async (req: Request, res: Response) => {
         });
     }
 
-    // 2. Diagnóstico do Email
+    // Diagnóstico do Email
     const emailStatus = await diagnosticarSMTP();
     
-    // 3. Consolidação do Status Geral
+    // Consolidação do Status Geral
     let globalStatus: 'UP' | 'DEGRADED' | 'DOWN' = 'UP';
     
     if (dbStatus === 'DOWN') {

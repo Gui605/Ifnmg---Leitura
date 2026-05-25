@@ -2,25 +2,32 @@ import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/AppError';
 import { ErrorCodes } from '../../errors/ErrorCodes';
 
-/**
- * Middleware de Segurança de Infraestrutura
- * Protege contra acessos não seguros ou hosts inválidos.
+/*
+Middleware de segurança de infraestrutura
+Protege contra acessos não seguros ou hosts inválidos.
  */
 export const enforceSecurity = (req: Request, _res: Response, next: NextFunction) => {
     
-    // 🛡️ GUARD: Só aplica restrições estritas de infraestrutura em Produção.
+    // GUARD: Só aplica restrições estritas de infraestrutura em Produção.
     if (process.env.NODE_ENV !== 'production') {
         return next();
     }
 
-    // 1. HTTPS Enforcer
+    /* Origatoriedade de HTTPS
+    Verifica se a requisição é criptografada. Em ambientes com Proxy Reverso 
+    ex: AWS ALB, Cloudflare, Nginx, o SSL é decodificado antes de chegar ao Node.
+    */
     const proto = req.headers['x-forwarded-proto'];
     const isSecure = req.secure || (typeof proto === 'string' ? proto === 'https' : false);
     if (!isSecure) {
         return next(new AppError('Conexão segura (HTTPS) é obrigatória.', 403, ErrorCodes.FORBIDDEN));
     }
 
-    // 2. Host Validation
+    /*
+    Validação de Host
+    Evita ataques de injeção de Host onde o atacante manipula o cabeçalho 'Host'.
+    Garante que a API só responda se for chamada exatamente pelo domínio configurado.
+     */
     const apiUrl = process.env.API_URL;
     if (apiUrl) {
         try {

@@ -7,34 +7,26 @@ import { PostCreateSchema, PostsQuerySchema, PostVoteSchema, PostCommentSchema, 
 import { z } from 'zod';
 import { limitadorEngajamento, limitadorLeitura } from '../../shared/middlewares/rateLimiter';
 
-/**
- * 💡 PADRÃO ENTERPRISE EVOLUÍDO:
- * 1. Segurança de Contrato: Zod barra Mass Assignment e payloads gigantes.
- * 2. Normalização de Query: Zod converte "?page=1" de string para number.
- * 3. Defesa em Camadas: Auth -> Validation -> Controller.
- */
+
 
 const postsRoutes = Router();
 
-// --- ROTAS DE LEITURA (Acesso Público / Híbrido) ---
+//ROTAS DE LEITURA Acesso Público / Híbrido
 
-/** * GET /api/v1/posts 
- * 🛡️ Validação de Query: Garante que page/limit sejam números válidos.
- */
+// GET /api/v1/posts 
+//Validação de Query: Garante que page/limit sejam números válidos.
 postsRoutes.get(
     '/', 
     middlewareAutenticacaoOpcional, 
     limitadorLeitura,
     validate({
             query: PostsQuerySchema
-        }), // Valida e limpa os parâmetros de busca
+        }), 
     postsController.listarPosts
 );
 
-/**
- * GET /api/v1/posts/pesquisa
- * 🛡️ Busca unificada entre posts e obras
- */
+//GET /api/v1/posts/pesquisa
+//Busca unificada entre posts e obras
 postsRoutes.get(
     '/pesquisa',
     middlewareAutenticacaoOpcional,
@@ -42,11 +34,10 @@ postsRoutes.get(
 );
 
 
-// --- ROTAS DE ESCRITA (Acesso Restrito) ---
+//ROTAS DE ESCRITA Acesso Restrito
 
-/** * POST /api/v1/posts 
- * 🛡️ Validação de Body: Bloqueia autor_id manual e garante formato do conteúdo.
- */
+// POST /api/v1/posts 
+//Validação que bloqueia autor_id manual e garante formato do conteúdo.
 postsRoutes.post(
     '/', 
     middlewareAutenticacao, 
@@ -57,9 +48,8 @@ postsRoutes.post(
     postsController.criarPost
 );
 
-/** * DELETE /api/v1/posts/:id 
- * 🛡️ Segurança: O Controller valida se quem deleta é o dono do post.
- */
+// DELETE /api/v1/posts/:id 
+//Valida se quem deleta é o dono do post.
 const PostIdParamsSchema = z.object({ id: z.coerce.number().positive() });
 const EmptyBodySchema = z.object({}).strict();
 
@@ -91,10 +81,8 @@ postsRoutes.post('/:id/comentarios',
     postsController.comentarPost
 );
 
-/**
- * GET /posts/:id/comentarios
- * 🛡️ Público/Opcional
- */
+//GET /posts/:id/comentarios
+//Público/Opcional
 postsRoutes.get('/:id/comentarios',
     middlewareAutenticacaoOpcional,
     validate({
@@ -103,10 +91,8 @@ postsRoutes.get('/:id/comentarios',
     postsController.listarComentarios
 );
 
-/**
- * DELETE /posts/comentarios/:id
- * 🛡️ Protegida - apenas autor ou admin
- */
+//DELETE /posts/comentarios/:id
+//Protegida - apenas autor ou admin
 postsRoutes.delete('/comentarios/:id',
     middlewareAutenticacao,
     validate({
@@ -125,10 +111,8 @@ postsRoutes.post('/:id/reagir',
     postsController.reagirPost
 );
 
-/**
- * GET /api/v1/posts/:id
- * 🛡️ Híbrido: Acesso público, mas personaliza para logado
- */
+//GET /api/v1/posts/:id
+//Híbrido: Acesso público, mas personaliza para logado
 postsRoutes.get('/:id',
     middlewareAutenticacaoOpcional,
     limitadorLeitura,

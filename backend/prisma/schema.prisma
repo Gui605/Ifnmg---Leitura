@@ -57,7 +57,7 @@ enum DenunciaStatus {
   REJEITADO
 }
 
-//////////////// PERFIS //////////////////
+//PERFIS
 
 model Perfis {
   perfil_id Int @id @default(autoincrement())

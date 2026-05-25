@@ -45,11 +45,8 @@ export const tratadorDeErros = (
 
   const reason = http.STATUS_CODES[statusCode] || 'Error';
 
-  /**
-   * =================================
-   * AppError (Fonte principal)
-   * =================================
-   */
+   //AppError (Fonte principal)
+
 
   if (err instanceof AppError) {
 
@@ -71,11 +68,8 @@ export const tratadorDeErros = (
 
   }
 
-  /**
-   * =================================
-   * JSON Malformado
-   * =================================
-   */
+  //JSON Malformado
+
 
   if (err instanceof SyntaxError && baseError && 'body' in baseError) {
 
@@ -103,11 +97,7 @@ export const tratadorDeErros = (
 
   }
 
-  /**
-   * =================================
-   * Payload vazio
-   * =================================
-   */
+  //Payload vazio
 
   if (baseError) {
 
@@ -134,9 +124,8 @@ export const tratadorDeErros = (
 
     }
 
-    /**
-     * Content-Type inválido
-     */
+    //Content-Type inválido
+
 
     if (
       baseError.statusCode === 415 ||
@@ -165,11 +154,8 @@ export const tratadorDeErros = (
 
   }
 
-  /**
-   * =================================
-   * Validação Zod
-   * =================================
-   */
+  //Validação Zod
+
 
   if (err instanceof ZodError) {
 
@@ -200,7 +186,7 @@ export const tratadorDeErros = (
 
       const extended = issue as ZodIssueExtended;
       
-      // FILTRO DE SEGURANÇA: Garante que o path seja apenas string ou number
+      // Filtro de segurança: Garante que o path seja apenas string ou number
       const safePath = issue.path.filter(
         (p): p is string | number => typeof p === 'string' || typeof p === 'number'
       );
@@ -228,11 +214,7 @@ export const tratadorDeErros = (
 
   }
 
-  /**
-   * =================================
-   * Prisma
-   * =================================
-   */
+  // Prisma
 
   if (baseError) {
 
@@ -244,9 +226,8 @@ export const tratadorDeErros = (
       setResponse(404, ErrorCodes.RESOURCE_NOT_FOUND, 'Recurso não encontrado.');
     }
 
-    /**
-     * JWT
-     */
+    // JWT
+
 
     if (baseError.name === 'JsonWebTokenError') {
       setResponse(401, ErrorCodes.UNAUTHENTICATED, 'Token inválido.');
@@ -262,7 +243,7 @@ export const tratadorDeErros = (
 
   if (statusCode >= 500) {
     message = 'Erro interno do servidor. Tente novamente mais tarde.';
-    // 🔍 DEBUG: Exibe stack trace no terminal durante desenvolvimento
+    //Exibe stack trace no terminal durante desenvolvimento
     if (process.env.NODE_ENV !== 'production') {
       console.error('\x1b[31m%s\x1b[0m', '--- [DEBUG] INTERNAL SERVER ERROR STACK ---');
       console.error(err);
@@ -276,7 +257,8 @@ export const tratadorDeErros = (
     error: reason,
     errorCode,
     message,
-    // 🔍 DEBUG: Envia stack trace no payload para facilitar a vida do desenvolvedor (APENAS EM DEV)
+    //Envia sequencia de função chamadas até algum erro ocorrer
+    //para facilitar em desenvolvimento
     ...(process.env.NODE_ENV !== 'production' && { stack: err instanceof Error ? err.stack : String(err) }),
     path: req.originalUrl,
     requestId

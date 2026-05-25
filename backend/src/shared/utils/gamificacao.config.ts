@@ -1,60 +1,54 @@
-/**
- * 🎮 CONFIGURAÇÃO DO MOTOR DE GAMIFICAÇÃO (IFNMG)
- * Versão 2.0 - XP Orgânico com Decaimento Temporal e Especialização
+// implementar / refatorar
+/*
+Configuração do Motor de Gamificação
+ XP Orgânico com Decaimento Temporal e Especialização
  */
 
-// --- CATEGORIAS E PESOS ---
+//Categorias e Pesos de XP
 
-/**
- * XP por Ação Própria: Recompensa o esforço de criação de conteúdo.
- */
+// XP por ação própria: Recompensa o esforço de criação de conteúdo.
 export const CATEGORIA_ESCRITA = {
-    POST_AVULSO: 20,    // Mínimo 100 caracteres (validado no service)
-    OBRA_CAPITULO: 40,  // Mínimo 300 caracteres (validado no service)
+    POST_AVULSO: 20,    // Mínimo 100 caracteres (Post simples)
+    OBRA_CAPITULO: 40,  // Mínimo 300 caracteres (Capítulo de uma obra)
     OBRA_CRIAR: 50,     // Criação de nova Obra (Projeto)
 } as const;
 
-/**
- * XP por Ação de Curadoria: Recompensa a disseminação de conhecimento.
- */
+// XP por ação de curadoria: Recompensa a disseminação de conhecimento.
 export const CATEGORIA_CURADORIA = {
     REPOST_REALIZADO: 10,
 } as const;
 
-/**
- * XP Social (Karma): Recompensa quem RECEBE engajamento.
- * Apenas o AUTOR do post ganha XP quando alguém interage.
- */
+// XP social (karma): Recompensa quem recebe engajamento.
+// Apenas o autor do post ganha XP quando alguém interage.
 export const CATEGORIA_SOCIAL = {
     VOTO_UP_RECEBIDO: 5,
     REACAO_RECEBIDA: 3,
     FAVORITO_RECEBIDO: 10,
 } as const;
 
-// --- REGRAS DE SPAM E ESPONTANEIDADE ---
+// Regras de spam e espontaneidade
 
-/**
- * REGRAS DE ESPONTANEIDADE:
- * - O usuário que REAGE ou COMENTA não ganha XP (Ação espontânea).
- * - O objetivo é focar exclusivamente em RECOMPENSAR QUEM RECEBE engajamento.
- */
+/*
+ Regras de espontaneidade:
+- O usuário que REAGE ou COMENTA não ganha XP (Ação espontânea).
+- O objetivo é focar exclusivamente em RECOMPENSAR QUEM RECEBE engajamento.
+*/
 export const LIMITES_DIARIOS = {
-    MAX_XP_POR_DIA: 2000, // Hard cap para evitar saltos artificiais de nível (ex: post viral)
+    MAX_XP_POR_DIA: 2000, // limite de XP por dia para evitar saltos artificiais de nível por post viral
 } as const;
 
-// --- MOTOR DE DECAIMENTO TEMPORAL ---
+// Motor de decaimento temporal
 
-/**
- * Calcula o XP final de uma interação social baseada na antiguidade do post.
- * 
- * Lógica de Decaimento:
- * - 🕒 0h a 48h: 1.0x (Engajamento fresco - Recompensa total)
- * - 🕒 48h a 168h (1 semana): 0.5x (Conteúdo esfriando)
- * - 🕒 > 168h: 0.1x (Conteúdo antigo - Proteção contra spam de posts "zumbis")
- * 
- * @param pontosBase Valor fixo da CATEGORIA_SOCIAL
- * @param dataCriacaoPost Data em que o post original foi publicado
- * @returns Pontos ajustados pelo tempo
+/*
+ Calcula o XP final de uma interação social baseada na antiguidade do post.
+ Lógica de Decaimento:
+-  0h a 48h: 1.0x Engajamento fresco - Recompensa total
+-  48h a 168h (1 semana): 0.5x Conteúdo esfriando
+-  > 168h: 0.1x Conteúdo antigo - Proteção contra spam de posts "zumbis"
+ 
+ @param pontosBase Valor fixo da CATEGORIA_SOCIAL
+ @param dataCriacaoPost Data em que o post original foi publicado
+ @returns Pontos ajustados pelo tempo
  */
 export function calcularXpComDecaimento(pontosBase: number, dataCriacaoPost: Date): number {
     const agora = new Date().getTime();
@@ -67,16 +61,16 @@ export function calcularXpComDecaimento(pontosBase: number, dataCriacaoPost: Dat
     return Math.floor(pontosBase * 0.1) || 1; // Garante pelo menos 1 XP
 }
 
-// --- MOTOR DE NÍVEIS ---
+// Motor de nível
 
-/**
- * FÓRMULA GEOMÉTRICA DE NÍVEL
- * Curva: Nível * 100 * (1.5 ^ Nível)
- * 
- * Progressão Estimada:
- * Lvl 1: ~150 XP
- * Lvl 5: ~750 XP * 7.5 = 5625 XP
- * Lvl 10: ~1000 XP * 57 = 57000 XP
+/*
+ Fórmula Geométrica de Nível de XP
+ Curva: Nível * 100 * (1.5 ^ Nível)
+ 
+ Progressão Estimada:
+ Lvl 1: ~150 XP
+ Lvl 5: ~750 XP * 7.5 = 5625 XP
+ Lvl 10: ~1000 XP * 57 = 57000 XP
  */
 export function calcularNivel(xpTotal: number): number {
     let nivel = 1;
@@ -86,15 +80,13 @@ export function calcularNivel(xpTotal: number): number {
     return nivel;
 }
 
-/**
- * Retorna o XP TOTAL necessário para alcançar o nível alvo.
- */
+//Retorna o XP TOTAL necessário para alcançar o nível alvo.
 export function xpParaNivel(nivel: number): number {
     if (nivel <= 1) return 0;
     return Math.floor(nivel * 100 * Math.pow(1.5, nivel));
 }
 
-// --- ESPECIALIZAÇÃO DE TÍTULOS ---
+// Especialização de Títulos
 
 export type CategoriaXp = 'ESCRITA' | 'CURADORIA' | 'SOCIAL';
 
@@ -104,9 +96,9 @@ export interface TituloEspecialidade {
     categoria: CategoriaXp;
 }
 
-/**
- * Mapeamento de Títulos por Especialidade.
- * O sistema de service deve rastrear XP por categoria separadamente para validar estas exigências.
+/*
+ Mapeamento de Títulos por Especialidade.
+ O sistema de service deve rastrear XP por categoria separadamente para validar estas exigências.
  */
 export const TITULOS_ESPECIALIDADE: TituloEspecialidade[] = [
     { nome: "Escritor Iniciante", exigenciaXp: 500, categoria: 'ESCRITA' },
@@ -115,9 +107,7 @@ export const TITULOS_ESPECIALIDADE: TituloEspecialidade[] = [
     { nome: "Mestre da Comunidade", exigenciaXp: 10000, categoria: 'SOCIAL' },
 ];
 
-/**
- * Patentes Globais baseadas apenas no Nível Total.
- */
+// Patentes Globais baseadas apenas no Nível Total.
 export const PATENTES_GLOBAIS = [
     { nivel: 1, nome: "Calouro" },
     { nivel: 10, nome: "Explorador" },

@@ -1,10 +1,10 @@
 //backend/src/shared/middlewares/responseEnveloper.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 
-/**
- * 🛡️ MIDDLEWARE DE ENVELOPAMENTO DE RESPOSTA
- * Sobrescreve o método res.json para garantir que todas as respostas
- * de sucesso sigam o contrato { status, message, data, meta }.
+/*
+Middleware de envelopamento de resposta
+ Sobrescreve o método res.json para garantir que todas as respostas
+ de sucesso sigam o contrato { status, message, data, meta }.
  */
 export const responseEnveloper = (req: Request, res: Response, next: NextFunction) => {
     const originalJson = res.json;
@@ -38,7 +38,7 @@ export const responseEnveloper = (req: Request, res: Response, next: NextFunctio
             if (body.data !== undefined) envelopedBody.data = body.data;
             if (body.meta !== undefined) envelopedBody.meta = body.meta;
             
-            // Se o objeto original tinha status, preservamos (ex: 'success')
+            // Se o objeto original tinha status, preservamos. ex: 'success'
             if (body.status) envelopedBody.status = body.status;
         }
 

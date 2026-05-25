@@ -11,7 +11,6 @@ import { registrar as registrarLog } from '../../shared/utils/logService';
 import { logger } from '../../shared/utils/logger';
 
 /**
- * 🛡️ PADRÃO ENTERPRISE: Camada de Serviço de Autenticação
  * Sincronizado com ErrorCodes e Factory Methods.
  */
 
@@ -27,7 +26,7 @@ async function registrarUsuario(data: RegistrarData, requestId?: string): Promis
     try {
         const emailNormalizado = email.toLowerCase().trim();
         
-        // 🔍 NOVO: Verificação profunda do estado do usuário existente
+        // Verificação profunda do estado do usuário existente
         const existente = await prisma.usuarios.findUnique({
             where: { email: emailNormalizado },
             select: { 
@@ -79,7 +78,7 @@ async function registrarUsuario(data: RegistrarData, requestId?: string): Promis
             throw AppError.gone('Vimos que seu link expirou. Enviamos uma nova chave de ativação.');
         }
 
-        // 🛡️ LÓGICA ORIGINAL: Transação para novos registros
+        // Transação para novos registros
         await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             const novoPerfil = await tx.perfis.create({ 
                 data: { 
@@ -90,11 +89,6 @@ async function registrarUsuario(data: RegistrarData, requestId?: string): Promis
             });
             novoPerfilId = novoPerfil.perfil_id;
 
-            /**
-             * 🛡️ BLINDAGEM DE PRIVILÉGIOS (Mass Assignment)
-             * Mesmo com Zod .strict(), forçamos 'is_admin: false' manualmente.
-             * Isso impede que qualquer injeção no payload eleve privilégios no banco.
-             */
             await tx.usuarios.create({
                 data: {
                     email: emailNormalizado,
@@ -106,7 +100,7 @@ async function registrarUsuario(data: RegistrarData, requestId?: string): Promis
                     nome_completo: nome_completo.trim(),
                     nome_campus: nome_campus.trim(),
                     data_nascimento: new Date(data_nascimento as unknown as Date),
-                    is_admin: false, // 🔒 Hardened: Nunca permite admin no registro público
+                    is_admin: false, // Isso impede que qualquer injeção no payload eleve privilégios no banco
                 },
             });
 
@@ -120,7 +114,6 @@ async function registrarUsuario(data: RegistrarData, requestId?: string): Promis
         
 
     } catch (error: any) {
-            // Preserva o tratamento de erro original para restrições de banco (P2002)
             if (error.code === 'P2002') {
                 logger.warn('Tentativa de cadastro com dados duplicados (P2002)', { evento: 'AUTH_REGISTRATION_ATTEMPT_DUPLICATE_P2002', requestId });
                 await gerarHashSenha(senha);
@@ -130,7 +123,7 @@ async function registrarUsuario(data: RegistrarData, requestId?: string): Promis
             throw error; 
         }
 
-    // Disparo de e-mail para NOVOS cadastros (fora do bloco catch/if)
+    // Disparo de e-mail para NOVOS cadastros
     setImmediate(() => { enviarEmailComToken(email, tokenVerificacao, 'verificacao').catch(() => {}); });
 
     return `Cadastro realizado! Enviamos um link de ativação para ${email}.`;
@@ -139,7 +132,6 @@ async function registrarUsuario(data: RegistrarData, requestId?: string): Promis
 async function logarUsuario(email: string, senha: string, requestId?: string): Promise<string> {
     const user = await prisma.usuarios.findUnique({ where: { email } });
     
-    // 🛡️ Segurança: Usamos Factory Method para 401
     if (!user) { 
         throw AppError.unauthorized('E-mail ou senha incorretos.'); 
     }
@@ -158,7 +150,7 @@ async function logarUsuario(email: string, senha: string, requestId?: string): P
             
             setImmediate(() => { enviarEmailComToken(user.email, novoToken, 'verificacao').catch(() => {}); });
 
-            // 🛡️ 410 Gone: Lançamento manual para casos específicos de expiração
+            // 410: Lançamento manual para casos específicos de expiração
             throw new AppError(
                 `Seu link de ativação expirou. Enviamos um novo para ${user.email}.`, 
                 410, 
@@ -166,7 +158,7 @@ async function logarUsuario(email: string, senha: string, requestId?: string): P
             );
         }
         
-        // 🛡️ 403 Forbidden: Conta inativa
+        // 03: Conta inativa
         throw new AppError(
             'Sua conta ainda não foi ativada. Verifique seu e-mail para confirmar o cadastro.', 
             403, 

@@ -5,10 +5,6 @@ import { logger } from '../../shared/utils/logger';
 
 const SENHA_FORTE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
-/**
- * 💡 PADRÃO ENTERPRISE: Camada de Operações Críticas de Segurança
- * Gerencia o ciclo de vida de credenciais e encerramento de contas.
- */
 
 async function alterarSenha(usuarioId: number, senhaAntiga: string, novaSenha: string, requestId?: string): Promise<string> {
     const user = await prisma.usuarios.findUnique({ 
@@ -17,19 +13,19 @@ async function alterarSenha(usuarioId: number, senhaAntiga: string, novaSenha: s
 
     if (!user) throw AppError.notFound('Usuário não encontrado.');
 
-    // 1. Validar senha antiga (Prova de Posse)
+    // Validar senha antiga
     const isPasswordValid = await compararSenha(senhaAntiga, user.password_hash);
     if (!isPasswordValid) { 
         logger.warn('Tentativa de alteração de senha com credenciais inválidas', { evento: 'USER_PASSWORD_CHANGE_FAILED', usuario_id: usuarioId, requestId });
         throw AppError.unauthorized('A senha atual informada está incorreta.'); 
     }
 
-    // 2. Checagem de complexidade (Server-side defense)
+    // Checagem de complexidade
     if (!SENHA_FORTE.test(novaSenha)) {
         throw AppError.badRequest('A senha deve conter ao menos 8 caracteres, incluindo letras maiúsculas, minúsculas e números.');
     }
     
-    // 3. Política de Não-Reutilização
+    // Política de Não-Reutilização
     const isSameAsOld = await compararSenha(novaSenha, user.password_hash);
     if (isSameAsOld) {
         throw AppError.badRequest('A nova senha não pode ser igual à senha atual.');
@@ -47,7 +43,6 @@ async function alterarSenha(usuarioId: number, senhaAntiga: string, novaSenha: s
 }
 
 /**
- * 🛡️ DIREITO AO ESQUECIMENTO (LGPD) - ANONIMIZAÇÃO ATÔMICA
  * Refatorado para garantir que dados de auditoria permaneçam internamente
  * enquanto a identidade pública é totalmente removida.
  */
@@ -59,20 +54,20 @@ async function deletarConta(usuarioId: number, senhaAtual: string, requestId?: s
 
     if (!user) throw AppError.notFound('Usuário não encontrado.');
 
-    // 1. Confirmação de Identidade
+    // Confirmação de Identidade
     const isPasswordValid = await compararSenha(senhaAtual, user.password_hash);
     if (!isPasswordValid) { 
         throw AppError.unauthorized('Senha incorreta. A exclusão da conta foi cancelada por segurança.'); 
     }
 
-    // 2. Bloqueio de Segurança para Admins
+    // Bloqueio de Segurança para Admins
     if (user.is_admin) {
         throw AppError.forbidden('Administradores não podem excluir a própria conta. Remova seu cargo primeiro.');
     }
 
-    // 3. Transação de Anonimização (Padrão LGPD)
+    // Transação de Anonimização (Padrão LGPD)
     await prisma.$transaction(async (tx) => {
-        // A. Limpeza de Comunidades (Dono Solitário)
+        // Limpeza de Comunidades (Dono Solitário)
         const comunidadesSolo = await tx.comunidades.findMany({
             where: { criador_id: user.perfil_id },
             include: { _count: { select: { membros: true } } }
@@ -84,7 +79,7 @@ async function deletarConta(usuarioId: number, senhaAtual: string, requestId?: s
             }
         }
 
-        // B. Anonimização do Perfil (Identidade Pública)
+        // Anonimização do Perfil (Identidade Pública)
         await tx.perfis.update({
             where: { perfil_id: user.perfil_id },
             data: {
@@ -100,7 +95,7 @@ async function deletarConta(usuarioId: number, senhaAtual: string, requestId?: s
             }
         });
 
-        // C. Anonimização do Usuário (Identidade de Acesso)
+        // Anonimização do Usuário (Identidade de Acesso)
         // Preservamos usuario_id, nome_completo e data_nascimento para auditoria interna.
         await tx.usuarios.update({
             where: { usuario_id: usuarioId },
@@ -114,7 +109,7 @@ async function deletarConta(usuarioId: number, senhaAtual: string, requestId?: s
             }
         });
 
-        // D. Limpeza de Relações Voláteis
+        // Limpeza de Relações Voláteis
         await tx.seguidores.deleteMany({
             where: { OR: [{ seguidor_id: user.perfil_id }, { seguido_id: user.perfil_id }] }
         });

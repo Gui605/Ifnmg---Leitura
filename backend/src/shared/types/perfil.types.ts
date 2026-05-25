@@ -1,12 +1,6 @@
 import { z } from 'zod';
 
-/**
- * 🛡️ SCHEMAS DE VALIDAÇÃO (ZOD)
- * O .strict() garante que campos extras (Mass Assignment) disparem erro 400.
- * O .trim() já limpa espaços em branco automaticamente.
- */
-
-// 1. Schemas de Perfil
+//Schema de validação de perfil
 export const TituloResumoSchema = z.object({
   titulo_id: z.number(),
   nome: z.string(),
@@ -25,14 +19,14 @@ export const PatenteSchema = z.object({
   nome: z.string(),
 });
 
-// 2. Schema para Atualização de Perfil
+// Schema para Atualização de Perfil
 export const PerfilPatchSchema = z.object({
     nome: z.string().min(3).max(50).optional(),
     bio: z.string().max(255).optional(),
     titulo_ativo_id: z.number().positive().optional(),
 }).strict();
 
-// 3. Schema para Alteração de Senha
+// Schema para Alteração de Senha
 export const SenhaPatchSchema = z.object({
     senhaAntiga: z.string().min(1, "A senha antiga é obrigatória"),
     novaSenha: z.string()
@@ -45,16 +39,12 @@ export const SenhaPatchSchema = z.object({
     path: ["confirmarNovaSenha"],
 });
 
-// 4. Schema para Deleção de Conta
+// Schema para Deleção de Conta
 export const DeletarContaSchema = z.object({
     senhaAtual: z.string().min(1, "A senha é necessária para confirmar a exclusão"),
 }).strict();
 
-/**
- * 💡 INFERÊNCIA DE TIPOS
- * O TypeScript extrai automaticamente as interfaces dos schemas acima.
- * Não é mais necessário escrever "export interface ..." manualmente!
- */
+// Inferência de tipos
 export type PerfilPatchBody = z.infer<typeof PerfilPatchSchema>;
 export type TituloResumo = z.infer<typeof TituloResumoSchema>;
 export type PerfilTitulos = z.infer<typeof PerfilTitulosSchema>;

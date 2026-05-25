@@ -5,10 +5,6 @@ import { registrar as registrarLog } from '../../shared/utils/logService';
 import { ObraCreateBody, ObraUpdateBody } from '../../shared/types/obra.types';
 import perfilService from '../perfil/perfil.service';
 
-/**
- * 💡 SERVIÇO DE OBRAS (Projetos Literários/Acadêmicos)
- * Implementa CRUD e lógica de progressão.
- */
 
 async function criarObra(perfilId: number, data: ObraCreateBody, requestId?: string) {
     const obra = await prisma.$transaction(async (tx) => {
@@ -89,7 +85,7 @@ async function buscarObraPorId(obraId: number) {
     // Cálculo do total de visualizações (soma de todos os capítulos)
     const totalVisualizacoes = obra.capitulos.reduce((acc, cap) => acc + (cap.visualizacoes || 0), 0);
 
-    // Normalização dos capítulos com snapshot de autoria
+    // Normalização dos capítulos com snapshot de autoria, se o autor for desativado, mostra "Usuário Desativado" ou algo similar
     const capitulosNormalizados = obra.capitulos.map(c => ({
         ...c,
         autor_nome_user: c.autor_nome_user ?? c.autor?.nome_user ?? "Usuário Desativado"

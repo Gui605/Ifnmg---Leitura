@@ -1,6 +1,6 @@
-/**
- * Define o tipo de um valor após a sanitização.
- * É um tipo recursivo para suportar objetos e arrays aninhados.
+/*
+ Define o tipo de um valor após a sanitização.
+ É um tipo recursivo para suportar objetos e arrays aninhados.
  */
 export type SanitizedValue =
   | string

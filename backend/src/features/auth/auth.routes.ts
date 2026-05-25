@@ -6,17 +6,10 @@ import { validate } from '../../shared/middlewares/validate.middleware';
 import { middlewareAutenticacao } from '../../shared/middlewares/authMiddleware';
 import { RegistrarSchema, LoginSchema, SolicitarRecuperacaoSchema, RedefinirSenhaSchema } from '../../shared/types/auth.types';
 
-/**
- * 💡 PADRÃO ENTERPRISE BLINDADO:
- * 1. Rate Limiting (Proteção de Infraestrutura)
- * 2. Schema Validation (Proteção de Contrato e Integridade)
- * 3. Controller (Lógica de Negócio)
- */
 
 const router = Router();
 
-// --- Registro e Ativação ---
-// 🛡️ RegistrarSchema.strict() impede a injeção de campos como 'role' ou 'is_admin'
+// Registro e Ativação
 router.post(
     '/registrar', 
     limitadorRegistro,
@@ -26,8 +19,7 @@ router.post(
 
 router.get('/confirmar', authController.confirmarEmail); 
 
-// --- Autenticação ---
-// 🛡️ LoginSchema garante que o payload contenha apenas email e senha válidos
+// Autenticação
 router.post(
     '/logar', 
     limitadorLogin,
@@ -35,7 +27,7 @@ router.post(
     authController.logar
 );
 
-// --- Recuperação de Senha ---
+// Recuperação de Senha
 router.post(
     '/solicitar-recuperacao', 
     limitadorRegistro,
@@ -49,7 +41,7 @@ router.post(
     authController.redefinirSenha
 );
 
-// --- Logout Global (revoga todas as sessões ativas) ---
+// Logout Global - revoga todas as sessões ativas
 router.post(
     '/logout-all',
     middlewareAutenticacao,

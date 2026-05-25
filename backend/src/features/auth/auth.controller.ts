@@ -8,10 +8,9 @@ import { AppError } from '../../shared/utils/AppError';
 
 type ConfirmarEmailQuery = { token?: unknown };
 
-/**
- * 💡 PADRÃO ENTERPRISE EVOLUÍDO:
- * Com o uso de Zod + validateMiddleware, as validações de Regex e Presença
- * foram movidas para a camada de contrato (shared/types/auth.types.ts).
+/*
+ as validações de Regex e Presença foram movidas para
+  a camada de contrato (shared/types/auth.types.ts).
  */
 
 const registrar = tratarAssincrono(async (req: Request<{}, {}, RegistrarData>, res: Response) => {
@@ -25,7 +24,7 @@ const registrar = tratarAssincrono(async (req: Request<{}, {}, RegistrarData>, r
 });
 
 const logar = tratarAssincrono(async (req: Request<{}, {}, LoginData>, res: Response) => {
-    // 🛡️ Email já chega em lowercase e senha já é garantida como string.
+    // Email já chega em lowercase e senha já é garantida como string.
     const { email, senha } = req.body;
     
     const token = await authService.logarUsuario(email, senha, req.requestId);
@@ -41,7 +40,6 @@ const logar = tratarAssincrono(async (req: Request<{}, {}, LoginData>, res: Resp
 const confirmarEmail = tratarAssincrono(async (req: Request<{}, any, any, ConfirmarEmailQuery>, res: Response) => {
     const { token } = req.query;
 
-    // Manter validação manual aqui apenas se não criar um schema para Query Params
     if (!token || typeof token !== 'string' || token.trim().length !== 64) {
         throw AppError.badRequest('Token de verificação inválido ou expirado.');
     }
@@ -72,7 +70,7 @@ const solicitarRecuperacao = tratarAssincrono(async (req: Request<{}, any, Solic
 
 const redefinirSenha = tratarAssincrono(async (req: Request<{}, any, RedefinirSenhaBody>, res: Response) => {
     const { token, novaSenha } = req.body;
-    // Validações de igualdade e força de senha agora ocorrem no Zod Schema.
+    // Validações de igualdade e força de senha ocorrem no Zod Schema.
 
     await recuperacaoService.redefinirSenha(token, novaSenha, req.requestId);
 

@@ -1,10 +1,9 @@
-/**
- * Dicionário Global de Códigos de Erro
- * Esse Enum é o "idioma único" entre o Backend e o Frontend.
- * Todas as mensagens de erro do sistema devem estar mapeadas aqui.
+/*
+Esse Enum é o idioma único entre o Backend e o Frontend.
+Todas as mensagens de erro do sistema devem estar mapeadas aqui.
  */
 export enum ErrorCodes {
-  // --- Autenticação ---
+  // Autenticação
   INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
   TOKEN_INVALID = 'TOKEN_INVALID',
@@ -12,13 +11,13 @@ export enum ErrorCodes {
   UNAUTHENTICATED = 'UNAUTHENTICATED',
   INSUFFICIENT_PERMISSIONS = 'INSUFFICIENT_PERMISSIONS',
 
-  // --- Usuário e Cadastro ---
+  // Usuário e Cadastro
   /** @deprecated Use RESOURCE_NOT_FOUND ou uma verificação de negócio específica */
   USER_NOT_FOUND = 'USER_NOT_FOUND',
   EMAIL_ALREADY_EXISTS = 'EMAIL_ALREADY_EXISTS',
   CONFLICT = 'CONFLICT',
 
-  // --- Validação e Entrada ---
+  // Validação e Entrada
   VALIDATION_ERROR = 'VALIDATION_ERROR',
   BAD_REQUEST = 'BAD_REQUEST',
   /** @deprecated Use VALIDATION_ERROR para padronização global */
@@ -29,7 +28,7 @@ export enum ErrorCodes {
   INVALID_CONTENT_TYPE = 'INVALID_CONTENT_TYPE',
   INVALID_JSON_STRUCTURE = 'INVALID_JSON_STRUCTURE',
 
-  // --- Infraestrutura e Sistema ---
+  // Infraestrutura e Sistema
   RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
   RESOURCE_NOT_FOUND = 'RESOURCE_NOT_FOUND',
   INTERNAL_ERROR = 'INTERNAL_ERROR',
@@ -37,7 +36,7 @@ export enum ErrorCodes {
   CONFIG_ERROR = 'CONFIG_ERROR',
   SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
   
-  // --- Serviços Externos ---
+  // Serviços Externos
   EMAIL_SERVICE_UNAVAILABLE = 'EMAIL_SERVICE_UNAVAILABLE',
   DATABASE_CONNECTION_FAILED = 'DATABASE_CONNECTION_FAILED'
 }
