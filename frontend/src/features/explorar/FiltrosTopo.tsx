@@ -24,7 +24,7 @@ export function FiltrosTopo({ filtros, onFiltrosChange }: Props) {
 
   return (
     <div className="flex flex-col gap-6 mb-10">
-      {/* Seletor de Tipo (Tabs) */}
+      {/* Seletor de Tipo */}
       <div className="flex items-center gap-2 p-1.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-full w-fit shadow-sm">
         {tabs.map(tab => (
           <button
@@ -82,7 +82,7 @@ export function FiltrosTopo({ filtros, onFiltrosChange }: Props) {
           <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none group-hover:text-[var(--accent-primary)] transition-colors" />
         </div>
 
-        {/* Clear Button (Mobile/Foco) */}
+        {/* botão limpar */}
         {(filtros.curso || filtros.idioma || filtros.status || (filtros.tipo && filtros.tipo !== 'TODOS')) && (
           <button 
             onClick={() => onFiltrosChange({ curso: '', idioma: '', status: '', tipo: 'TODOS' })}

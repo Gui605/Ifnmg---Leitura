@@ -39,7 +39,7 @@ export function ListaResultados({ trabalhos, loading, filtros, onFiltrosChange, 
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header de Resultados - Rigor copia.md */}
+      {/* Header de Resultados */}
       <div className="flex items-center justify-between mb-4 border-b border-[var(--accent-primary)]/10 pb-4 px-2">
         <span className="text-sm text-slate-500 font-medium">
           {meta.total.toLocaleString()} resultados encontrados
@@ -64,7 +64,7 @@ export function ListaResultados({ trabalhos, loading, filtros, onFiltrosChange, 
         ))}
       </div>
 
-      {/* Pagination AO3 Style */}
+      {/* Paginação */}
       <div className="mt-10 flex items-center justify-center gap-4">
         <button 
           onClick={() => onPageChange(meta.page - 1)}

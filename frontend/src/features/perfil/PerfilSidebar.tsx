@@ -8,7 +8,7 @@ interface PerfilSidebarProps {
 }
 
 export default function PerfilSidebar({ perfil }: PerfilSidebarProps) {
-  if (!perfil) return null; // Ou um skeleton
+  if (!perfil) return null; 
 
   const patente = perfil.titulo_ativo || getPatentePorNivel(perfil.level);
 

@@ -1,6 +1,4 @@
-/**
- * 🏛️ LISTA OFICIAL DE UNIDADES (CAMPUS) DO IFNMG
- */
+//Lista de unidades do IFNMG
 export const LISTA_CAMPUS = [
   "Teste",
   "Almenara", 
@@ -16,7 +14,4 @@ export const LISTA_CAMPUS = [
   "Janaúba"
 ] as const;
 
-/**
- * 💡 Tipo derivado para uso em Schemas e Tipagens
- */
 export type UnidadeCampus = typeof LISTA_CAMPUS[number];

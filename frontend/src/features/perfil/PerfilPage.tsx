@@ -37,7 +37,7 @@ export default function PerfilPage() {
   const handleToggleFollow = async () => {
     if (!perfil?.perfil_id || isOwnProfile) return;
     
-    // Optimistic UI: Salva estado anterior para rollback
+    // Salva estado anterior para rollback
     const previousPerfil = { ...perfil };
     const isFollowing = !perfil.is_following;
     
@@ -60,13 +60,12 @@ export default function PerfilPage() {
     try {
       const res = await toggleFollow(perfil.perfil_id);
       
-      // Sincroniza com o backend para garantir integridade (opcional, mas recomendado)
+      // Sincroniza com o backend para garantir integridade 
       const updatedPerfil = await getPerfilPublico(perfil.perfil_id);
       setPerfil(updatedPerfil);
       
       Notificacao.toast.sucesso(res.seguindo ? `Seguindo @${perfil.nome_user}` : `Deixou de seguir @${perfil.nome_user}`);
     } catch (err: any) {
-      // Rollback em caso de erro
       setPerfil(previousPerfil);
       Notificacao.toast.erro(err?.message || "Erro ao processar ação");
     } finally {

@@ -2,18 +2,17 @@
 
 import React from 'react';
 
-/**
- * 🎮 LÓGICA DE NÍVEL GEOMÉTRICA (IFNMG)
- * Fórmula: Nivel * 100 * (1.5 ^ Nivel)
- */
+/*
+logica de nivel geometrica
+Fórmula: Nivel * 100 * (1.5 ^ Nivel)
+*/
 export function calcularXpParaNivel(nivel: number): number {
   if (nivel <= 1) return 0;
   return Math.floor(nivel * 100 * Math.pow(1.5, nivel));
 }
 
-/**
- * 🏛️ PATENTES GLOBAIS
- * Fallback para quando o usuário não possui um título de especialidade ativo.
+/*
+ Fallback para quando o usuário não possui um título de especialidade ativo.
  */
 export const PATENTES_GLOBAIS = [
   { nivel: 1, nome: "Calouro" },

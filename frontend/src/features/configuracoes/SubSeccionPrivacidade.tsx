@@ -9,10 +9,10 @@ export function SubSeccionPrivacidade() {
 
   const handleDeleteAccount = async () => {
     try {
-      // 1. Pre-flight check
+      // checagem de pendencias
       const pendencias = await checkPendenciasExclusao();
 
-      // CENÁRIO C: Bloqueio por ser Admin ou Dono de Comunidades Ativas
+      // primeira situação: Bloqueio por ser Admin ou Dono de Comunidades Ativas
       if (!pendencias.podeExcluir) {
         let mensagem = "";
         if (pendencias.isRootAdmin) {
@@ -30,7 +30,7 @@ export function SubSeccionPrivacidade() {
         return;
       }
 
-      // CENÁRIO B: Dono Solitário (Aviso de exclusão de comunidades)
+      // segunda situação: Dono Solitário (Aviso de exclusão de comunidades)
       let textoConfirmacao = 'Esta ação é irreversível. Todos os seus dados pessoais serão anonimizados e seu acesso será desativado permanentemente.';
       if (pendencias.comunidadesImpeditivas.length === 0) {
         // Se houver comunidades onde ele é o único membro, avisar que serão apagadas

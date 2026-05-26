@@ -50,15 +50,15 @@ export function ExplorarPage() {
   }, [filtros]);
 
   const fetchTrabalhos = async () => {
-    console.log("🔍 Tentando buscar trabalhos com os filtros:", filtros);
+    console.log("Tentando buscar trabalhos com os filtros:", filtros);
     setLoading(true);
     try {
       const response = await pesquisarTrabalhos(filtros);
-      console.log("✅ Resposta recebida:", response);
+      console.log("Resposta recebida:", response);
       setTrabalhos(response.trabalhos);
       setMeta(response.meta);
     } catch (err) {
-      console.error("❌ Erro na busca:", err);
+      console.error(" Erro na busca:", err);
       Notificacao.toast.erro('Falha ao carregar trabalhos', 'Não foi possível buscar os pergaminhos acadêmicos.');
     } finally {
       setLoading(false);

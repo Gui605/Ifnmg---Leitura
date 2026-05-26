@@ -18,10 +18,8 @@ type AuthContextValue = {
 const TOKEN_KEY = 'auth-token';
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-/**
- * Decodificador simplificado de JWT para extração de claims (ex: exp).
- * Evita dependências externas mantendo a rigidez de contrato.
- */
+// Decodificador simplificado de JWT para extração de claims
+// Evita dependências externas mantendo a rigidez de contrato.
 function parseJwt(token: string) {
   try {
     const base64Url = token.split('.')[1];
@@ -39,9 +37,7 @@ function parseJwt(token: string) {
   }
 }
 
-/**
- * Valida se o token existe e não está expirado.
- */
+// Valida se o token existe e não está expirado
 function getValidToken(): string | null {
   const t = storageGet<string>(TOKEN_KEY);
   if (!t) return null;
@@ -110,8 +106,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setPerfil(p);
         } catch (error) {
             console.error("Erro ao carregar perfil, mas mantendo sessão:", error);
-            // Em vez de logout(true), apenas defina um estado de erro ou 
-            // deixe o perfil como null, mas mantenha o token.
         }
       } 
       setLoading(false);
@@ -181,9 +175,7 @@ export function useAuth() {
   return ctx;
 }
 
-/**
- * Componente utilitário para renderizar um estado de carregamento padrão
- */
+// Componente utilitário para renderizar um estado de carregamento padrão
 export function AuthLoadingScreen() {
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex items-center justify-center">

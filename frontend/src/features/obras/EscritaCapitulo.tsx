@@ -45,13 +45,12 @@ export default function EscritaCapitulo() {
 
     try {
       setEnviando(true);
-      // DEBUG: Log do payload antes de enviar
       const payload = {
         titulo: titulo.trim(),
         conteudo: conteudo.trim(),
         obra_id: Number(obra.obra_id), // Garante que seja NUMBER
         status: 'ANDAMENTO', // Status padrão explícito
-        tags: [] // Categorias herdadas no backend
+        tags: [] // Categorias herdadas no backend, para os capitulos manterem a categoria da obra
       };
       
       console.log("[DEBUG] Enviando capítulo:", payload);

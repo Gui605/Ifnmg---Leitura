@@ -9,7 +9,6 @@ import { AppError } from './appError';
 
 
 
-// 1. CONFIGURAÇÃO E TRANSPORTE
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1',
   headers: { 'Content-Type': 'application/json' },
@@ -18,7 +17,6 @@ export const api = axios.create({
 
 
 
-// Interceptor de Request: Injeta Token
 
 api.interceptors.request.use((config) => {
 
@@ -42,7 +40,7 @@ api.interceptors.request.use((config) => {
 
 
 
-// Dicionário de Erros (UX)
+// Dicionário de Erros
 const ERROR_MESSAGES: Record<string, string> = {
   [ErrorCodes.INVALID_CREDENTIALS]: 'E-mail ou senha incorretos. Verifique os dados.',
   [ErrorCodes.TOKEN_EXPIRED]: 'Sua sessão expirou por segurança. Por favor, entre novamente.',
@@ -69,19 +67,19 @@ const ERROR_MESSAGES: Record<string, string> = {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // 1. Diagnóstico Técnico (O Log que nos salva)
+    // Diagnóstico Técnico
     console.error("--- DEBUG API ---", {
       status: error.response?.status,
       data: error.response?.data,
       url: error.config?.url
     });
 
-    // 2. Extração de informações de forma segura
+    // Extração de informações de forma segura
     const data = error.response?.data || {};
     const status = error.response?.status;
     const code = data?.errorCode || data?.code;
 
-    // 3. Determinação inteligente da mensagem (Prioriza o servidor, depois o erro de rede)
+    // Determinação inteligente da mensagem (Prioriza o servidor, depois o erro de rede)
     let message = data?.message 
                   || (code && ERROR_MESSAGES[code]) 
                   || 'Erro inesperado.';
@@ -91,7 +89,7 @@ api.interceptors.response.use(
       message = 'O servidor não respondeu. Verifique se ele está rodando e se o CORS está liberado.';
     }
 
-    // 4. Lógica de Segurança (Preservando a sua lógica atual)
+    // Lógica de Segurança 
     const isAuthError = [401, 403].includes(status) || 
       ([ErrorCodes.TOKEN_EXPIRED, ErrorCodes.TOKEN_INVALID, ErrorCodes.UNAUTHENTICATED, ErrorCodes.FORBIDDEN] as string[]).includes(code || '');
 
@@ -115,7 +113,7 @@ api.interceptors.response.use(
 
 
 
-// 2. CAMADA DE CONTRATO (Wrapper de Validação)
+// CAMADA DE CONTRATO (Wrapper de Validação)
 
 type Selector<T> = (raw: any, resp: AxiosResponse) => T;
 
@@ -139,12 +137,12 @@ async function request<T>(
     resp = await api[method](url, data, config);
   }
   
-  // AQUI A MÁGICA: O backend envia { status, message, data, meta, perfil_atualizado }
+  // O backend envia { status, message, data, meta, perfil_atualizado }
   if (!resp.data || !resp.data.hasOwnProperty('status') || !resp.data.hasOwnProperty('message')) {
     throw AppError.internal('Contrato da API inválido: Formato de resposta inesperado.');
   }
 
-  // 🛡️ SINCRONIA DE PERFIL: Se o backend enviou perfil_atualizado, disparamos o evento global
+  //Se o backend enviou perfil_atualizado, disparamos o evento global
   if (resp.data.perfil_atualizado) {
     window.dispatchEvent(new CustomEvent('auth:perfil_updated', { 
       detail: resp.data.perfil_atualizado 
@@ -157,7 +155,7 @@ async function request<T>(
   // Mantemos o seletor para casos especiais (ex: ler o meta)
   const target = select ? select(resp.data, resp) : payload;
   
-  // 🔍 DEBUG: Log para identificar falha de contrato
+  // Log para identificar falha de contrato
   console.log(`[DEBUG] Validando schema para URL: ${url}`, {
     target: Array.isArray(target) ? `Array(${target.length})` : target
   });

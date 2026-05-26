@@ -45,7 +45,7 @@ export default function Feed() {
   // Prioriza o perfil do AuthContext para reatividade global
   const perfil = perfilAuth || perfilLocal;
 
-  // 1. Carregamento Inicial (Perfil + Primeira Página)
+  // Carregamento Inicial 
   useEffect(() => {
     let cancelado = false;
 
@@ -75,7 +75,7 @@ export default function Feed() {
     return () => { cancelado = true; };
   }, []);
 
-  // 2. Lógica de Infinite Scroll (Scroll Listener)
+  // Lógica de rolagem infinita
   useEffect(() => {
     const handleScroll = () => {
       if (loading || loadingMore || !hasMore) return;
@@ -147,7 +147,7 @@ export default function Feed() {
         isRightVisible={isRightVisible}
       />
 
-      {/* LAYOUT */}
+      {/* Layout */}
       <main
         className={`
         max-w-[1400px] mx-auto px-4 md:px-10 py-8 grid gap-8 transition-all duration-500 ease-in-out
@@ -155,7 +155,7 @@ export default function Feed() {
       `}
       >
 
-        {/* LEFT SIDEBAR */}
+        {/* Left Sidebar */}
         {isLeftVisible && (
           <aside className="hidden md:block sticky top-16 h-[calc(100vh-64px)] overflow-y-auto scrollbar-hide space-y-8 transition-all duration-500 py-8">
             <div className="bg-[var(--bg-card)] rounded-2xl shadow-[var(--shadow-elevation-1)] border border-[var(--border-color)] p-2">
@@ -177,7 +177,7 @@ export default function Feed() {
           </aside>
         )}
 
-        {/* FEED */}
+        {/* Feed */}
         <section className={`
           flex-1 w-full pb-24 md:pb-0 transition-all duration-500
           ${(!isLeftVisible && !isRightVisible) ? 'max-w-3xl mx-auto' : 'max-w-2xl mx-auto'}
@@ -234,7 +234,7 @@ export default function Feed() {
           </div>
         </section>
 
-        {/* RIGHT SIDEBAR */}
+        {/* Sidebar da direita */}
         {isRightVisible && (
           <aside className="hidden lg:block sticky top-16 h-[calc(100vh-64px)] overflow-y-auto scrollbar-hide space-y-6 transition-all duration-500 py-8">
             <TrendingTags />

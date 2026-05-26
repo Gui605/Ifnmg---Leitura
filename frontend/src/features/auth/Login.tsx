@@ -24,10 +24,10 @@ export default function Login() {
   const [ehLogin, setEhLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [nome, setNome] = useState(''); // nome completo
-  const [apelido, setApelido] = useState(''); // nome de exibição (nickname)
+  const [nome, setNome] = useState(''); 
+  const [apelido, setApelido] = useState(''); 
   const [campus, setCampus] = useState('');
-  const [nascimento, setNascimento] = useState(''); // YYYY-MM-DD
+  const [nascimento, setNascimento] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [estaCarregando, setEstaCarregando] = useState(false);
   const [erroVisual, setErroVisual] = useState(false);
@@ -85,6 +85,7 @@ export default function Login() {
     }
   };
 
+  // Abrir recuperação de senha
   async function abrirRecuperacao(emailPreenchido?: string) {
     const emailRec = await Notificacao.modal.promptEmail({
       valorInicial: emailPreenchido || ''
@@ -118,6 +119,7 @@ export default function Login() {
     } catch {}
   }, []);
 
+  // Alerta de sucesso no cadastro
   async function alertaSucessoCadastro() {
     const res = await Notificacao.modal.sucesso({
       titulo: 'Cadastro Realizado!',
@@ -132,6 +134,7 @@ export default function Login() {
     resetFormulario();
   }
 
+  // Alerta de cadastro pendente
   async function alertaCadastroPendente() {
     const res = await Notificacao.modal.aviso({
       titulo: 'Cadastro Pendente',
@@ -145,6 +148,7 @@ export default function Login() {
     }
   }
 
+  // Alerta de link reenviado
   async function alertaLinkReenviado() {
     const res = await Notificacao.modal.sucesso({
       titulo: 'Link Reenviado',
@@ -158,6 +162,7 @@ export default function Login() {
     }
   }
 
+  // Alerta de conta pendente no login
   async function alertaContaPendenteLogin() {
     const res = await Notificacao.modal.aviso({
       titulo: 'Conta Não Ativada',
@@ -171,6 +176,7 @@ export default function Login() {
     }
   }
 
+  // Alerta de email já existente
   async function alertaEmailExistente() {
     const res = await Notificacao.modal.confirmar({
       titulo: 'Parece que você já é um de nós!',
@@ -192,6 +198,7 @@ export default function Login() {
     }
   }
 
+  // Resetar formulário
   const resetFormulario = (keepEmail?: boolean) => {
     setNome(''); setApelido(''); setCampus(''); setNascimento('');
     setBuscaCampus(''); setMostrarSugestoes(false);
@@ -204,11 +211,12 @@ export default function Login() {
     setErroCampus(''); setErroNascimento(''); setErroConfirmar('');
   };
 
+  // Enviar formulário
   async function enviarFormulario(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErroEmail(''); setErroSenha(''); setErroNome(''); setErroApelido(''); setErroCampus(''); setErroNascimento(''); setErroConfirmar('');
 
-    // Validação Hierárquica (Funil)
+    // Validação Hierárquica
     if (!emailOkNow) {
       setErroEmail(emailTrimNow.length === 0 ? 'Informe seu e-mail.' : 'Utilize um e-mail institucional válido.');
       setMostraErroEmail(true); setErroVisual(true);
@@ -289,7 +297,7 @@ export default function Login() {
           senha
         });
 
-        // Fluxo de Sucesso do Cadastro (Genuíno 201/200)
+        // Fluxo de Sucesso do Cadastro 
         await alertaSucessoCadastro();
       } catch (err: unknown) {
         if (err instanceof AppError) {

@@ -8,9 +8,8 @@ interface UserSuggestion {
   perfil_id: number;
   nome_user: string;
 }
-
-// Mock inicial enquanto não existe endpoint de sugestão real, 
-// mas já implementando a lógica de follow real
+//Implementação / refatorar / refatoração
+// Mock de desenvolvimento enquanto não existe endpoint de sugestão real
 const MOCK_SUGGESTIONS: UserSuggestion[] = [
   { perfil_id: 2, nome_user: "CarlosEduardo" },
   { perfil_id: 3, nome_user: "JulianaMendes" }

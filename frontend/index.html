@@ -16,13 +16,12 @@
           const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           const isDark = stored === 'dark' || (stored !== 'light' && systemDark);
           
-          // Aplica a classe de tema no HTML
+          // Aplica a classe de tema claro ou escuro
           document.documentElement.classList.add(isDark ? 'dark-mode' : 'light-mode');
           
-          // Libera a renderização do body (que estava escondido via CSS)
+          // Libera a renderização do body
           document.documentElement.classList.add('theme-ready');
         } catch (e) {
-          // Fallback seguro caso ocorra erro no localStorage
           document.documentElement.classList.add('light-mode', 'theme-ready');
         }
       })();

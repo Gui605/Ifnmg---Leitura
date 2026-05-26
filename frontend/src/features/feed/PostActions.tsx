@@ -23,15 +23,12 @@ export default function PostActions({ postId, upvotes: upvotesProp = 0, comments
 
   async function toggleVotar() {
     setLoadingVoto(true);
-    // Optimistic UI
     setUpvotes(prev => prev + 1);
     try {
       await apiClient.post(`/posts/${postId}/votar`, { tipo: 'UP' }, z.any());
       Notificacao.toast.sucesso("Voto registrado!", "Você ganhou +2 XP e o autor ganhou +10 XP.");
     } catch (err: any) {
-      // Rollback
       setUpvotes(prev => Math.max(0, prev - 1));
-      // Erro já tratado pelo interceptor do apiClient
     } finally {
       setLoadingVoto(false);
     }

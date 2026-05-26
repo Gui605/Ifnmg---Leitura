@@ -65,16 +65,16 @@ export default function ObraDetalhesPage() {
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-lexend">
       <Header showSearch={false} />
 
-      {/* Hero Section com Background Blur */}
+      {/* Seção principal com efeito de desfoque no fundo */}
       <div className="relative h-[450px] w-full overflow-hidden">
-        {/* Camada de Background Blur */}
+        {/* Camada de fundo desfocado */}
         <div 
           className="absolute inset-0 bg-cover bg-center scale-110 blur-2xl opacity-30"
           style={{ backgroundImage: obra.imagem_capa ? `url(${obra.imagem_capa})` : 'none' }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--bg-primary)]/60 to-[var(--bg-primary)]" />
 
-        {/* Conteúdo do Hero */}
+        {/* Conteúdo da seção */}
         <div className="relative max-w-6xl mx-auto px-6 h-full flex flex-col justify-end pb-12">
           <div className="flex flex-col md:flex-row gap-8 items-end">
             {/* Capa em Destaque */}

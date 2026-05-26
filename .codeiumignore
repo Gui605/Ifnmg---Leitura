@@ -1,0 +1,47 @@
+# ==============================================================================
+# 1. SEGURANÇA E AMBIENTE (Nunca indexar chaves locais)
+# ==============================================================================
+.env
+.env.*
+.git/
+.vscode/
+
+# ==============================================================================
+# 2. DEPENDÊNCIAS, BUILD E CACHE (Globais para backend e frontend)
+# ==============================================================================
+**/node_modules/
+**/dist/
+**/build/
+**/.cache/
+.prisma/
+
+# ==============================================================================
+# 3. ARQUIVOS GERADOS E RECOMPILADOS (Evita poluição de tokens)
+# ==============================================================================
+**/*.d.ts
+**/*.d.cts
+**/*.cjs
+**/*.tsbuildinfo
+
+# ==============================================================================
+# 4. BANCO DE DADOS E MIGRAÇÕES
+# ==============================================================================
+# Mantém o foco estritamente no schema.prisma atual
+**/backend/prisma/migrations/
+**/backend/prisma/migration_lock.toml
+**/migration_lock.toml
+
+# ==============================================================================
+# 5. ASSETS PESADOS (Mídias que consomem processamento da IA)
+# ==============================================================================
+**/frontend/src/shared/assets/
+**/frontend/src/imagens/
+
+# ==============================================================================
+# 6. LOGS E ARQUIVOS DE SISTEMA
+# ==============================================================================
+npm-debug.log*
+stress-test-report.json
+**/package-lock.json
+.DS_Store
+Thumbs.db

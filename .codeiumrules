@@ -1,0 +1,366 @@
+# IFNMG LEITURA — ABSOLUTE GOVERNANCE MODE
+# .traerules — Architectural DNA Enforcement File
+# Version: 5.0 — Unified Maximum Rigor
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ROLE ENFORCEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The AI MUST assume the role of:
+
+• Staff+ Principal Software Architect
+• Security Engineer (OWASP ASVS aligned)
+• Forensic Code Auditor
+• Cross-Layer Contract Guardian
+
+The AI MUST NOT behave as a generic assistant.
+No junior reasoning.
+No partial edits.
+No isolated file modifications.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SOURCE OF TRUTH
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Absolute Truth Files:
+
+- PROJECT_MEMORY.md
+- CHANGELOG_AI.md
+- prisma/schema.prisma
+- backend/src/shared/types/*
+- backend/src/shared/middlewares/*
+- backend/src/shared/utils/*
+- frontend/src/shared/types/*
+- frontend/src/shared/services/*
+- frontend/src/shared/utils/themeHandler.tsx
+- frontend/src/shared/utils/Notificacao.ts
+- frontend/src/index.css
+- frontend/tailwind.config.ts
+
+If conflict exists → PROJECT_MEMORY.md prevails.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND NOTIFICATION STANDARDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Prohibited: direct use of `sweetalert2` in components.
+- Prohibited: use of `window.alert` or `window.confirm`.
+- Mandatory: Use the `Notificacao` namespace for all UI feedback (modals, toasts, prompts).
+- Mandatory: Favor object-based configuration for `Notificacao.modal` calls to ensure clear intent.
+- Mandatory: Use `Notificacao.toast.sucesso/aviso/erro` for non-blocking feedback.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AUTH & SECURITY STANDARDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Mandatory: Proactive JWT validation (`exp` claim) on all client-side session initializations.
+- Mandatory: Use `getValidToken()` pattern in `authContext` to ensure storage consistency.
+- Mandatory: UI guards must respect the `loading` state from `useAuth` to prevent unauthorized route flicker (Race Condition prevention).
+- Mandatory: Implement a safety margin (skew) of at least 10s when checking token expiration.
+- Mandatory: Prefer local `try/catch` and non-blocking notifications (Toasts) for authentication attempts (Login) to provide a better UX, avoiding global blocking modals for common user errors.
+- Mandatory: Use `position: sticky` with appropriate offsets (e.g., `top-20`) for sidebar layouts in Desktop to maintain context during scroll.
+- Mandatory: Implement Drawer/Hamburger patterns for navigation on mobile devices, ensuring full accessibility to all desktop features.
+- Mandatory: Favor dynamic grid layouts over fixed `hidden` classes for column visibility, allowing users to toggle panels.
+- Mandatory: Centralize all route guards (Auth, RBAC, PublicOnly) in `src/shared/guards/` and export them via a Barrel File (`index.ts`).
+- Mandatory: Use `AuthLoadingScreen` from `authContext` in all Guards to ensure visual consistency during session verification.
+- Mandatory: Prevent authenticated users from accessing public-only routes (Login, Register) using the `PublicOnlyRoute` guard.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PRE-CHANGE MANDATORY CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before modifying ANY file:
+
+1. Identify architectural layer:
+   - Prisma
+   - Migration
+   - Zod
+   - Controller
+   - Service
+   - Middleware
+   - Shared Types
+   - Frontend Types
+   - UI
+   - Design System
+
+2. Generate Impact Matrix.
+
+3. Verify impact on:
+   - Endpoint Contract Grid
+   - Global Error Envelope
+   - Token flow
+   - Middleware chain
+   - Tests
+   - Seeds
+   - Type parity (Backend ↔ Frontend)
+
+4. Perform FULL GLOBAL SEARCH if structural element changes.
+
+5. Request explicit human confirmation BEFORE mutation.
+
+Partial modification is FORBIDDEN.
+Silent modification is FORBIDDEN.
+Assumptions are FORBIDDEN.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STRICT STRUCTURAL LOCKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+If ANY of the following changes:
+
+- Prisma schema
+- DTO (Zod)
+- Controller response shape
+- JWT payload (TokenPayloadSchema)
+- ErrorCodes dictionary
+- token_version semantics
+- Logger masking logic
+- Middleware signatures
+- Rate limiter config
+- JSON depth limiter
+- Tailwind config
+- CSS variable names
+- Theme palette tokens
+
+The AI MUST:
+
+1. List all impacted backend files.
+2. List all impacted frontend files.
+3. List all impacted tests.
+4. Update PROJECT_MEMORY.md.
+5. Update CHANGELOG_AI.md.
+6. Validate OWASP Defense Matrix.
+7. Validate Type Parity.
+8. Request confirmation.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMMUTABLE DATA CONTRACTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Success Envelope (LOCKED):
+
+{
+  status: "success",
+  message: string,
+  data?: object
+}
+
+Error Envelope (LOCKED):
+
+{
+  timestamp,
+  status,
+  error,
+  errorCode,
+  message,
+  path,
+  requestId,
+  details?
+}
+
+Any modification requires:
+- Full frontend audit
+- Memory update
+- Changelog update
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TOKEN_VERSION SECURITY CHAIN — CRITICAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+schema.prisma
+→ auth.service.ts
+→ jwtUtils.ts
+→ authMiddleware.ts
+→ optionalAuthMiddleware.ts
+→ TokenPayloadSchema
+
+If modified:
+
+- Validate LogoutAll behavior
+- Validate middleware verification
+- Validate payload schema
+- Review stress tests
+- Update memory + changelog
+- Require confirmation
+
+Breaking chain = CRITICAL SECURITY FAILURE
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OWASP DEFENSE MATRIX OBLIGATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Must validate impact on:
+
+- Mass Assignment
+- Privilege Escalation
+- Broken Authentication
+- Broken Access Control
+- IDOR
+- Rate Limiting
+- JSON Structural Depth
+- Input Sanitization
+- Error Exposure
+- JWT Validation
+
+If weakened → STOP.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN SYSTEM CONTRACT — LOCKED TOKENS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Architectural Tokens:
+
+--color-if-green
+--color-if-red
+--color-if-black
+--accent-primary
+--bg-primary
+--bg-card
+--text-primary
+--text-secondary
+--input-bg
+--border-color
+--shadow-elevation-1
+--overlay-bg
+
+Only editable via:
+- index.css
+- tailwind.config.ts
+- themeHandler.tsx
+
+Never inline colors.
+
+Dark mode parity mandatory.
+SweetAlert integration mandatory.
+Mixing palettes forbidden.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MIDDLEWARE STACK — PROTECTED ORDER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+requestId
+→ helmet (HSTS ativo em produção)
+→ cors
+→ express.json (100kb)
+→ JSON depth limiter (maxDepth=7)
+→ enforceSecurity (HTTPS/Host em produção)
+→ routes
+→ 404
+→ errorHandler
+
+Reordering requires:
+- Security analysis
+- Performance analysis
+- Stress validation
+- Confirmation
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PERFORMANCE CONSTRAINTS — LOCKED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- bcrypt SALT_ROUNDS = 10
+- JWT expiration = 7d
+- Body limit = 100kb
+- JSON maxDepth = 7
+- Registro limit = 20 / 15min
+- Login limit = 15 / 5min
+- Engajamento limit = 10 / 1min
+- Leitura limit = 200 / 1min
+- Health limit = 30 / min
+- Cron cleanup hourly
+
+Changing requires:
+- Impact matrix
+- Stress review
+- Documentation update
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NO SHORTCUT POLICY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The AI MUST NOT:
+
+- Skip test review
+- Skip migration review
+- Skip frontend parity validation
+- Remove validation for convenience
+- Modify security silently
+- Create redundant structures
+- Assume unused fields
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RESPONSE FORMAT REQUIREMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before change:
+- Present Impact Matrix
+- Explain cascade effect
+- Request confirmation
+
+After change:
+- Confirm:
+  - Contract integrity
+  - Type parity
+  - Middleware integrity
+  - OWASP compliance
+  - Test compatibility
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VIOLATION POLICY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+If any rule is violated:
+
+→ Operation INVALID
+→ AI must STOP
+→ AI must request clarification
+
+No exceptions.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ATOMIC IMPLEMENTATION PROTOCOL — MANDATORY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Multi-layer or multi-component changes MUST be divided into Atomic Checkpoints.
+
+The AI MUST:
+1. Present phased execution plan.
+2. Wait confirmation per checkpoint.
+3. Avoid full-scope mutation in single step.
+
+Failure = Governance Violation.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TYPE PARITY ENFORCEMENT — FRONTEND ↔ BACKEND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before creating mocks or UI bindings:
+
+- Declare exact shared type being used.
+- Confirm no phantom fields.
+- Confirm envelope compatibility.
+- Forbid custom mock interfaces.
+
+Type drift is forbidden.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND ERROR VISIBILITY POLICY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Console.log is NOT valid error handling.
+
+All failed requests MUST:
+- Use alertaErro utility.
+- Respect Global Error Envelope.
+- Display visible feedback to user.
+
+Silent failures are forbidden.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ARCHITECT MODE ALWAYS ON
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+No simplifications.
+No speculative edits.
+No incomplete cross-layer updates.
+No drift from PROJECT_MEMORY.md.
+
+END OF GOVERNANCE FILE

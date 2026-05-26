@@ -34,7 +34,7 @@ export function FiltrosSide({ filtros, onFiltrosChange, onClear }: Props) {
 
   return (
     <aside className="w-full lg:sticky lg:top-24 lg:h-[calc(100vh-120px)] lg:overflow-y-auto scrollbar-hide overscroll-contain flex flex-col gap-6 pb-10">
-      {/* BLOCO ÚNICO DE FILTROS - Rigor copia.md */}
+      {/* BLOCO ÚNICO DE FILTROS */}
       <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl flex flex-col shadow-sm">
         
         {/* Header da Sidebar */}
@@ -51,7 +51,7 @@ export function FiltrosSide({ filtros, onFiltrosChange, onClear }: Props) {
           </button>
         </div>
 
-        {/* Conteúdo dos Filtros (Sem scroll interno) */}
+        {/* Conteúdo dos Filtros  */}
         <div className="flex flex-col p-6 space-y-6">
           
           {/* Seção de Cursos */}
@@ -67,7 +67,7 @@ export function FiltrosSide({ filtros, onFiltrosChange, onClear }: Props) {
             </select>
           </div>
 
-          {/* Seção de Idioma (Checkboxes - Fidelidade AO3) */}
+          {/* Seção de Idioma*/}
           <div>
             <label className="text-sm font-semibold mb-2 block text-slate-500 uppercase tracking-wider font-lexend">Idioma</label>
             <div className="space-y-2.5">
@@ -87,7 +87,7 @@ export function FiltrosSide({ filtros, onFiltrosChange, onClear }: Props) {
             </div>
           </div>
 
-          {/* Seção de Status (Grid 2 colunas - Fidelidade copia.md) */}
+          {/* Seção de Status Grid 2 colunas */}
           <div>
             <label className="text-sm font-semibold mb-2 block text-slate-500 uppercase tracking-wider font-lexend">Status</label>
             <div className="grid grid-cols-2 gap-2">
@@ -146,7 +146,7 @@ export function FiltrosSide({ filtros, onFiltrosChange, onClear }: Props) {
         </div>
       </div>
 
-      {/* BLOCO DE AJUDA - Fidelidade copia.md */}
+      {/* BLOCO DE AJUDA */}
       <div className="bg-[var(--accent-primary)]/5 rounded-xl border border-[var(--accent-primary)]/20 p-4 shadow-sm">
         <h4 className="text-xs font-bold text-[var(--accent-primary)] mb-2 uppercase tracking-widest font-lexend">
           AJUDA

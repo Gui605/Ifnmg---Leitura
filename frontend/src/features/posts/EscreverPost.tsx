@@ -154,7 +154,7 @@ export default function EscreverPost() {
             <p className="text-sm text-slate-500 mt-1">Compartilhe seu conhecimento acadêmico com a comunidade.</p>
           </div>
 
-          {/* 1. Título Independente */}
+          {/* Título Independente */}
           <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-3 shadow-[var(--shadow-elevation-1)] space-y-2">
             <label className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
                   <Scroll size={16} className="text-[var(--accent-primary)]" />
@@ -170,7 +170,7 @@ export default function EscreverPost() {
           </div>
             
                 
-          {/* 2. Categoria e Tags */}
+          {/* Categoria e Tags */}
           <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-3 shadow-[var(--shadow-elevation-1)] space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Seletor de Categoria */}

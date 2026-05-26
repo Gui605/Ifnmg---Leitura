@@ -9,7 +9,7 @@ export const TituloSchema = z.object({
 });
 
 export const PerfilTituloSchema = z.object({
-  atribuido_em: z.string(), // ISO date
+  atribuido_em: z.string(), 
   esta_ativo: z.boolean(),
   titulo: TituloSchema,
 });
@@ -29,7 +29,6 @@ export const PerfilResumoSchema = z.object({
   score_karma: z.number(),
   reading_points: z.number(),
   
-  // Gamificação V2
   level: z.number().default(1),
   xp: z.number().default(0),
   xp_escrita: z.number().default(0),

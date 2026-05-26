@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { apiClient } from '../utils/apiClient';
 import { PostResumo, PostResumoSchema, TrabalhoResumo, TrabalhoResumoSchema, FiltrosBusca, PostCreateBody } from '../types/post.types';
 
+//Lista posts com filtros opcionais
 export async function getPosts(filtros: { page?: number; categoriaId?: number; autorId?: number } = {}): Promise<{ posts: PostResumo[]; meta: any }> {
   const params = new URLSearchParams();
   params.append('page', String(filtros.page || 1));
@@ -16,6 +17,7 @@ export async function getPosts(filtros: { page?: number; categoriaId?: number; a
   })) as Promise<{ posts: PostResumo[]; meta: any }>;
 }
 
+//Pesquisa trabalhos com filtros opcionais
 export async function pesquisarTrabalhos(filtros: FiltrosBusca): Promise<{ trabalhos: TrabalhoResumo[]; meta: any }> {
   const params = new URLSearchParams();
   if (filtros.query) params.append('termo', filtros.query);
@@ -35,10 +37,12 @@ export async function pesquisarTrabalhos(filtros: FiltrosBusca): Promise<{ traba
   })) as Promise<{ trabalhos: TrabalhoResumo[]; meta: any }>;
 }
 
+//Lista posts de um usuário específico
 export async function getPostsByUserId(userId: number, page: number = 1): Promise<{ posts: PostResumo[]; meta: any }> {
   return getPosts({ autorId: userId, page });
 }
 
+//Lista posts favoritados pelo usuário logado
 export async function getPostsFavoritados(page: number = 1): Promise<{ posts: PostResumo[]; meta: any }> {
   // Nota: Implementação do endpoint de favoritos pendente no backend, usando mock estruturado
   return apiClient.get(`/posts/favoritos?page=${page}&limit=10`, z.any(), undefined, (raw) => ({
@@ -47,22 +51,27 @@ export async function getPostsFavoritados(page: number = 1): Promise<{ posts: Po
   })) as Promise<{ posts: PostResumo[]; meta: any }>;
 }
 
+//Cria um novo post
 export async function criarPost(data: PostCreateBody): Promise<any> {
   return apiClient.post('/posts', data, z.any(), undefined, (raw) => raw?.data);
 }
 
+//Vota em um post
 export async function votarPost(postId: number, tipo: 'up' | 'down'): Promise<{ total_upvotes: number; total_downvotes: number }> {
   return apiClient.post(`/posts/${postId}/votar`, { tipo: tipo.toUpperCase() }, z.any(), undefined, (raw) => raw?.data) as Promise<{ total_upvotes: number; total_downvotes: number }>;
 }
 
+//Busca um post por ID
 export async function getPostById(postId: number): Promise<any> {
   return apiClient.get(`/posts/${postId}`, z.any(), undefined, (raw) => raw?.data);
 }
 
+//Reage a um post
 export async function reagirPost(postId: number, tipo: string): Promise<any> {
   return apiClient.post(`/posts/${postId}/reagir`, { tipo }, z.any(), undefined, (raw) => raw?.data);
 }
 
+//Comenta em um post
 export async function comentarPost(postId: number, texto: string, parentId?: number, isSpoiler: boolean = false): Promise<any> {
   return apiClient.post(`/posts/${postId}/comentarios`, { texto, parent_id: parentId, is_spoiler: isSpoiler }, z.any(), undefined, (raw) => raw?.data);
 }

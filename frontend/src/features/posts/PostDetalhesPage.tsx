@@ -32,7 +32,7 @@ export default function PostDetalhesPage() {
     if (id) {
       const postId = Number(id);
       
-      // 🛡️ Previne múltiplas chamadas (incluindo StrictMode) para o mesmo ID
+      // Previne múltiplas chamadas para o mesmo ID
       if (lastFetchedId.current !== postId) {
         lastFetchedId.current = postId;
         loadPost(postId);
@@ -40,6 +40,7 @@ export default function PostDetalhesPage() {
     }
   }, [id]);
 
+  // Carrega o post
   async function loadPost(postId: number) {
     try {
       setLoading(true);
@@ -162,7 +163,7 @@ export default function PostDetalhesPage() {
               </div>
             )}
 
-            {/* Quadro de Reações (Barra elegante) */}
+            {/* Quadro de Reações */}
             <FeedbackBox 
               postId={post.post_id} 
               reacoesCount={post.reacoes_count || {}} 

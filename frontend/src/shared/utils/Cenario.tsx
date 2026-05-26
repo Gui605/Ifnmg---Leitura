@@ -4,6 +4,7 @@ import { useTema } from './themeHandler';
 import fundoDia from '../../imagens/fundoLoginDia.jpg';
 import fundoNoite from '../../imagens/fundoLoginNoite.jpg';
 
+
 export function FundoBiblioteca() {
   const { modoEscuro } = useTema();
   return (
@@ -13,8 +14,6 @@ export function FundoBiblioteca() {
         style={{
           backgroundImage: `url(${modoEscuro ? fundoNoite : fundoDia})`,
           filter: 'blur(2px)',
-          // Aumentamos o scale ligeiramente para garantir que o "blur" 
-          // nas bordas não mostre o fundo branco ao redimensionar
           transform: 'scale(1.15)', 
         }}
       />
@@ -40,11 +39,6 @@ export function Particulas() {
     }));
   }, [reduce]);
   return (
-  /* MODIFICAÇÃO 1: 
-     - Trocamos 'w-screen h-screen' por 'inset-0'. 
-     - Adicionamos 'min-h-[100dvh]' para garantir que no mobile 
-       ele cubra a área atrás da barra de endereços.
-  */
   <div className="pointer-events-none fixed inset-0 w-full min-h-[100dvh] overflow-hidden z-20">
     {particles.map((p) => (
       <motion.span
@@ -65,20 +59,12 @@ export function Particulas() {
           ease: 'easeInOut',
         }}
         style={{
-          /* MODIFICAÇÃO 2: 
-             A posição permanece em %, mas o container 'inset-0' 
-             garante que 100% seja o fim real da tela do celular.
-          */
           top: `${p.y}%`,
           left: `${p.x}%`,
           width: p.size,
           height: p.size,
           backgroundColor: modoEscuro ? '#2f9e41' : '#f59e0b',
           boxShadow: modoEscuro ? '0 0 14px #2f9e41' : '0 0 2px #f59e0b',
-          /* MODIFICAÇÃO 3:
-             Garante que o hardware do celular trate as animações 
-             de forma fluida sem 'engasgar' o scroll do formulário.
-          */
           willChange: 'transform, opacity',
         }}
       />
@@ -89,7 +75,6 @@ export function Particulas() {
 
 export function CenarioLogin() {
   return (
-    // Este container "trava" tudo o que visual na janela do navegador
     <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none">
       <FundoBiblioteca />
       <Particulas />

@@ -54,7 +54,6 @@ export default function Header({
 
   const isAuthPage = location.pathname.startsWith('/entrada');
 
-  // Prioriza o perfil do AuthContext para garantir reatividade global
   const perfil = perfilAuth || perfilProp;
 
   const handleBack = () => {
@@ -68,9 +67,9 @@ export default function Header({
   return (
     <header className="sticky top-0 z-50 w-full h-16 bg-[var(--bg-card)]/80 border-b border-[var(--accent-primary)]/10 px-4 md:px-10 flex items-center justify-between shadow-sm backdrop-blur-md">
       <div className="flex items-center gap-8 flex-1">
-        {/* Logo e Voltar (Lado Esquerdo) */}
+        {/* Logo e Voltar  */}
         <div className="flex items-center gap-3">
-          {/* Ícone Campus (Sempre visível) */}
+          {/* Ícone Campus  */}
           <Link to="/feed" className="flex items-center gap-2 hover:scale-105 transition-transform active:scale-95 shrink-0">
             <BookOpen 
               size={28} 
@@ -84,7 +83,7 @@ export default function Header({
             </h1>
           </Link>
 
-          {/* Botão Voltar (À direita do Campus, dinâmico) */}
+          {/* Botão Voltar, à direita do Campus, dinâmico */}
           {!hideBack && (
             <button
               onClick={handleBack}
@@ -104,7 +103,7 @@ export default function Header({
           </button>
         </div>
 
-        {/* BUSCA OU TÍTULO */}
+        {/* Busca ou Título */}
         {showSearch ? (
           <div className="hidden md:flex flex-1 max-w-md">
             <div className="relative w-full">
@@ -129,7 +128,7 @@ export default function Header({
         )}
       </div>
 
-      {/* MENU DIREITA */}
+      {/* Menu Direito */}
       <div className="flex items-center gap-4 md:gap-8">
         {/* Nav Links */}
         {navLinks && (
@@ -146,10 +145,9 @@ export default function Header({
           </nav>
         )}
 
-        {/* Slot de Ações */}
         {actions && <div className="flex items-center gap-3">{actions}</div>}
 
-        {/* Layout Toggle (Holy Grail) */}
+        {/* Layout Toggle */}
         {(toggleLeft || toggleRight) && (
           <div className="relative">
             <button

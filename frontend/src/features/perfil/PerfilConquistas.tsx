@@ -77,7 +77,7 @@ export default function PerfilConquistas({ perfil }: PerfilConquistasProps) {
                   )}
                 </div>
                 
-                {/* Tooltip no hover */}
+                {/* exibir descrição ao passar o mouse */}
                 <div className="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-slate-800 px-2 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100 z-10 font-lexend shadow-xl">
                   {conquista.titulo.descricao || 'Título de Honra'}
                 </div>

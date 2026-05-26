@@ -1,6 +1,6 @@
 import Swal, { SweetAlertOptions, SweetAlertResult } from 'sweetalert2';
 
-// --- Tipagens ---
+// Tipagens
 export type ToastLevel = 'info' | 'success' | 'warning' | 'error';
 
 export type ModalConfig = {
@@ -11,7 +11,7 @@ export type ModalConfig = {
   textoCancelar?: string;
 } & Partial<SweetAlertOptions>;
 
-// --- Configurações compartilhadas ---
+// Configurações compartilhadas
 const getSwal = async () => (await import('sweetalert2')).default;
 
 const BASE = {
@@ -27,10 +27,10 @@ const CLASSES = {
   cancelButton: 'w-full sm:w-auto order-3'
 };
 
-// --- Notificacao Namespace ---
+// Notificacao Namespace
 export const Notificacao = {
   
-  // 1. NON-BLOCKING (TOASTS)
+  // essa notificação é usada para mostrar mensagens rápidas e não bloqueantes
   toast: {
     show: (level: ToastLevel, title: string, text?: string) => {
       return Swal.fire({
@@ -52,7 +52,7 @@ export const Notificacao = {
     info: (title: string, text?: string) => Notificacao.toast.show('info', title, text),
   },
 
-  // 2. BLOCKING (MODALS / DIALOGS)
+  // essa notificação é usada para mostrar mensagens bloqueantes
   modal: {
     sucesso: async (titleOrCfg: string | ModalConfig): Promise<SweetAlertResult> => {
       const swal = await getSwal();

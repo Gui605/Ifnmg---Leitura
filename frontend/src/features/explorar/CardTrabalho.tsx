@@ -43,7 +43,7 @@ export function CardTrabalho({ trabalho }: Props) {
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-6 hover:border-[var(--accent-primary)]/30 transition-all duration-300 group shadow-[var(--shadow-elevation-1)]">
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Thumbnail lateral para Obras */}
+        {/* Imagem lateral para Obras */}
         {isObra && (trabalho as any).imagem_capa && (
           <div className="shrink-0 w-full md:w-32 aspect-[3/4] rounded-xl overflow-hidden border border-[var(--border-color)] shadow-sm">
             <img 

@@ -128,7 +128,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTema() {
   const ctx = useContext(ThemeContext);
   if (!ctx) {
-    // Fallback minimal: compute from storage if provider is missing
     const modo = getTema();
     return {
       modoGeral: modo,

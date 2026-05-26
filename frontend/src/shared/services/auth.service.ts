@@ -17,23 +17,18 @@ export async function fazerLogin(credenciais: LoginCredentials): Promise<AuthRes
   })) as Promise<AuthResponse>;
 }
 
-/**
- * 🛡️ LOGOUT LOCAL (Browser Only)
- * Apenas limpa o token do armazenamento local.
- * Útil para sair de um dispositivo sem invalidar outros.
- */
+//Apenas limpa o token do armazenamento local.
+//Útil para sair de um dispositivo sem invalidar outros.
 export function logoutLocal(): void {
   storageRemove('auth-token');
 }
 
-/**
- * 🛡️ LOGOUT GLOBAL (All Devices)
- * Chama o backend para invalidar o token_version, deslogando de todos os lugares.
- */
+//Chama o backend para invalidar o token_version, deslogando de todos os lugares.
 export async function fazerLogout(): Promise<void> {
   return apiClient.post('/auth/logout-all', {}, z.any(), undefined, () => {}) as unknown as Promise<void>;
 }
 
+//Registra um novo usuário
 export async function registrarUsuario(body: RegisterPayload): Promise<RegisterResponse> {
   const payload = { 
     nome_completo: body.nome_completo,
@@ -49,6 +44,7 @@ export async function registrarUsuario(body: RegisterPayload): Promise<RegisterR
   })) as Promise<RegisterResponse>;
 }
 
+//Solicita recuperação de senha
 export async function solicitarRecuperacao(email: string): Promise<{ status: number; message: string }> {
   return apiClient.post('/auth/solicitar-recuperacao', { email }, RegisterResponseSchema, undefined, (raw, resp) => ({
     status: resp.status,
@@ -56,6 +52,7 @@ export async function solicitarRecuperacao(email: string): Promise<{ status: num
   })) as Promise<RegisterResponse>;
 }
 
+//Redefine a senha
 export async function redefinirSenha(token: string, novaSenha: string): Promise<{ status: number; message: string }> {
   return apiClient.post('/auth/redefinir-senha', { token, novaSenha }, RegisterResponseSchema, undefined, (raw, resp) => ({
     status: resp.status,

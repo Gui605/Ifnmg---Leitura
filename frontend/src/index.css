@@ -4,16 +4,16 @@
 @tailwind utilities;
 
 :root {
-  --color-if-green: #1a8039; /* Verde IFNMG Leitura */
+  --color-if-green: #1a8039; /* Verde IFNMG*/
   --color-if-red: #c53030;
   --color-if-black: #0f172a; /* Slate-900 */
 
-  --bg-primary: #f6f8f6; /* Off-white suave EscrevAí */
+  --bg-primary: #f6f8f6; /* Off-white suave */
   --bg-card: #FFFFFF;    /* Card branco puro para elevação */
-  --text-primary: #0f172a; /* Slate-900 EscrevAí */
-  --text-secondary: #64748b; /* Slate-500 EscrevAí */
+  --text-primary: #0f172a; /* Slate-900 */
+  --text-secondary: #64748b; /* Slate-500 */
   --accent-primary: #1a8039; /* Verde IFNMG */
-  --input-bg: rgba(26, 128, 57, 0.05); /* bg-primary/5 EscrevAí */
+  --input-bg: rgba(26, 128, 57, 0.05); /* bg-primary/5 */
   --border-color: rgba(26, 128, 57, 0.1); /* Borda primária sutil */
   --border-camp: #0f172a;
   --shadow-elevation-1: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
@@ -84,14 +84,14 @@
     font-size: 1.2rem;
     line-height: 1.4;
     opacity: 0;
-    transform: translateY(-8px); /* Começa um pouco acima */
-    animation: fadeInErro 0.4s forwards ease-out; /* O 'forwards' mantém o estado final */
+    transform: translateY(-8px);
+    animation: fadeInErro 0.4s forwards ease-out;
   }
 
   @keyframes fadeInErro {
     to {
       opacity: 1;
-      transform: translateY(0); /* Desce suavemente para a posição correta */
+      transform: translateY(0);
     }
   }
 
