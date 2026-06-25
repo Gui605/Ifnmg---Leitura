@@ -15,7 +15,8 @@ async function listar(requestId) {
     });
     return data;
 }
-// buscarPorId será implementado em painel admin
+/* buscarPorId será implementado em painel admin
+ não está sincronizada por está em faze de desenvolvimento */
 async function buscarPorId(id, requestId) {
     if (!id || isNaN(id))
         throw AppError_1.AppError.badRequest('ID inválido.');
@@ -30,10 +31,8 @@ async function criar(data, requestId) {
     const nomeLimpo = data.nome?.trim();
     if (!nomeLimpo)
         throw AppError_1.AppError.badRequest('O nome da categoria é obrigatório.');
-    // 🛡️ SOLUÇÃO UNIVERSAL: Busca o registro e compara no JavaScript
-    // Isso funciona em SQLite, MySQL e Postgres sem erro de 'mode'
     const existe = await prisma_client_1.default.categorias.findFirst({
-        where: { nome: nomeLimpo } // Busca exata primeiro (mais rápido)
+        where: { nome: nomeLimpo } // Busca exata primeiro para dá resposta mais rápido
     });
     // Se não achou exato, fazemos uma busca de segurança para evitar "TI" e "ti"
     if (!existe) {
@@ -63,7 +62,7 @@ async function atualizar(id, data, requestId) {
     const categoria = await prisma_client_1.default.categorias.findUnique({ where: { categoria_id: id } });
     if (!categoria)
         throw AppError_1.AppError.notFound('Categoria não encontrada.');
-    // Verifica duplicidade manual (Universal)
+    // Verifica duplicidade manual
     const todasExcetoEsta = await prisma_client_1.default.categorias.findMany({
         where: { NOT: { categoria_id: id } },
         select: { nome: true }
@@ -93,7 +92,7 @@ async function excluir(id, requestId) {
     return deleted;
 }
 exports.default = { listar, criar, atualizar, excluir };
-// ====== Fusão de Interesses (Taxonomia) ======
+// Fusão de Interesses
 async function seguirCategoria(perfilId, categoriaId, requestId) {
     const categoriaExiste = await prisma_client_1.default.categorias.findUnique({
         where: { categoria_id: categoriaId },
@@ -162,12 +161,12 @@ async function listarInteresses(perfilId, requestId) {
     return out;
 }
 /**
- * 📈 TRENDING TAGS: Agregação de Categorias em Alta
- * Identifica as categorias com mais posts nos últimos 7 dias.
+ * Categorias em Alta
+ * Identifica as categorias/tags com mais posts nos últimos 7 dias.
  */
 async function buscarCategoriasEmAlta(limite = 5, _requestId) {
     const seteDiasAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    // 1. Agrega contagem de posts por categoria no período
+    // contagem de posts por categoria no período
     const agregacao = await prisma_client_1.default.postsCategorias.groupBy({
         by: ['categoria_id'],
         where: {
@@ -189,13 +188,13 @@ async function buscarCategoriasEmAlta(limite = 5, _requestId) {
     });
     if (agregacao.length === 0)
         return [];
-    // 2. Hidrata com o nome das categorias
+    // Hidrata com o nome das categorias
     const ids = agregacao.map(a => a.categoria_id);
     const categorias = await prisma_client_1.default.categorias.findMany({
         where: { categoria_id: { in: ids } },
         select: { categoria_id: true, nome: true }
     });
-    // 3. Formata o retorno mantendo a ordem da agregação
+    // Formata o retorno mantendo a ordem da agregação
     return agregacao.map(a => {
         const cat = categorias.find(c => c.categoria_id === a.categoria_id);
         return {

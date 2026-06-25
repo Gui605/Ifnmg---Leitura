@@ -28,6 +28,16 @@ export default function EscreverPost() {
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
   const tagInputRef = useRef<HTMLDivElement>(null);
 
+  const navLinks = [
+  { label: 'Início', path: '/feed' },
+  { label: 'Explorar', path: '/explorar' },
+  { label: 'Notificações', path: '/notificacoes' },
+  { label: 'Comunidade', path: '/comunidade' },
+  { label: 'Salvos', path: '/salvos' },
+  { label: 'Minhas Obras', path: '/minhas-obras' },
+  { label: 'Configurações', path: '/configuracoes/perfil' }
+];
+
   const sugestoesIniciais = categorias.slice(0, 3);
   const sugestoesFiltradas = tagBusca.length > 0 
     ? categorias
@@ -138,11 +148,13 @@ export default function EscreverPost() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] font-sans">
-      <Header 
+      <Header
         perfil={perfil}
         showSearch={false}
         onBack={handleCancelar}
         actions={writingHeaderActions}
+        disabledNav={loading}
+        navLinks={navLinks}
       />
 
       <main className="max-w-[1200px] mx-auto px-4 md:px-10 py-10 grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-10">
@@ -170,39 +182,14 @@ export default function EscreverPost() {
           </div>
             
                 
-          {/* Categoria e Tags */}
+          {/* Tags Adicionais */}
           <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-3 shadow-[var(--shadow-elevation-1)] space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Seletor de Categoria */}
-              <div className="space-y-1">
-                <label className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
-                  <GraduationCap size={16} className="text-[var(--accent-primary)]" />
-                  Categoria Principal
-                </label>
-                <select 
-                  className="w-full bg-[var(--input-bg)] border-none rounded-lg px-4 py-1.5 text-sm font-semibold text-[var(--text-secondary)] focus:ring-2 focus:ring-[var(--accent-primary)] transition-all"
-                  onChange={(e) => {
-                    const id = Number(e.target.value);
-                    if (id && !categoriasSelecionadas.includes(id)) {
-                      setCategoriasSelecionadas(prev => [...prev, id]);
-                    }
-                  }}
-                  value=""
-                >
-                  <option value="" disabled>Selecione uma categoria...</option>
-                  {categorias.map(cat => (
-                    <option key={cat.categoria_id} value={cat.categoria_id}>
-                      {cat.nome.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-                  
+            <div className="grid grid-cols-1 gap-4">
               {/* Seletor de Tags com Autocomplete */}
               <div className="space-y-1">
                 <label className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
                   <Hash size={16} className="text-[var(--accent-primary)]" />
-                  Tags Adicionais
+                  Tags do seu Pergaminho
                 </label>
                 <div className="relative" ref={tagInputRef}>
                   <input 
@@ -213,7 +200,7 @@ export default function EscreverPost() {
                       setMostrarSugestoes(true);
                     }}
                     onFocus={() => setMostrarSugestoes(true)}
-                    placeholder="Busque ou crie tags..."
+                    placeholder="Busque ou selecione marcadores acadêmicos..."
                     className="w-full bg-[var(--input-bg)] border-none rounded-lg px-4 py-1.5 text-sm focus:ring-2 focus:ring-[var(--accent-primary)] transition-all"
                   />
 
@@ -226,6 +213,7 @@ export default function EscreverPost() {
                       {sugestoesFiltradas.length > 0 ? (
                         sugestoesFiltradas.map(cat => (
                           <button
+                            type="button"
                             key={cat.categoria_id}
                             onClick={() => {
                               toggleCategoria(cat.categoria_id);

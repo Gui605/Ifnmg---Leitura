@@ -2,7 +2,7 @@
 import { PrismaClient } from '@prisma/client';
 
 /*
- Estende o objeto global do NodeJS para incluir o PrismaClient
+ Estendemos o objeto global do NodeJS para incluir o PrismaClient
  Isso elimina a necessidade de usar @ts-ignore
  estendendo oficialmente o manual de regras do TypeScript.
  */

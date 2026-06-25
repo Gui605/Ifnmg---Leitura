@@ -122,12 +122,31 @@ const checkPendenciasExclusao = tratarAssincrono(async (req: Request, res: Respo
     });
 });
 
-export default { 
-    getPerfilInfo, 
-    getPerfilPublico, 
-    updatePerfil, 
-    alterarSenha, 
-    deletarPerfil, 
+const getSugestoesMembros = tratarAssincrono(async (req: Request, res: Response) => {
+    const perfilId = req.user.perfil_id;
+    const limit = Number(req.query.limit) || 5;
+
+    if (limit < 1 || limit > 20) {
+        throw AppError.badRequest('Limite deve estar entre 1 e 20.');
+    }
+
+    const sugestoes = await perfilService.obterSugestoesMembros(perfilId, limit);
+
+    return res.status(200).json({
+        status: 'success',
+        message: 'Sugestões recuperadas com sucesso.',
+        data: sugestoes,
+        meta: null
+    });
+});
+
+export default {
+    getPerfilInfo,
+    getPerfilPublico,
+    updatePerfil,
+    alterarSenha,
+    deletarPerfil,
     toggleFollow,
-    checkPendenciasExclusao
+    checkPendenciasExclusao,
+    getSugestoesMembros
 };

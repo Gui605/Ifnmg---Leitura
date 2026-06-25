@@ -19,8 +19,17 @@ export default function PerfilPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-
   const isOwnProfile = !id || id === 'me' || Number(id) === userLogado?.perfil_id;
+
+  const navLinks = [
+  { label: 'Início', path: '/feed' },
+  { label: 'Explorar', path: '/explorar' },
+  { label: 'Notificações', path: '/notificacoes' },
+  { label: 'Comunidade', path: '/comunidade' },
+  { label: 'Salvos', path: '/salvos' },
+  { label: 'Minhas Obras', path: '/minhas-obras' },
+  { label: 'Configurações', path: '/configuracoes/perfil' }
+];
 
   useEffect(() => {
     setLoading(true);
@@ -110,18 +119,19 @@ export default function PerfilPage() {
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300">
       <Header 
         perfil={perfil}
-        title={perfil ? `Perfil de ${perfil.nome_user}` : "Perfil"}
+        title={"Perfil"}
         showSearch={false}
-        onBack={() => navigate('/dashboard')}
+        onBack={() => navigate('/feed')}
         actions={profileActions}
         toggleLeft={() => setIsSidebarVisible(!isSidebarVisible)}
         isLeftVisible={isSidebarVisible}
+        navLinks={navLinks}
       />
 
       <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 p-6 lg:flex-row transition-all duration-500">
         {isSidebarVisible && (
           <aside className="flex w-full flex-col gap-6 lg:w-1/3 animate-in fade-in slide-in-from-left-4 duration-300">
-            <PerfilSidebar perfil={perfil} />
+            <PerfilSidebar perfil={perfil} isOwnProfile={isOwnProfile} />
           </aside>
         )}
         <div className={`flex w-full flex-col gap-6 transition-all duration-500 ${isSidebarVisible ? 'lg:w-2/3' : 'w-full max-w-4xl mx-auto'}`}>

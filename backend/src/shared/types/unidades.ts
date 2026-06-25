@@ -1,4 +1,5 @@
-//Lista de unidades/campus do IFNMG
+//backend/src/shared/types/unidades.ts
+//Lista de unidades do IFNMG
 export const LISTA_CAMPUS = [
   "Teste",
   "Almenara", 

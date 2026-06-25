@@ -19,8 +19,7 @@ const REACOES_CONFIG = [
   { tipo: 'LIKE', label: 'FELIZ', icon: ThumbsUp, color: 'text-blue-500', bg: 'bg-blue-500/10' },
   { tipo: 'LOVE', label: 'AMOR', icon: Heart, color: 'text-rose-500', bg: 'bg-rose-500/10' },
   { tipo: 'FIRE', label: 'QUENTE', icon: Flame, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-  { tipo: 'SAD', label: 'TRISTE', icon: Ghost, color: 'text-gray-500', bg: 'bg-gray-500/10' },
-  { tipo: 'BORED', label: 'TÉDIO', icon: Coffee, color: 'text-yellow-600', bg: 'bg-yellow-600/10' }
+  { tipo: 'SAD', label: 'TRISTE', icon: Ghost, color: 'text-gray-500', bg: 'bg-gray-500/10' }
 ];
 
 export default function FeedbackBox({ postId, reacoesCount, minhaReacao, onUpdate }: Props) {

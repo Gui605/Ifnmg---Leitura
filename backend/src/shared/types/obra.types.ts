@@ -20,7 +20,9 @@ export const ObraUpdateSchema = z.object({
     titulo: z.string().min(5).max(200).trim().optional(),
     descricao: z.string().max(1000).optional(),
     imagem_capa: z.string().url().optional().or(z.literal("")),
-    categorias: z.array(z.number().int()).min(1).max(3).optional()
+    categorias: z.array(z.number().int()).min(1).max(3).optional(),
+    status: z.enum(["ANDAMENTO", "CONCLUIDO"]).optional()
+    
 }).strict();
 
 //Inferência automática de tipos
@@ -34,6 +36,7 @@ export const ObraResponseSchema = z.object({
     titulo: z.string(),
     descricao: z.string().nullable(),
     imagem_capa: z.string().nullable(),
+    status: z.enum(["ANDAMENTO", "CONCLUIDO"]).optional(),
     data_criacao: z.date(),
     capitulos: z.array(z.any()).optional(),
     categorias: z.array(z.object({

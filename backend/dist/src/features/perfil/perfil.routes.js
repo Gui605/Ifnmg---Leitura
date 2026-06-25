@@ -10,37 +10,28 @@ const authMiddleware_1 = require("../../shared/middlewares/authMiddleware");
 const optionalAuthMiddleware_1 = require("../../shared/middlewares/optionalAuthMiddleware");
 const validate_middleware_1 = require("../../shared/middlewares/validate.middleware");
 const perfil_types_1 = require("../../shared/types/perfil.types");
-/**
- * 💡 PADRÃO ENTERPRISE EVOLUÍDO:
- * Substituímos listas manuais de strings por Schemas de Validação (Zod).
- * Isso garante que o contrato da API seja a "Única Fonte de Verdade".
- */
 const perfilRoutes = (0, express_1.Router)();
-// 🛡️ Camada 1: Identidade (Token JWT deve ser válido)
+// Identidade: O Token JWT deve ser válido
 perfilRoutes.use(authMiddleware_1.middlewareAutenticacao);
-// --- 👤 Gestão de Informações Pessoais ---
-/** * GET /me -> Recupera dados do perfil logado
- */
+// Gestão de Informações Pessoais
+//GET /me -> Recupera dados do perfil logado
 perfilRoutes.get('/me', perfil_controller_1.default.getPerfilInfo);
-/** * PATCH /me -> Atualização de dados básicos
- * 🛡️ Camada 2: Validação de Contrato (Apenas campos permitidos pelo Zod)
- */
+// PATCH /me -> Atualização de dados básicos
 perfilRoutes.patch('/me', (0, validate_middleware_1.validate)({ body: perfil_types_1.PerfilPatchSchema }), perfil_controller_1.default.updatePerfil);
-// --- 🔐 Operações de Segurança Crítica ---
-/** * PATCH /seguranca/senha -> Troca de credenciais
- * 🛡️ Camada 2: O Zod valida força da senha e se a confirmação é idêntica.
- */
+// Operações de Segurança Crítica
+// PATCH /seguranca/senha -> Troca de credenciais
 perfilRoutes.patch('/seguranca/senha', (0, validate_middleware_1.validate)({ body: perfil_types_1.SenhaPatchSchema }), perfil_controller_1.default.alterarSenha);
-/** * DELETE /seguranca/conta -> Encerramento de conta
- * 🛡️ Camada 2: Exige apenas a senha atual para confirmação.
- */
+// DELETE /seguranca/conta -> Encerramento de conta
+// Exige a senha atual para confirmação.
 perfilRoutes.get('/seguranca/check-exclusao', perfil_controller_1.default.checkPendenciasExclusao);
 perfilRoutes.delete('/seguranca/conta', (0, validate_middleware_1.validate)({ body: perfil_types_1.DeletarContaSchema }), perfil_controller_1.default.deletarPerfil);
-// --- 🤝 Sistema de Seguidores ---
-/** * POST /:id/seguir -> Toggle follow/unfollow
- */
+// Sistema de Seguidores
+// POST /:id/seguir
+// Validação de Contrato (Apenas campo 'id' é permitido)
 perfilRoutes.post('/:id/seguir', perfil_controller_1.default.toggleFollow);
-/** * GET /:id -> Busca perfil público de terceiros
- */
+// GET /sugestoes -> recomendações de perfis
+perfilRoutes.get('/sugestoes', perfil_controller_1.default.getSugestoesMembros);
+// GET /:id -> Busca perfil público de terceiros
+// Validação de Contrato (Apenas campo 'id' é permitido)
 perfilRoutes.get('/:id', optionalAuthMiddleware_1.middlewareAutenticacaoOpcional, perfil_controller_1.default.getPerfilPublico);
 exports.default = perfilRoutes;

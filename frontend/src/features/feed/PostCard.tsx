@@ -2,6 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Book, CheckCircle2, UserX } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
 import { PostResumo } from "../../shared/types/post.types";
 import PostActions from "./PostActions";
 import TagList from "./TagList";
@@ -88,7 +89,7 @@ export default function PostCard({ post, disableProfileLink = false }: Props) {
                 {post.autor_display?.campus && (
                   <>
                     <span className="font-medium whitespace-nowrap text-[var(--accent-primary)]">
-                      {post.autor_display.campus}
+                      IFNMG - Campus {post.autor_display.campus}
                     </span>
                     <span className="opacity-50">•</span>
                   </>
@@ -121,10 +122,10 @@ export default function PostCard({ post, disableProfileLink = false }: Props) {
           </h2>
         </div>
 
-        {/* Conteúdo */}
-        <p className="text-[var(--text-secondary)] leading-relaxed line-clamp-3 mb-4">
-          {post.conteudo}
-        </p>
+        {/* Conteúdo com Suporte a Markdown */}
+        <div className="text-[var(--text-secondary)] text-sm leading-relaxed line-clamp-3 mb-4 markdown-body prose prose-sm max-w-none">
+          <ReactMarkdown>{post.conteudo}</ReactMarkdown>
+        </div>
 
         {/* Tags */}
         <TagList tags={post.tags ?? []} />

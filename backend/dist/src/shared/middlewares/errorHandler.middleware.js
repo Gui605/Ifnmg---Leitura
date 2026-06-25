@@ -33,11 +33,7 @@ const tratadorDeErros = (err, req, res, _) => {
         }
     }
     const reason = http_1.default.STATUS_CODES[statusCode] || 'Error';
-    /**
-     * =================================
-     * AppError (Fonte principal)
-     * =================================
-     */
+    //AppError (Fonte principal)
     if (err instanceof AppError_1.AppError) {
         statusCode = err.statusCode;
         errorCode = err.errorCode;
@@ -53,11 +49,7 @@ const tratadorDeErros = (err, req, res, _) => {
             requestId
         });
     }
-    /**
-     * =================================
-     * JSON Malformado
-     * =================================
-     */
+    //JSON Malformado
     if (err instanceof SyntaxError && baseError && 'body' in baseError) {
         if (baseError.statusCode === 400 || baseError.status === 400) {
             logger_1.logger.warn('JSON malformado', {
@@ -77,11 +69,7 @@ const tratadorDeErros = (err, req, res, _) => {
             });
         }
     }
-    /**
-     * =================================
-     * Payload vazio
-     * =================================
-     */
+    //Payload vazio
     if (baseError) {
         if (baseError.type === 'entity.verify.failed' ||
             baseError.message?.includes('body is required')) {
@@ -100,9 +88,7 @@ const tratadorDeErros = (err, req, res, _) => {
                 requestId
             });
         }
-        /**
-         * Content-Type inválido
-         */
+        //Content-Type inválido
         if (baseError.statusCode === 415 ||
             baseError.message?.includes('Content-Type') ||
             baseError.type === 'charset.unsupported') {
@@ -122,11 +108,7 @@ const tratadorDeErros = (err, req, res, _) => {
             });
         }
     }
-    /**
-     * =================================
-     * Validação Zod
-     * =================================
-     */
+    //Validação Zod
     if (err instanceof zod_1.ZodError) {
         const sourceObj = req.method === 'GET' ? req.query : req.body;
         const getByPath = (obj, path) => {
@@ -145,7 +127,7 @@ const tratadorDeErros = (err, req, res, _) => {
         };
         const details = err.issues.map((issue) => {
             const extended = issue;
-            // FILTRO DE SEGURANÇA: Garante que o path seja apenas string ou number
+            // Filtro de segurança: Garante que o path seja apenas string ou number
             const safePath = issue.path.filter((p) => typeof p === 'string' || typeof p === 'number');
             const raw = getByPath(sourceObj, safePath);
             return {
@@ -166,11 +148,7 @@ const tratadorDeErros = (err, req, res, _) => {
             details
         });
     }
-    /**
-     * =================================
-     * Prisma
-     * =================================
-     */
+    // Prisma
     if (baseError) {
         if (baseError.code === 'P2002') {
             setResponse(409, ErrorCodes_1.ErrorCodes.EMAIL_ALREADY_EXISTS, 'Este e-mail já está em uso.');
@@ -178,9 +156,7 @@ const tratadorDeErros = (err, req, res, _) => {
         if (baseError.code === 'P2025') {
             setResponse(404, ErrorCodes_1.ErrorCodes.RESOURCE_NOT_FOUND, 'Recurso não encontrado.');
         }
-        /**
-         * JWT
-         */
+        // JWT
         if (baseError.name === 'JsonWebTokenError') {
             setResponse(401, ErrorCodes_1.ErrorCodes.UNAUTHENTICATED, 'Token inválido.');
         }
@@ -191,7 +167,7 @@ const tratadorDeErros = (err, req, res, _) => {
     logByStatus(statusCode, req, requestId, errorCode);
     if (statusCode >= 500) {
         message = 'Erro interno do servidor. Tente novamente mais tarde.';
-        // 🔍 DEBUG: Exibe stack trace no terminal durante desenvolvimento
+        //Exibe stack trace no terminal durante desenvolvimento
         if (process.env.NODE_ENV !== 'production') {
             console.error('\x1b[31m%s\x1b[0m', '--- [DEBUG] INTERNAL SERVER ERROR STACK ---');
             console.error(err);
@@ -204,7 +180,8 @@ const tratadorDeErros = (err, req, res, _) => {
         error: reason,
         errorCode,
         message,
-        // 🔍 DEBUG: Envia stack trace no payload para facilitar a vida do desenvolvedor (APENAS EM DEV)
+        //Envia sequencia de função chamadas até algum erro ocorrer
+        //para facilitar em desenvolvimento
         ...(process.env.NODE_ENV !== 'production' && { stack: err instanceof Error ? err.stack : String(err) }),
         path: req.originalUrl,
         requestId

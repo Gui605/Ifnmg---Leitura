@@ -2,11 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TokenPayloadSchema = exports.JwtMetaSchema = exports.RedefinirSenhaSchema = exports.SolicitarRecuperacaoSchema = exports.LoginSchema = exports.RegistrarSchema = void 0;
 const zod_1 = require("zod");
-const unidades_1 = require("../constants/unidades");
+const unidades_1 = require("./unidades");
 /**
- * 🛡️ SCHEMA DE REGISTRO
- * Implementa validações rigorosas de formato e segurança.
- * O .strict() impede a injeção de campos como 'is_admin' ou 'cadastro_confirmado'.
+ Schema de Registro de Usuário
  */
 exports.RegistrarSchema = zod_1.z.object({
     nome_user: zod_1.z.string()
@@ -36,7 +34,7 @@ exports.RegistrarSchema = zod_1.z.object({
     }),
 }).strict();
 /**
- * 🛡️ SCHEMA DE LOGIN
+ Schema de Login de Usuário
  */
 exports.LoginSchema = zod_1.z.object({
     email: zod_1.z.string().email("E-mail inválido").trim(),
@@ -57,8 +55,8 @@ exports.RedefinirSenhaSchema = zod_1.z.object({
         .regex(/[A-Z]/, "A senha deve conter ao menos uma letra maiúscula")
         .regex(/[0-9]/, "A senha deve conter ao menos um número"),
 }).strict();
-/**
- * 🛡️ SCHEMA DE METADADOS JWT (iat, exp)
+/*
+ Schema de Metadados de JWT (iat, exp)
  */
 exports.JwtMetaSchema = zod_1.z.object({
     iat: zod_1.z.number().optional(),

@@ -16,7 +16,7 @@ function formatUptime(seconds) {
 }
 const checkHealth = async (req, res) => {
     const requestId = req.requestId || 'unknown';
-    // 1. Diagnóstico do Banco de Dados (Deep Check)
+    // Diagnóstico do Banco de Dados
     let dbStatus = 'UP';
     try {
         // Executa query leve para testar conexão real
@@ -32,9 +32,9 @@ const checkHealth = async (req, res) => {
             error: error.message
         });
     }
-    // 2. Diagnóstico do Email
+    // Diagnóstico do Email
     const emailStatus = await (0, serviceEmail_1.diagnosticarSMTP)();
-    // 3. Consolidação do Status Geral
+    // Consolidação do Status Geral
     let globalStatus = 'UP';
     if (dbStatus === 'DOWN') {
         globalStatus = 'DOWN'; // DB é crítico

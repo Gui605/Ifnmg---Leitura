@@ -74,7 +74,7 @@ export default function CriarObra() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      <Header title="Nova Obra" showSearch={false} />
+      <Header title="Nova Obra" showSearch={false} hideMobileMenu={true} />
 
       <div className="max-w-3xl mx-auto p-6 space-y-8">
         <div className="space-y-1">

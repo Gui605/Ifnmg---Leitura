@@ -80,12 +80,16 @@ export default function Feed() {
     const handleScroll = () => {
       if (loading || loadingMore || !hasMore) return;
 
-      const scrollHeight = document.documentElement.scrollHeight;
-      const scrollTop = document.documentElement.scrollTop;
-      const clientHeight = document.documentElement.clientHeight;
+      // Abordagem cross-browser resiliente a viewports móveis
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop;
+      const windowHeight = window.innerHeight;
+      const docHeight = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight
+      );
 
-      // Se chegar a 100px do fim da página, carrega mais
-      if (scrollTop + clientHeight >= scrollHeight - 100) {
+      // Dispara o carregamento quando o usuário rolar até 85% da página
+      if (scrollTop + windowHeight >= docHeight - 250) {
         carregarMais();
       }
     };
@@ -118,9 +122,12 @@ export default function Feed() {
         : 'md:grid-cols-[1fr,320px]';
 
   const navLinks = [
-    { label: 'Início', path: '/feed' },
     { label: 'Explorar', path: '/explorar' },
-    { label: 'Comunidade', path: '/comunidade' }
+    { label: 'Notificações', path: '/notificacoes' },
+    { label: 'Comunidade', path: '/comunidade' },
+    { label: 'Salvos', path: '/salvos' },
+    { label: 'Minhas Obras', path: '/minhas-obras' },
+    { label: 'Configurações', path: '/configuracoes/perfil' }
   ];
 
   const headerActions = (
@@ -162,9 +169,9 @@ export default function Feed() {
               <nav className="flex flex-col gap-1">
                 <SidebarLink icon={<Home size={20} strokeWidth={2} />} label="Feed" active />
                 <SidebarLink icon={<Compass size={20} strokeWidth={2} />} label="Explorar" to="/explorar" />
-                <SidebarLink icon={<Bell size={20} strokeWidth={2} />} label="Notificações" to="/notificacoes" />
-                <SidebarLink icon={<UsersIcon size={20} strokeWidth={2} />} label="Comunidade" to="/comunidade" />
-                <SidebarLink icon={<Bookmark size={20} strokeWidth={2} />} label="Salvos" to="/salvos" />
+                <SidebarLink icon={<Bell size={20} strokeWidth={2} />} label="Notificações" to="/notificacoes" disabled={true} />
+                <SidebarLink icon={<UsersIcon size={20} strokeWidth={2} />} label="Comunidade" to="/comunidade" disabled={true} />
+                <SidebarLink icon={<Bookmark size={20} strokeWidth={2} />} label="Salvos" to="/salvos" disabled={true} />
                 <SidebarLink icon={<BookOpen size={20} strokeWidth={2} />} label="Minhas Obras" to="/minhas-obras" />
                 <SidebarLink 
                   icon={<Settings size={20} strokeWidth={2} />} 
@@ -218,7 +225,19 @@ export default function Feed() {
               <PostCard key={post.post_id} post={post} />
             ))}
 
-            {/* Loading More Indicator */}
+            {/* Botão de contingência para rolagem manual */}
+            {!loading && !loadingMore && hasMore && posts.length > 0 && (
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={() => carregarMais()}
+                  className="bg-[var(--bg-card)] text-[var(--accent-primary)] border border-[var(--accent-primary)]/30 hover:bg-[var(--accent-primary)]/10 font-bold font-lexend text-sm px-6 py-2.5 rounded-xl transition-all duration-300 shadow-sm w-full sm:w-auto"
+                >
+                  Carregar mais pergaminhos
+                </button>
+              </div>
+            )}
+
+           
             {loadingMore && (
               <div className="flex justify-center p-4">
                 <div className="w-6 h-6 border-2 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin" />
@@ -252,19 +271,22 @@ function SidebarLink({
   label,
   to,
   active = false,
-  onClick
+  onClick,
+  disabled = false
 }: {
   icon: React.ReactNode;
   label: string;
   to?: string;
   active?: boolean;
   onClick?: () => void;
+  disabled?: boolean;
 }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = active || (to && location.pathname === to);
 
   const handleClick = () => {
+    if (disabled) return; 
     if (onClick) onClick();
     if (to) navigate(to);
   };
@@ -272,11 +294,15 @@ function SidebarLink({
   return (
     <button
       onClick={handleClick}
+      disabled={disabled}
+      style={{ cursor: disabled ? 'not-allowed' : 'pointer' }} 
       className={`
       flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 w-full
-      ${isActive 
-        ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] font-bold' 
-        : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)]'}
+      ${disabled 
+        ? 'opacity-45 text-[var(--text-secondary)] select-none' 
+        : isActive 
+          ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] font-bold' 
+          : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)]'}
     `}
     >
       <span className={isActive ? 'text-[var(--accent-primary)]' : ''}>

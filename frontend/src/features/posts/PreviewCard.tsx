@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import PostActions from "../feed/PostActions";
 import TagList from "../feed/TagList";
 import { Info, Eye, EyeOff } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
 
 interface PreviewProps {
   titulo: string;
@@ -44,14 +45,14 @@ export default function PreviewCard({ titulo, conteudo, autor, campus, tags }: P
                   {autor}
                 </p>
                 <div className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
-                  {campus && (
+                  {campus ? (
                     <>
                       <span className="font-medium text-[var(--accent-primary)] whitespace-nowrap">
-                        IFNMG - {campus}
+                        IFNMG - Campus {campus}
                       </span>
                       <span className="opacity-50">•</span>
                     </>
-                  )}
+                  ) : null}
                   <span className="whitespace-nowrap italic">Agora mesmo</span>
                 </div>
               </div>
@@ -66,9 +67,13 @@ export default function PreviewCard({ titulo, conteudo, autor, campus, tags }: P
             {tags.length > 0 && <TagList tags={tags} />}
             
             {/* Conteúdo */}
-            <div className="text-[var(--text-primary)] text-sm leading-relaxed line-clamp-6 whitespace-pre-wrap">
-              {conteudo || "O conteúdo do seu pergaminho aparecerá aqui enquanto você escreve..."}
-            </div>
+            <div className="text-[var(--text-primary)] text-sm leading-relaxed line-clamp-6 markdown-body">
+            {conteudo ? (
+              <ReactMarkdown>{conteudo}</ReactMarkdown>
+            ) : (
+              "O conteúdo do seu pergaminho aparecerá aqui enquanto você escreve..."
+            )}
+          </div>
           </div>
           
           {/* Ações (Desabilitadas na prévia) */}

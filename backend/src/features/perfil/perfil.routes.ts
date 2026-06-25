@@ -60,6 +60,12 @@ perfilRoutes.post(
     perfilController.toggleFollow
 );
 
+// GET /sugestoes -> recomendações de perfis
+perfilRoutes.get(
+    '/sugestoes',
+    perfilController.getSugestoesMembros
+);
+
 // GET /:id -> Busca perfil público de terceiros
 // Validação de Contrato (Apenas campo 'id' é permitido)
 perfilRoutes.get(

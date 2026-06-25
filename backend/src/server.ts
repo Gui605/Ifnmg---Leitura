@@ -37,7 +37,7 @@ app.set('trust proxy', 1);
 // Rastreamento deve ser o primeiro para logar tudo
 app.use(middlewareRequestId);
 
-// CORS deve vir antes de qualquer middleware que possa bloquear a requisição (como Helmet ou Security)
+// CORS deve vir antes de qualquer middleware que possa bloquear a requisiçã
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

@@ -284,28 +284,25 @@ async function reagirPost(perfilId: number, postId: number, tipo: 'LIKE' | 'LOVE
   if (!post) throw AppError.notFound('Publicação não encontrada.');
 
   await prisma.$transaction(async (tx) => {
-    const existente = await tx.reacoes.findUnique({
-      where: { perfil_id_post_id_tipo: { perfil_id: perfilId, post_id: postId, tipo } }
+    const reacaoExistente = await tx.reacoes.findFirst({ 
+      where: { perfil_id: perfilId, post_id: postId } 
     });
 
-    if (existente) {
-      throw AppError.badRequest('Reação já registrada.');
-    }
+    if (reacaoExistente) {
+      if (reacaoExistente.tipo === tipo) {
+        // CASO 1: Mesmo tipo - remover reação
+        await tx.reacoes.delete({ where: { reacao_id: reacaoExistente.reacao_id } });
+      } else {
+        // CASO 2: Tipo diferente - substituir reação
+        await tx.reacoes.delete({ where: { reacao_id: reacaoExistente.reacao_id } });
+        await tx.reacoes.create({ data: { perfil_id: perfilId, post_id: postId, tipo } });
+      }
+    } else {
+      // CASO 3: Sem reação anterior - criar nova
+      await tx.reacoes.create({ data: { perfil_id: perfilId, post_id: postId, tipo } });
 
-    // Apenas reações positivas geram XP para o autor do post
-    const reacoesPositivas = ['LIKE', 'LOVE', 'FIRE'];
-    if (reacoesPositivas.includes(tipo) && post.autor_id) {
-      await perfilService.processarGanhoXP(
-        post.autor_id, 
-        'REACAO_RECEBIDA', 
-        requestId, 
-        post.data_criacao
-      );
+      
     }
-
-    await tx.reacoes.create({
-      data: { perfil_id: perfilId, post_id: postId, tipo }
-    });
   });
 
   await registrarLog(perfilId, 'POST_REACTED', { post_id: postId, tipo }, requestId);

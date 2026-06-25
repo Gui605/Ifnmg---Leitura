@@ -24,11 +24,11 @@ const middlewareAutenticacao = async (req, res, next) => {
         if (!usuario || typeof decoded.token_version !== 'number' || usuario.token_version !== decoded.token_version) {
             return next(AppError_1.AppError.unauthorized('Sessão revogada.'));
         }
-        /**
-         * 🛡️ INJEÇÃO DE IDENTIDADE (IFNMG)
-         * Populamos req.user com o objeto AuthUser completo e tipado.
-         * Isso remove a necessidade de req.usuario_id/perfil_id avulsos.
-         */
+        /*
+        Injeção de Identidade (IFNMG)
+        Popular req.user com o objeto AuthUser completo e tipado
+        remove a necessidade de req.user.
+        */
         req.user = {
             usuario_id: decoded.usuario_id,
             perfil_id: decoded.perfil_id,

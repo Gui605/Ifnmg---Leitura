@@ -46,7 +46,6 @@ const crypto = __importStar(require("crypto"));
 const logService_1 = require("../../shared/utils/logService");
 const logger_1 = require("../../shared/utils/logger");
 /**
- * 🛡️ PADRÃO ENTERPRISE: Camada de Serviço de Autenticação
  * Sincronizado com ErrorCodes e Factory Methods.
  */
 async function registrarUsuario(data, requestId) {
@@ -58,7 +57,7 @@ async function registrarUsuario(data, requestId) {
     let novoUsuarioId;
     try {
         const emailNormalizado = email.toLowerCase().trim();
-        // 🔍 NOVO: Verificação profunda do estado do usuário existente
+        // Verificação profunda do estado do usuário existente
         const existente = await prisma_client_1.default.usuarios.findUnique({
             where: { email: emailNormalizado },
             select: {
@@ -102,7 +101,7 @@ async function registrarUsuario(data, requestId) {
             logger_1.logger.info('Link de ativação expirado, reenviando e-mail', { evento: 'AUTH_REGISTRATION_LINK_RENEWED', email: emailNormalizado, requestId });
             throw AppError_1.AppError.gone('Vimos que seu link expirou. Enviamos uma nova chave de ativação.');
         }
-        // 🛡️ LÓGICA ORIGINAL: Transação para novos registros
+        // Transação para novos registros
         await prisma_client_1.default.$transaction(async (tx) => {
             const novoPerfil = await tx.perfis.create({
                 data: {
@@ -112,11 +111,6 @@ async function registrarUsuario(data, requestId) {
                 }
             });
             novoPerfilId = novoPerfil.perfil_id;
-            /**
-             * 🛡️ BLINDAGEM DE PRIVILÉGIOS (Mass Assignment)
-             * Mesmo com Zod .strict(), forçamos 'is_admin: false' manualmente.
-             * Isso impede que qualquer injeção no payload eleve privilégios no banco.
-             */
             await tx.usuarios.create({
                 data: {
                     email: emailNormalizado,
@@ -128,7 +122,7 @@ async function registrarUsuario(data, requestId) {
                     nome_completo: nome_completo.trim(),
                     nome_campus: nome_campus.trim(),
                     data_nascimento: new Date(data_nascimento),
-                    is_admin: false, // 🔒 Hardened: Nunca permite admin no registro público
+                    is_admin: false, // Isso impede que qualquer injeção no payload eleve privilégios no banco
                 },
             });
             const usuarioCriado = await tx.usuarios.findFirst({
@@ -139,7 +133,6 @@ async function registrarUsuario(data, requestId) {
         });
     }
     catch (error) {
-        // Preserva o tratamento de erro original para restrições de banco (P2002)
         if (error.code === 'P2002') {
             logger_1.logger.warn('Tentativa de cadastro com dados duplicados (P2002)', { evento: 'AUTH_REGISTRATION_ATTEMPT_DUPLICATE_P2002', requestId });
             await (0, hashing_1.gerarHashSenha)(senha);
@@ -148,13 +141,12 @@ async function registrarUsuario(data, requestId) {
         }
         throw error;
     }
-    // Disparo de e-mail para NOVOS cadastros (fora do bloco catch/if)
+    // Disparo de e-mail para NOVOS cadastros
     setImmediate(() => { (0, serviceEmail_1.enviarEmailComToken)(email, tokenVerificacao, 'verificacao').catch(() => { }); });
     return `Cadastro realizado! Enviamos um link de ativação para ${email}.`;
 }
 async function logarUsuario(email, senha, requestId) {
     const user = await prisma_client_1.default.usuarios.findUnique({ where: { email } });
-    // 🛡️ Segurança: Usamos Factory Method para 401
     if (!user) {
         throw AppError_1.AppError.unauthorized('E-mail ou senha incorretos.');
     }
@@ -168,10 +160,10 @@ async function logarUsuario(email, senha, requestId) {
                 data: { token_verificacao: novoToken, expiracao_pendente: novaExp },
             });
             setImmediate(() => { (0, serviceEmail_1.enviarEmailComToken)(user.email, novoToken, 'verificacao').catch(() => { }); });
-            // 🛡️ 410 Gone: Lançamento manual para casos específicos de expiração
+            // 410: Lançamento manual para casos específicos de expiração
             throw new AppError_1.AppError(`Seu link de ativação expirou. Enviamos um novo para ${user.email}.`, 410, ErrorCodes_1.ErrorCodes.TOKEN_EXPIRED);
         }
-        // 🛡️ 403 Forbidden: Conta inativa
+        // 03: Conta inativa
         throw new AppError_1.AppError('Sua conta ainda não foi ativada. Verifique seu e-mail para confirmar o cadastro.', 403, ErrorCodes_1.ErrorCodes.FORBIDDEN);
     }
     const senhaValida = await (0, hashing_1.compararSenha)(senha, user.password_hash);

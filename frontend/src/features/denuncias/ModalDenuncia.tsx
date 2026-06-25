@@ -29,7 +29,7 @@ export function ModalDenuncia({ postId, onClose }: ModalDenunciaProps) {
     try {
       await registrarDenuncia(postId, {
         denuncia_tipo: tipoSelecionado,
-        descricao: descricao.trim() || undefined
+        descricao: descricao.trim() || ""
       });
       Notificacao.toast.sucesso("Denúncia enviada para análise.", "Obrigado por ajudar a manter a comunidade segura.");
       onClose();

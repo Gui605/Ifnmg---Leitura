@@ -12,6 +12,7 @@ import {
   EyeOff,
   UserX
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { getPostById, votarPost } from '../../shared/services/post.service';
 import { PostResponse } from '../../shared/types/post.types';
 import { Notificacao } from '../../shared/utils/Notificacao';
@@ -28,6 +29,16 @@ export default function PostDetalhesPage() {
   const [votos, setVotos] = useState({ up: 0, down: 0 });
   const lastFetchedId = useRef<number | null>(null);
 
+  const navLinks = [
+  { label: 'Início', path: '/feed' },
+  { label: 'Explorar', path: '/explorar' },
+  { label: 'Notificações', path: '/notificacoes' },
+  { label: 'Comunidade', path: '/comunidade' },
+  { label: 'Salvos', path: '/salvos' },
+  { label: 'Minhas Obras', path: '/minhas-obras' },
+  { label: 'Configurações', path: '/configuracoes/perfil' }
+];
+
   useEffect(() => {
     if (id) {
       const postId = Number(id);
@@ -41,18 +52,18 @@ export default function PostDetalhesPage() {
   }, [id]);
 
   // Carrega o post
-  async function loadPost(postId: number) {
+  async function loadPost(postId: number, silent = false) {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const data = await getPostById(postId);
       setPost(data);
       setVotos({ up: data.total_upvotes, down: data.total_downvotes });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!silent) window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       Notificacao.toast.erro('Publicação não encontrada.');
       navigate('/');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
@@ -84,6 +95,7 @@ export default function PostDetalhesPage() {
       <Header 
         title={post.titulo}
         showSearch={false}
+        navLinks={navLinks}
       />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
@@ -111,7 +123,11 @@ export default function PostDetalhesPage() {
                 </div>
                 <div>
                   <p className="text-sm font-bold">{post.autor_display?.nome}</p>
-                  <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider">{post.autor_display?.campus}</p>
+                  {post.autor_display?.campus ? (
+                    <p className="text-[10px] text-[var(--accent-primary)] font-semibold uppercase tracking-wider">
+                      IFNMG - Campus {post.autor_display.campus}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
@@ -124,9 +140,11 @@ export default function PostDetalhesPage() {
           </div>
 
           {/* Conteúdo da Leitura */}
-          <article className="px-8 md:px-16 py-12 md:py-16">
-            <div className="text-xl leading-[1.8] font-serif text-[var(--text-primary)] whitespace-pre-wrap selection:bg-[var(--accent-primary)]/20 text-justify break-words overflow-wrap-anywhere">
-              {post.conteudo}
+            <article className="px-8 md:px-16 py-12 md:py-16">
+            <div className="text-xl leading-[1.8] font-serif text-[var(--text-primary)] text-justify break-words overflow-wrap-anywhere markdown-body prose dark:prose-invert max-w-none">
+              <ReactMarkdown>
+                {post.conteudo ? post.conteudo : ""}
+              </ReactMarkdown>
             </div>
           </article>
 
@@ -168,7 +186,7 @@ export default function PostDetalhesPage() {
               postId={post.post_id} 
               reacoesCount={post.reacoes_count || {}} 
               minhaReacao={post.minha_reacao || null}
-              onUpdate={() => loadPost(post.post_id)}
+              onUpdate={() => loadPost(post.post_id, true)}
             />
           </footer>
         </div>
@@ -185,7 +203,7 @@ export default function PostDetalhesPage() {
             </h2>
           </div>
 
-          <ComentarioInput postId={post.post_id} onSuccess={() => loadPost(post.post_id)} />
+          <ComentarioInput postId={post.post_id} onSuccess={() => loadPost(post.post_id, true)} />
 
           <div className="space-y-6">
             {post.comentarios?.map((comentario: any) => (
@@ -193,7 +211,7 @@ export default function PostDetalhesPage() {
                 key={comentario.comentario_id} 
                 comentario={comentario} 
                 postId={post.post_id}
-                onUpdate={() => loadPost(post.post_id)}
+                onUpdate={() => loadPost(post.post_id, true)}
               />
             ))}
           </div>

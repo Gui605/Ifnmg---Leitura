@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+//backend/src/features/denuncias/denuncias.service.ts
 const prisma_client_1 = __importDefault(require("../../shared/prisma/prisma.client"));
 const AppError_1 = require("../../shared/utils/AppError");
 const logService_1 = require("../../shared/utils/logService");
@@ -20,14 +21,23 @@ async function registrarDenuncia(perfilId, postId, data, requestId) {
         });
         if (!post)
             throw AppError_1.AppError.notFound('Publicação não encontrada.');
+        //desabilitar snapshot por enquanto e colocar uma verção com string simples
+        //Para armazenar textos longos, a coluna
+        // precisa ser do tipo Text ou Json no schema.prisma
+        /*const snapshot = JSON.stringify({
+          post_id: post.post_id,
+          titulo: post.titulo,
+          conteudo: post.conteudo,
+          autor_id: post.autor_id,
+          total_upvotes: post.total_upvotes,
+          total_downvotes: post.total_downvotes,
+          total_comentarios: post.total_comentarios
+        });*/
         const snapshot = JSON.stringify({
             post_id: post.post_id,
-            titulo: post.titulo,
-            conteudo: post.conteudo,
-            autor_id: post.autor_id,
-            total_upvotes: post.total_upvotes,
-            total_downvotes: post.total_downvotes,
-            total_comentarios: post.total_comentarios
+            titulo: post.titulo.substring(0, 50),
+            conteudo: post.conteudo ? post.conteudo.substring(0, 100) + '...' : "",
+            autor_id: post.autor_id
         });
         const created = await tx.denuncias.create({
             data: {

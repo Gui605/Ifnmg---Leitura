@@ -10,12 +10,10 @@ const createRateLimiter = (maxRequests, windowMinutes, customMessage, useIdentit
         max: maxRequests,
         standardHeaders: true,
         legacyHeaders: false,
-        // 3. Atualize o keyGenerator para aceitar 'res' e usar o helper
         keyGenerator: (req, res) => {
             if (useIdentity && req.perfil_id) {
                 return String(req.perfil_id);
             }
-            // O 'as any' resolve o conflito de tipos entre bibliotecas diferentes
             return (0, express_rate_limit_1.ipKeyGenerator)(req, res);
         },
         handler: (req, res, next) => {
@@ -23,20 +21,17 @@ const createRateLimiter = (maxRequests, windowMinutes, customMessage, useIdentit
         },
     });
 };
-// --- Modelos de Limitadores Reutilizáveis ---
-/**
- * 🛡️ 1. authActionLimiter: Proteção para Registro e Recuperação
- * Bloqueia ataques de inundação de e-mail e criação massiva de contas (5 tentativas por 15min).
+// Modelos de Limitadores Reutilizáveis
+/*Limitador de registro: Proteção para Registro e Recuperação
+ Bloqueia ataques de inundação de e-mail e criação massiva de contas 5 tentativas por 15min.
  */
 exports.limitadorRegistro = createRateLimiter(20, 15, 'Muitas tentativas de registro detectadas. Tente novamente mais tarde.', false);
-/**
- * 🛡️ 2. loginLimiter: Proteção contra Força Bruta (Brute Force)
- * Bloqueia tentativas sequenciais de adivinhação de senhas (10 tentativas por 5min).
+/*Limitador de login: Proteção contra Força Bruta
+ Bloqueia tentativas sequenciais de adivinhação de senhas 10 tentativas por 5min.
  */
 exports.limitadorLogin = createRateLimiter(15, 5, 'Limite de tentativas de login excedido. Tente novamente em 5 minutos.', false);
-/**
- * 🛡️ 3. limitadorSaude: Proteção para Endpoint de Health Check
- * Permite monitoramento frequente (30 req/min) mas bloqueia abusos.
+/*Limitador de saúde: Proteção para Endpoint de Health Check
+ Permite monitoramento frequente (30 req/min) mas bloqueia abusos.
  */
 exports.limitadorSaude = createRateLimiter(30, 1, 'Muitas verificações de saúde. Reduza a frequência do monitoramento.', false);
 exports.limitadorEngajamento = createRateLimiter(10, 1, 'Muitas ações de engajamento em curto intervalo. Aguarde um momento.', true);

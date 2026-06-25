@@ -55,5 +55,36 @@ export async function checkPendenciasExclusao(): Promise<PendenciasExclusao> {
 
 //Define o título ativo do usuário
 export async function setTituloAtivo(tituloId: number): Promise<PerfilResumo> {
-  return apiClient.patch(`/perfil/titulos/${tituloId}/ativar`, {}, PerfilResumoSchema, undefined, (raw) => raw?.data) as Promise<PerfilResumo>;
+  return apiClient.patch(
+    `/perfil/titulos/${tituloId}/ativar`, 
+    {}, 
+    PerfilResumoSchema, 
+    undefined, 
+    (raw) => raw?.data
+  ) as Promise<PerfilResumo>;
+}
+
+export interface SugestaoPerfil {
+  perfil_id: number;
+  nome_user: string;
+  level: number;
+}
+
+// Busca sugestões de perfis para seguir com base em afinidades taxonômicas e interesses compartilhados
+export async function getSugestoesMembros(limit = 5): Promise<SugestaoPerfil[]> {
+  const schema = z.array(
+    z.object({
+      perfil_id: z.number(),
+      nome_user: z.string(),
+      level: z.number()
+    })
+  );
+
+  // Envia o parâmetro de limite encapsulado corretamente em query parameters (params)
+  return apiClient.get(
+    '/perfil/sugestoes', 
+    schema, 
+    { params: { limit } }, 
+    (raw) => raw?.data
+  ) as Promise<SugestaoPerfil[]>;
 }

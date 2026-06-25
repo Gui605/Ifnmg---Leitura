@@ -5,9 +5,10 @@ import { ProgressBarXP, getPatentePorNivel } from '../../shared/components/Progr
 
 interface PerfilSidebarProps {
   perfil: PerfilResumo | null;
+  isOwnProfile?: boolean;
 }
 
-export default function PerfilSidebar({ perfil }: PerfilSidebarProps) {
+export default function PerfilSidebar({ perfil, isOwnProfile = false }: PerfilSidebarProps) {
   if (!perfil) return null; 
 
   const patente = perfil.titulo_ativo || getPatentePorNivel(perfil.level);
@@ -39,14 +40,22 @@ export default function PerfilSidebar({ perfil }: PerfilSidebarProps) {
           </div>
 
           <div className="mt-6 flex w-full flex-col gap-3">
-            <button className="w-full rounded-lg bg-[var(--accent-primary)] py-2 font-bold text-white transition-opacity hover:opacity-90 font-lexend shadow-sm active:scale-[0.98]">Editar Perfil</button>
+            {/* O botão de editar perfil só renderiza se for o perfil do próprio usuário logado */}
+            {isOwnProfile && (
+              <button className="w-full rounded-lg bg-[var(--accent-primary)] py-2 font-bold text-white transition-opacity hover:opacity-90 font-lexend shadow-sm active:scale-[0.98]">
+                Editar Perfil
+              </button>
+            )}
+            
             <div className="flex justify-center gap-4 text-[var(--text-secondary)]">
               <Globe size={18} strokeWidth={1.5} className="cursor-pointer hover:text-[var(--accent-primary)] transition-colors" />
               <School size={18} strokeWidth={1.5} className="cursor-pointer hover:text-[var(--accent-primary)] transition-colors" />
               <Mail size={18} strokeWidth={1.5} className="cursor-pointer hover:text-[var(--accent-primary)] transition-colors" />
             </div>
           </div>
+
         </div>
+
         {perfil.bio && (
           <div className="mt-8 border-t border-[var(--border-color)]/10 pt-6">
             <h3 className="font-bold mb-3 font-lexend">Sobre</h3>

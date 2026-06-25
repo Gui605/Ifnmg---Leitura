@@ -20,6 +20,16 @@ export function ExplorarPage() {
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
 
+  const navLinks = [
+  { label: 'Início', path: '/feed' },
+  { label: 'Explorar', path: '/explorar' },
+  { label: 'Notificações', path: '/notificacoes' },
+  { label: 'Comunidade', path: '/comunidade' },
+  { label: 'Salvos', path: '/salvos' },
+  { label: 'Minhas Obras', path: '/minhas-obras' },
+  { label: 'Configurações', path: '/configuracoes/perfil' }
+];
+
   const [filtros, setFiltros] = useState<FiltrosBusca>({
     query: searchParams.get('q') || '',
     curso: searchParams.get('curso') || '',
@@ -77,6 +87,7 @@ export function ExplorarPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
       <Header 
+        navLinks={navLinks}
         showSearch={false} 
         actions={
           <button 

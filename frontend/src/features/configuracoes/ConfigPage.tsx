@@ -9,6 +9,16 @@ export function ConfigPage() {
   const { logout, perfil } = useAuth();
 
   const navLinks = [
+  { label: 'Início', path: '/feed' },
+  { label: 'Explorar', path: '/explorar' },
+  { label: 'Notificações', path: '/notificacoes' },
+  { label: 'Comunidade', path: '/comunidade' },
+  { label: 'Salvos', path: '/salvos' },
+  { label: 'Minhas Obras', path: '/minhas-obras' },
+  { label: 'Configurações', path: '/configuracoes/perfil' }
+];
+
+  const Links = [
     { to: '/configuracoes/perfil', icon: <User size={20} strokeWidth={1.5} />, label: 'Perfil Público' },
     { to: '/configuracoes/seguranca', icon: <Shield size={20} strokeWidth={1.5} />, label: 'Segurança' },
     { to: '/configuracoes/privacidade', icon: <Lock size={20} strokeWidth={1.5} />, label: 'Privacidade' },
@@ -20,6 +30,7 @@ export function ConfigPage() {
         title="Configurações"
         onBack={() => navigate(-1)}
         showSearch={false}
+        navLinks={navLinks}
       />
       <main className="flex flex-1 justify-center py-8 px-4 md:px-10">
         <div className="flex flex-col md:flex-row max-w-6xl flex-1 gap-8">
@@ -31,7 +42,7 @@ export function ConfigPage() {
               <p className="text-[var(--accent-primary)] text-sm font-medium">Conta e Segurança</p>
             </div>
             <nav className="flex flex-col gap-1">
-              {navLinks.map((link) => (
+              {Links.map((link) => (
                 <NavLink
                   key={link.to}
                   to={link.to}

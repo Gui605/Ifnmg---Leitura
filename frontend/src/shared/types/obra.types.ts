@@ -21,7 +21,8 @@ export const ObraUpdateSchema = z.object({
   titulo: z.string().min(5).max(200).trim().optional(),
   descricao: z.string().max(1000).optional(),
   imagem_capa: z.string().url().optional().or(z.literal("")),
-  categorias: z.array(z.number().int()).min(1).max(3).optional()
+  categorias: z.array(z.number().int()).min(1).max(3).optional(),
+  status: z.enum(["ANDAMENTO", "CONCLUIDO"]).optional()
 }).strict();
 
 
@@ -36,6 +37,7 @@ export const ObraResponseSchema = z.object({
   descricao: z.string().nullable(),
   imagem_capa: z.string().nullable(),
   data_criacao: z.string().or(z.date()),
+  status: z.enum(["ANDAMENTO", "CONCLUIDO"]).optional(),
   total_visualizacoes: z.number().optional(),
   capitulos: z.array(z.any()).optional(), // Usamos any para evitar dependência circular complexa no schema
   _count: z.object({

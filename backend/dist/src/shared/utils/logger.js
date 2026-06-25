@@ -15,7 +15,7 @@ const loggerInstance = (0, pino_1.default)({
         ],
         censor: '[MASKED]'
     },
-    // Metadados úteis para ambientes distribuídos (Docker/K8s)
+    // Dados úteis para ambientes distribuídos (Docker/K8s)
     formatters: {
         level: (label) => ({ level: label }),
         bindings: (bindings) => ({ pid: bindings.pid, host: bindings.hostname }),
@@ -24,7 +24,6 @@ const loggerInstance = (0, pino_1.default)({
 });
 exports.logger = {
     info: (message, context) => {
-        //a extração do requestId para o ROOT do log (Facilita muito o monitoramento)
         const { requestId, ...rest } = context || {};
         loggerInstance.info({ requestId, context: rest }, message);
     },

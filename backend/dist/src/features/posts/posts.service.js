@@ -26,7 +26,7 @@ async function criarPost(perfilId, data, requestId) {
         let categoriasIds = [];
         let idiomaPersistir = data.idioma;
         let statusPersistir = data.status || 'ANDAMENTO';
-        // 🛡️ SEGURANÇA: Se houver obra_id, valida se o perfilId é o autor da obra e herda categorias/idioma
+        // Se houver obra_id, valida se o perfilId é o autor da obra e herda categorias/idioma
         if (data.obra_id) {
             const obra = await tx.obras.findUnique({
                 where: { obra_id: data.obra_id },
@@ -42,16 +42,17 @@ async function criarPost(perfilId, data, requestId) {
             if (!isAutor) {
                 throw AppError_1.AppError.forbidden('Você não tem permissão para adicionar capítulos a esta obra.');
             }
+            // Implementar // refatorar
             // Herança de categorias e idioma da obra
             categoriasIds = obra.categorias.map(c => c.categoria_id);
             if (!idiomaPersistir)
                 idiomaPersistir = obra.idioma ?? undefined;
-            // Capítulos de obra SEMPRE herdam o status da obra ou são ANDAMENTO por padrão?
-            // Pela instrução, o status é propriedade da Obra, então capítulos podem ser simplificados.
+            // Capítulos de obra sempre herdam o status da obra ou são ANDAMENTO por padrão?
+            // o status é propriedade da Obra, então capítulos podem ser simplificados.
             statusPersistir = obra.status;
         }
         else {
-            // 1. Converter tags (nomes) em IDs de categorias (apenas se não for obra)
+            // Converter tags/nomes em IDs de categorias apenas se não for obra
             if (data.tags) {
                 for (const tagName of data.tags) {
                     const categoria = await tx.categorias.upsert({
@@ -63,7 +64,7 @@ async function criarPost(perfilId, data, requestId) {
                 }
             }
         }
-        // 2. Lógica de Ordem para Capítulos de Obras (Busca o maior valor atual para evitar duplicidade)
+        // Lógica de Ordem para Capítulos de Obras: busca o maior valor atual para evitar duplicidade
         let ordem = undefined;
         if (data.obra_id) {
             const ultimoCapitulo = await tx.posts.findFirst({
@@ -73,30 +74,31 @@ async function criarPost(perfilId, data, requestId) {
             });
             ordem = (ultimoCapitulo?.ordem ?? 0) + 1;
         }
-        // 3. Criar o post com snapshot de autoria e relações
+        // Criar o post com informações de autoria e relações
         const novo = await tx.posts.create({
             data: {
                 titulo: data.titulo,
                 conteudo: data.conteudo,
                 idioma: idiomaPersistir,
                 autor_id: perfilId,
-                autor_nome_user: perfil.nome_user, // Snapshot
-                nome_campus: perfil.usuario?.nome_campus, // Snapshot
+                autor_nome_user: perfil.nome_user,
+                nome_campus: perfil.usuario?.nome_campus,
                 obra_id: data.obra_id,
                 ordem, // Sequencial se for obra
                 comunidade_id: data.comunidade_id,
                 status: statusPersistir
             }
         });
-        // 4. Vincular categorias (Herdadas ou novas)
+        // Vincular categorias (Herdadas ou novas)
         if (categoriasIds.length > 0) {
             const links = categoriasIds.map((cid) => ({ post_id: novo.post_id, categoria_id: cid }));
             await tx.postsCategorias.createMany({ data: links, skipDuplicates: true });
         }
         return novo;
     });
+    // analize refatorar / implementar
     await (0, logService_1.registrar)(perfilId, 'POST_CREATED', { post_id: post.post_id }, requestId);
-    // 🎮 LÓGICA DE XP (IFNMG) - Recompensa apenas se atingir o tamanho mínimo
+    // LÓGICA DE XP - Recompensa apenas se atingir o tamanho mínimo
     const isObra = !!data.obra_id;
     const length = data.conteudo.length;
     if (isObra && length >= 300) {
@@ -110,7 +112,8 @@ async function criarPost(perfilId, data, requestId) {
         await perfil_service_1.default.processarGanhoXP(perfilId, 'POST_AVULSO', requestId);
     }
     else {
-        // Log informativo para monitoramento de spam/qualidade
+        // Log informativo para monitoramento de posts que não atingiram o tamanho mínimo
+        console.log(`[XP] Post não atingiu o tamanho mínimo para ${isObra ? 'Capítulo de Obra' : 'Post Avulso'} - Perfil: ${perfilId}`);
         await (0, logService_1.registrar)(perfilId, 'XP_SKIPPED_MIN_CHARS', {
             post_id: post.post_id,
             length,
@@ -200,9 +203,9 @@ async function votarPost(perfilId, postId, tipo, requestId) {
         if (existente && existente.tipo === tipo) {
             throw AppError_1.AppError.badRequest('Voto já registrado para este post.');
         }
-        // 🛡️ RECOMPENSA DE XP (Idempotência: apenas o primeiro voto gera XP)
+        // apenas o primeiro voto gera XP
         if (!existente) {
-            // 1. Autor do post ganha XP se for um UPVOTE
+            // Autor do post ganha XP se for um UPVOTE
             if (tipo === 'UP' && post.autor_id) {
                 // Passamos a data de criação do post para calcular o decaimento
                 const dataPost = await tx.posts.findUnique({
@@ -261,21 +264,24 @@ async function reagirPost(perfilId, postId, tipo, requestId) {
     if (!post)
         throw AppError_1.AppError.notFound('Publicação não encontrada.');
     await prisma_client_1.default.$transaction(async (tx) => {
-        const existente = await tx.reacoes.findUnique({
-            where: { perfil_id_post_id_tipo: { perfil_id: perfilId, post_id: postId, tipo } }
+        const reacaoExistente = await tx.reacoes.findFirst({
+            where: { perfil_id: perfilId, post_id: postId }
         });
-        if (existente) {
-            throw AppError_1.AppError.badRequest('Reação já registrada.');
+        if (reacaoExistente) {
+            if (reacaoExistente.tipo === tipo) {
+                // CASO 1: Mesmo tipo - remover reação
+                await tx.reacoes.delete({ where: { reacao_id: reacaoExistente.reacao_id } });
+            }
+            else {
+                // CASO 2: Tipo diferente - substituir reação
+                await tx.reacoes.delete({ where: { reacao_id: reacaoExistente.reacao_id } });
+                await tx.reacoes.create({ data: { perfil_id: perfilId, post_id: postId, tipo } });
+            }
         }
-        // 🛡️ RECOMPENSA DE XP (IFNMG)
-        // Apenas reações positivas geram XP para o autor do post
-        const reacoesPositivas = ['LIKE', 'LOVE', 'FIRE'];
-        if (reacoesPositivas.includes(tipo) && post.autor_id) {
-            await perfil_service_1.default.processarGanhoXP(post.autor_id, 'REACAO_RECEBIDA', requestId, post.data_criacao);
+        else {
+            // CASO 3: Sem reação anterior - criar nova
+            await tx.reacoes.create({ data: { perfil_id: perfilId, post_id: postId, tipo } });
         }
-        await tx.reacoes.create({
-            data: { perfil_id: perfilId, post_id: postId, tipo }
-        });
     });
     await (0, logService_1.registrar)(perfilId, 'POST_REACTED', { post_id: postId, tipo }, requestId);
     return await prisma_client_1.default.posts.findUnique({
@@ -343,14 +349,12 @@ async function getPostById(postId, perfilId) {
     });
     if (!post)
         throw AppError_1.AppError.notFound('Publicação não encontrada.');
-    // Incrementa visualizações (fora da transação principal)
-    // 🛡️ DEBUG: Log para rastrear incremento de visualização
     console.log(`[DEBUG] Incrementando visualização para post ${postId}`);
     await prisma_client_1.default.posts.update({
         where: { post_id: postId },
         data: { visualizacoes: { increment: 1 } }
     });
-    // 🛡️ NAVEGAÇÃO ENTRE CAPÍTULOS
+    // navegação entre capítulos de obra e posts avulso
     let navegacao = { anterior_id: null, proximo_id: null };
     if (post.obra_id && post.ordem !== null) {
         console.log(`[DEBUG] Buscando navegação para Obra ${post.obra_id}, Ordem ${post.ordem}`);
@@ -375,12 +379,12 @@ async function getPostById(postId, perfilId) {
     else {
         console.log(`[DEBUG] Post sem obra_id ou ordem. Obra: ${post.obra_id}, Ordem: ${post.ordem}`);
     }
-    // 📊 AGRUPAMENTO DE REAÇÕES
+    // Agrupamento de reações 
     const reacoesAgrupadas = post.reacoes.reduce((acc, curr) => {
         acc[curr.tipo] = (acc[curr.tipo] || 0) + 1;
         return acc;
     }, {});
-    // 🛡️ VERIFICA REAÇÃO DO USUÁRIO LOGADO
+    // Verificação de reação do usuário logado
     let minhaReacao = null;
     if (perfilId) {
         const reacao = post.reacoes.find(r => r.perfil_id === perfilId);
@@ -431,7 +435,7 @@ async function pesquisarUnificado(filtros) {
     }
     if (tipo === 'TODOS' || tipo === 'OBRA') {
         const whereObra = { ...where };
-        // Obras não têm 'conteudo', então ajustamos o OR
+        // Obras não têm 'conteudo', então ajustamos o filtro para 'descricao'
         if (termo) {
             whereObra.OR = [
                 { titulo: { contains: termo } },

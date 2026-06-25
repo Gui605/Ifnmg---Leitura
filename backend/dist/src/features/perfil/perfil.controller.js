@@ -7,11 +7,6 @@ const asyncHandler_1 = require("../../shared/utils/asyncHandler");
 const perfil_service_1 = __importDefault(require("./perfil.service"));
 const seguranca_service_1 = __importDefault(require("./seguranca.service"));
 const AppError_1 = require("../../shared/utils/AppError");
-/**
- * 💡 PADRÃO ENTERPRISE EVOLUÍDO:
- * A lógica de "Gatekeeper" contra Mass Assignment foi movida para o Zod (.strict()).
- * O Controller foca exclusivamente na orquestração dos serviços.
- */
 const getPerfilInfo = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const perfilId = req.user.perfil_id;
     const perfil = await perfil_service_1.default.buscarPerfilCompleto(perfilId, perfilId, req.requestId);
@@ -38,7 +33,7 @@ const getPerfilPublico = (0, asyncHandler_1.tratarAssincrono)(async (req, res) =
 });
 const updatePerfil = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const perfilId = req.user.perfil_id;
-    // 🛡️ O Zod já garantiu que o body contém APENAS 'nome' e que ele é válido.
+    // O Zod já garantiu que o body contém apenas 'nome' e que ele é válido.
     const { nome } = req.body;
     // O trim() também foi realizado automaticamente pelo Schema
     const perfilAtualizado = await perfil_service_1.default.atualizarPerfil(perfilId, { nome }, req.requestId);
@@ -51,7 +46,7 @@ const updatePerfil = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
 });
 const alterarSenha = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const usuarioId = req.user.usuario_id;
-    // 🛡️ Validações de força de senha e "novaSenha === confirmarNovaSenha" 
+    // Validações de força de senha e "novaSenha === confirmarNovaSenha" 
     // agora ocorrem automaticamente no Zod Schema (.refine()).
     const { senhaAntiga, novaSenha } = req.body;
     const message = await seguranca_service_1.default.alterarSenha(usuarioId, senhaAntiga, novaSenha, req.requestId);
@@ -69,7 +64,7 @@ const toggleFollow = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     if (isNaN(seguidoId) || seguidoId <= 0) {
         throw AppError_1.AppError.badRequest('ID de perfil inválido.');
     }
-    // Lógica de Toggle: Tenta deletar primeiro, se falhar (não segue), tenta seguir.
+    //  Tenta deletar primeiro, se falhar (não segue), tenta seguir.
     // Isso economiza uma query de 'find' e mantém a atomicidade.
     try {
         await perfil_service_1.default.deixarDeSeguirPerfil(seguidorId, seguidoId, req.requestId);
@@ -102,6 +97,20 @@ const checkPendenciasExclusao = (0, asyncHandler_1.tratarAssincrono)(async (req,
         data: check
     });
 });
+const getSugestoesMembros = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
+    const perfilId = req.user.perfil_id;
+    const limit = Number(req.query.limit) || 5;
+    if (limit < 1 || limit > 20) {
+        throw AppError_1.AppError.badRequest('Limite deve estar entre 1 e 20.');
+    }
+    const sugestoes = await perfil_service_1.default.obterSugestoesMembros(perfilId, limit);
+    return res.status(200).json({
+        status: 'success',
+        message: 'Sugestões recuperadas com sucesso.',
+        data: sugestoes,
+        meta: null
+    });
+});
 exports.default = {
     getPerfilInfo,
     getPerfilPublico,
@@ -109,5 +118,6 @@ exports.default = {
     alterarSenha,
     deletarPerfil,
     toggleFollow,
-    checkPendenciasExclusao
+    checkPendenciasExclusao,
+    getSugestoesMembros
 };

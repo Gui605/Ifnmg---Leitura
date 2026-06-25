@@ -7,10 +7,9 @@ const auth_service_1 = __importDefault(require("./auth.service"));
 const recuperacao_service_1 = __importDefault(require("./recuperacao.service"));
 const asyncHandler_1 = require("../../shared/utils/asyncHandler");
 const AppError_1 = require("../../shared/utils/AppError");
-/**
- * 💡 PADRÃO ENTERPRISE EVOLUÍDO:
- * Com o uso de Zod + validateMiddleware, as validações de Regex e Presença
- * foram movidas para a camada de contrato (shared/types/auth.types.ts).
+/*
+ as validações de Regex e Presença foram movidas para
+  a camada de contrato (shared/types/auth.types.ts).
  */
 const registrar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const { email, senha, nome_completo, nome_campus, data_nascimento, nome_user } = req.body;
@@ -22,7 +21,7 @@ const registrar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     });
 });
 const logar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
-    // 🛡️ Email já chega em lowercase e senha já é garantida como string.
+    // Email já chega em lowercase e senha já é garantida como string.
     const { email, senha } = req.body;
     const token = await auth_service_1.default.logarUsuario(email, senha, req.requestId);
     return res.status(200).json({
@@ -34,7 +33,6 @@ const logar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
 });
 const confirmarEmail = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const { token } = req.query;
-    // Manter validação manual aqui apenas se não criar um schema para Query Params
     if (!token || typeof token !== 'string' || token.trim().length !== 64) {
         throw AppError_1.AppError.badRequest('Token de verificação inválido ou expirado.');
     }
@@ -59,7 +57,7 @@ const solicitarRecuperacao = (0, asyncHandler_1.tratarAssincrono)(async (req, re
 });
 const redefinirSenha = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const { token, novaSenha } = req.body;
-    // Validações de igualdade e força de senha agora ocorrem no Zod Schema.
+    // Validações de igualdade e força de senha ocorrem no Zod Schema.
     await recuperacao_service_1.default.redefinirSenha(token, novaSenha, req.requestId);
     return res.status(200).json({
         status: 'success',

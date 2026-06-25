@@ -1,3 +1,4 @@
+//backend/src/features/denuncias/denuncias.service.ts
 import prisma from '../../shared/prisma/prisma.client';
 import { AppError } from '../../shared/utils/AppError';
 import { registrar as registrarLog } from '../../shared/utils/logService';
@@ -17,7 +18,12 @@ async function registrarDenuncia(perfilId: number, postId: number, data: DadosDe
       select: { post_id: true, titulo: true, conteudo: true, autor_id: true, total_upvotes: true, total_downvotes: true, total_comentarios: true }
     });
     if (!post) throw AppError.notFound('Publicação não encontrada.');
-    const snapshot = JSON.stringify({
+
+
+    //desabilitar snapshot por enquanto e colocar uma verção com string simples
+    //Para armazenar textos longos, a coluna
+    // precisa ser do tipo Text ou Json no schema.prisma
+    /*const snapshot = JSON.stringify({
       post_id: post.post_id,
       titulo: post.titulo,
       conteudo: post.conteudo,
@@ -25,6 +31,13 @@ async function registrarDenuncia(perfilId: number, postId: number, data: DadosDe
       total_upvotes: post.total_upvotes,
       total_downvotes: post.total_downvotes,
       total_comentarios: post.total_comentarios
+    });*/
+
+    const snapshot = JSON.stringify({
+      post_id: post.post_id,
+      titulo: post.titulo.substring(0, 50),
+      conteudo: post.conteudo ? post.conteudo.substring(0, 100) + '...' : "",
+      autor_id: post.autor_id
     });
     const created = await tx.denuncias.create({
       data: {

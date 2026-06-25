@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LISTA_CAMPUS } from '../constants/unidades';
+import { LISTA_CAMPUS } from './unidades';
 
 /**
  Schema de Registro de Usuário

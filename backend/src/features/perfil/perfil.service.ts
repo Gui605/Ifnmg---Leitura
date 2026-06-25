@@ -383,4 +383,77 @@ async function checkPendenciasExclusao(perfilId: number) {
     };
 }
 
-export default { atualizarPerfil, buscarPerfilCompleto, seguirPerfil, deixarDeSeguirPerfil, processarGanhoXP, atribuirTitulosPorMerito, checkPendenciasExclusao };
+/*
+  Recomendacao de seguir
+ */
+async function obterSugestoesMembros(perfilId: number, limit = 5) {
+    // 1. Buscar os IDs dos perfis que o usuário já segue
+    const seguidos = await prisma.seguidores.findMany({
+        where: { seguidor_id: perfilId },
+        select: { seguido_id: true }
+    });
+    
+    const perfisSeguindoIds = seguidos.map(s => s.seguido_id);
+
+    // 2. Montar as condições base de exclusão (Não ser o próprio usuário requisitante)
+    const condicoesBase: any[] = [
+        { perfil_id: { not: perfilId } }
+    ];
+
+    // Se o usuário já segue alguém, adiciona a restrição notIn no array
+    if (perfisSeguindoIds.length > 0) {
+        condicoesBase.push({
+            perfil_id: { notIn: perfisSeguindoIds }
+        });
+    }
+
+    // 3. Buscar categorias de interesse do usuário
+    const meusInteresses = await prisma.interesses.findMany({
+        where: { perfil_id: perfilId },
+        select: { categoria_id: true }
+    });
+    
+    const categoriaIds = meusInteresses.map(i => i.categoria_id);
+
+    // 4. Primeira tentativa: Buscar por interesses compartilhados
+    let sugestoes = await prisma.perfis.findMany({
+        where: {
+            AND: [
+                ...condicoesBase,
+                ...(categoriaIds.length > 0 ? [{
+                    interesses: {
+                        some: {
+                            categoria_id: { in: categoriaIds }
+                        }
+                    }
+                }] : [])
+            ]
+        },
+        select: {
+            perfil_id: true,
+            nome_user: true,
+            level: true
+        },
+        take: limit
+    });
+
+    // 5. Segunda tentativa: Se não houver correspondência por interesse, busca globais por maior level
+    if (sugestoes.length === 0) {
+        sugestoes = await prisma.perfis.findMany({
+            where: {
+                AND: condicoesBase
+            },
+            select: {
+                perfil_id: true,
+                nome_user: true,
+                level: true
+            },
+            take: limit,
+            orderBy: { level: 'desc' }
+        });
+    }
+
+    return sugestoes;
+}
+
+export default { atualizarPerfil, buscarPerfilCompleto, seguirPerfil, deixarDeSeguirPerfil, processarGanhoXP, atribuirTitulosPorMerito, checkPendenciasExclusao, obterSugestoesMembros };

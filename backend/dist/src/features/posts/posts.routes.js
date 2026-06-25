@@ -11,36 +11,24 @@ const validate_middleware_1 = require("../../shared/middlewares/validate.middlew
 const post_types_1 = require("../../shared/types/post.types");
 const zod_1 = require("zod");
 const rateLimiter_1 = require("../../shared/middlewares/rateLimiter");
-/**
- * 💡 PADRÃO ENTERPRISE EVOLUÍDO:
- * 1. Segurança de Contrato: Zod barra Mass Assignment e payloads gigantes.
- * 2. Normalização de Query: Zod converte "?page=1" de string para number.
- * 3. Defesa em Camadas: Auth -> Validation -> Controller.
- */
 const postsRoutes = (0, express_1.Router)();
-// --- ROTAS DE LEITURA (Acesso Público / Híbrido) ---
-/** * GET /api/v1/posts
- * 🛡️ Validação de Query: Garante que page/limit sejam números válidos.
- */
+//ROTAS DE LEITURA Acesso Público / Híbrido
+// GET /api/v1/posts 
+//Validação de Query: Garante que page/limit sejam números válidos.
 postsRoutes.get('/', optionalAuthMiddleware_1.middlewareAutenticacaoOpcional, rateLimiter_1.limitadorLeitura, (0, validate_middleware_1.validate)({
     query: post_types_1.PostsQuerySchema
-}), // Valida e limpa os parâmetros de busca
-posts_controller_1.default.listarPosts);
-/**
- * GET /api/v1/posts/pesquisa
- * 🛡️ Busca unificada entre posts e obras
- */
+}), posts_controller_1.default.listarPosts);
+//GET /api/v1/posts/pesquisa
+//Busca unificada entre posts e obras
 postsRoutes.get('/pesquisa', optionalAuthMiddleware_1.middlewareAutenticacaoOpcional, posts_controller_1.default.pesquisar);
-// --- ROTAS DE ESCRITA (Acesso Restrito) ---
-/** * POST /api/v1/posts
- * 🛡️ Validação de Body: Bloqueia autor_id manual e garante formato do conteúdo.
- */
+//ROTAS DE ESCRITA Acesso Restrito
+// POST /api/v1/posts 
+//Validação que bloqueia autor_id manual e garante formato do conteúdo.
 postsRoutes.post('/', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validate)({
     body: post_types_1.PostCreateSchema
 }), posts_controller_1.default.criarPost);
-/** * DELETE /api/v1/posts/:id
- * 🛡️ Segurança: O Controller valida se quem deleta é o dono do post.
- */
+// DELETE /api/v1/posts/:id 
+//Valida se quem deleta é o dono do post.
 const PostIdParamsSchema = zod_1.z.object({ id: zod_1.z.coerce.number().positive() });
 const EmptyBodySchema = zod_1.z.object({}).strict();
 postsRoutes.delete('/:id', authMiddleware_1.middlewareAutenticacao, (0, validate_middleware_1.validate)({
@@ -55,17 +43,13 @@ postsRoutes.post('/:id/comentarios', authMiddleware_1.middlewareAutenticacao, ra
     params: PostIdParamsSchema,
     body: post_types_1.PostCommentSchema
 }), posts_controller_1.default.comentarPost);
-/**
- * GET /posts/:id/comentarios
- * 🛡️ Público/Opcional
- */
+//GET /posts/:id/comentarios
+//Público/Opcional
 postsRoutes.get('/:id/comentarios', optionalAuthMiddleware_1.middlewareAutenticacaoOpcional, (0, validate_middleware_1.validate)({
     params: PostIdParamsSchema
 }), posts_controller_1.default.listarComentarios);
-/**
- * DELETE /posts/comentarios/:id
- * 🛡️ Protegida - apenas autor ou admin
- */
+//DELETE /posts/comentarios/:id
+//Protegida - apenas autor ou admin
 postsRoutes.delete('/comentarios/:id', authMiddleware_1.middlewareAutenticacao, (0, validate_middleware_1.validate)({
     params: PostIdParamsSchema
 }), posts_controller_1.default.deletarComentario);
@@ -73,10 +57,8 @@ postsRoutes.post('/:id/reagir', authMiddleware_1.middlewareAutenticacao, rateLim
     params: PostIdParamsSchema,
     body: post_types_1.ReacaoSchema
 }), posts_controller_1.default.reagirPost);
-/**
- * GET /api/v1/posts/:id
- * 🛡️ Híbrido: Acesso público, mas personaliza para logado
- */
+//GET /api/v1/posts/:id
+//Híbrido: Acesso público, mas personaliza para logado
 postsRoutes.get('/:id', optionalAuthMiddleware_1.middlewareAutenticacaoOpcional, rateLimiter_1.limitadorLeitura, (0, validate_middleware_1.validate)({
     params: PostIdParamsSchema
 }), posts_controller_1.default.getPostById);

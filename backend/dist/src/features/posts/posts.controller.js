@@ -10,7 +10,6 @@ const perfil_service_1 = __importDefault(require("../perfil/perfil.service"));
 const AppError_1 = require("../../shared/utils/AppError");
 const criarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const perfilId = req.user.perfil_id;
-    // 🔍 DEBUG: Log do payload recebido no backend
     console.log("[DEBUG] Recebendo payload para criação de post/capítulo:", req.body);
     const { titulo, conteudo, tags, idioma } = req.body;
     // Garante integridade referencial removendo duplicatas de tags
@@ -24,7 +23,7 @@ const criarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
         obra_id: req.body.obra_id,
         comunidade_id: req.body.comunidade_id
     }, req.requestId);
-    // 🛡️ ENRIQUECIMENTO: Busca perfil atualizado após ganho de XP
+    // Busca perfil atualizado após ganho de XP
     const perfilAtualizado = await perfil_service_1.default.buscarPerfilCompleto(perfilId, perfilId, req.requestId);
     return res.status(201).json({
         status: 'success',
@@ -57,7 +56,6 @@ const listarPosts = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
 const deletarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const postId = Number(req.params.id);
     const perfilId = req.user.perfil_id;
-    // 🛡️ Validação robusta de tipos numéricos para prevenir SQL Errors
     if (isNaN(postId) || !Number.isSafeInteger(postId) || postId <= 0) {
         throw AppError_1.AppError.badRequest("ID da publicação inválido.");
     }
@@ -77,7 +75,6 @@ const votarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
         throw AppError_1.AppError.badRequest("ID da publicação inválido.");
     }
     const postAtualizado = await posts_service_1.default.votarPost(perfilId, postId, tipo, req.requestId);
-    // 🛡️ ENRIQUECIMENTO: Busca perfil atualizado após voto
     const perfilLogado = await perfil_service_1.default.buscarPerfilCompleto(perfilId, perfilId, req.requestId);
     return res.status(200).json({
         status: 'success',
@@ -94,7 +91,6 @@ const comentarPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
         throw AppError_1.AppError.badRequest("ID da publicação inválido.");
     }
     const novoComentario = await comentarios_service_1.default.criarComentario(perfilId, postId, req.body, req.requestId);
-    // 🛡️ ENRIQUECIMENTO: Busca perfil atualizado após comentário
     const perfilLogado = await perfil_service_1.default.buscarPerfilCompleto(perfilId, perfilId, req.requestId);
     return res.status(201).json({
         status: 'success',
@@ -132,7 +128,6 @@ const reagirPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
         throw AppError_1.AppError.badRequest("ID da publicação inválido.");
     }
     const postAtualizado = await posts_service_1.default.reagirPost(perfilId, postId, tipo, req.requestId);
-    // 🛡️ ENRIQUECIMENTO: Busca perfil atualizado após reação
     const perfilLogado = await perfil_service_1.default.buscarPerfilCompleto(perfilId, perfilId, req.requestId);
     return res.status(200).json({
         status: 'success',
@@ -144,7 +139,7 @@ const reagirPost = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
 });
 const getPostById = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const postId = Number(req.params.id);
-    const perfilId = req.user?.perfil_id; // Opcional
+    const perfilId = req.user?.perfil_id;
     const post = await posts_service_1.default.getPostById(postId, perfilId);
     return res.status(200).json({
         status: 'success',

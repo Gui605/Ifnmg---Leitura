@@ -19,17 +19,37 @@ export default function EditorTexto({ conteudo, setConteudo }: EditorProps) {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const text = textarea.value;
+    
     const before = text.substring(0, start);
     const selection = text.substring(start, end);
     const after = text.substring(end);
 
-    const novoTexto = before + prefix + (selection || 'texto') + suffix + after;
+    // Se houver seleção, limpa espaços nas bordas para não quebrar o Markdown
+    const textoLimpo = selection.trim();
+    
+    // Tratamento especial para listas/tópicos
+    if (prefix === '\n- ') {
+      const novoTexto = before + `\n- ${textoLimpo || 'Item'}` + after;
+      setConteudo(novoTexto);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + 4, start + 4 + (textoLimpo || 'Item').length);
+      }, 0);
+      return;
+    }
+
+    // Texto final que será injetado sem espaços entre o marcador e a palavra
+    const textoInjetar = textoLimpo || 'texto';
+    const novoTexto = before + prefix + textoInjetar + suffix + after;
+    
     setConteudo(novoTexto);
     
-    // Focar de volta e selecionar
+    // Devolve o foco de forma cirúrgica mantendo a seleção real destacada
     setTimeout(() => {
       textarea.focus();
-      textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+      const novoStart = start + prefix.length;
+      const novoEnd = novoStart + textoInjetar.length;
+      textarea.setSelectionRange(novoStart, novoEnd);
     }, 0);
   };
 
@@ -92,6 +112,7 @@ export default function EditorTexto({ conteudo, setConteudo }: EditorProps) {
 function ToolbarButton({ icon, onClick, title }: { icon: React.ReactNode, onClick: () => void, title: string }) {
   return (
     <button 
+      type="button" 
       onClick={onClick}
       title={title}
       className="p-2 hover:bg-[var(--bg-card)] hover:text-[var(--accent-primary)] rounded-md transition-all text-[var(--text-secondary)] active:scale-90"

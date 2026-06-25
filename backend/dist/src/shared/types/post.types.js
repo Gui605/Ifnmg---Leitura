@@ -1,12 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostResponseSchema = exports.AutorDisplaySchema = exports.ReacaoSchema = exports.PostCommentSchema = exports.PostVoteSchema = exports.PostsQuerySchema = exports.PostCreateSchema = void 0;
-const zod_1 = require("zod");
 // backend/src/shared/types/post.types.ts
-/**
- * 🛡️ SCHEMA DE CRIAÇÃO DE POST
- * O .strict() impede que o usuário envie autor_id, data_criacao ou posts_id.
- */
+const zod_1 = require("zod");
+//Schema de criação de post
 exports.PostCreateSchema = zod_1.z.object({
     titulo: zod_1.z.string()
         .min(5, "O título deve ter pelo menos 5 caracteres")
@@ -32,10 +29,7 @@ exports.PostCreateSchema = zod_1.z.object({
     message: "O idioma é obrigatório para publicações independentes",
     path: ["idioma"]
 });
-/**
- * 🛡️ SCHEMA DE FILTRAGEM E PAGINAÇÃO
- * Valida os parâmetros de URL (Query Strings).
- */
+//Schema de filtragem e paginação
 exports.PostsQuerySchema = zod_1.z.object({
     page: zod_1.z.coerce.number().min(1).default(1),
     limit: zod_1.z.coerce.number().min(1).max(50).default(10),
@@ -51,15 +45,11 @@ exports.PostCommentSchema = zod_1.z.object({
     parent_id: zod_1.z.number().int().positive().nullable().optional(),
     is_spoiler: zod_1.z.boolean().default(false)
 }).strict();
-/**
- * 🛡️ SCHEMA DE REAÇÃO
- */
+//Schema de reação
 exports.ReacaoSchema = zod_1.z.object({
     tipo: zod_1.z.enum(['LIKE', 'LOVE', 'FIRE', 'SAD'])
 }).strict();
-/**
- * 🛡️ SCHEMA DE RESPOSTA DE POST (Refletindo SetNull)
- */
+//Schema de resposta de post
 exports.AutorDisplaySchema = zod_1.z.object({
     nome: zod_1.z.string(),
     campus: zod_1.z.string(),

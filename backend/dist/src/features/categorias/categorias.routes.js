@@ -44,20 +44,16 @@ const rateLimiter_1 = require("../../shared/middlewares/rateLimiter");
 const categorias_controller_2 = require("./categorias.controller");
 const categoriasRoutes = (0, express_1.Router)();
 const EmptyBodySchema = zod_1.z.object({}).strict();
-/**
- * 💡 PADRÃO ENTERPRISE EVOLUÍDO:
- * 1. Pipeline de Segurança: Auth -> Admin -> Validate -> Controller.
- * 2. Whitelist: Apenas o campo 'nome' passa pelo filtro do Zod.
- */
-// --- Leitura Pública ---
+// Leitura Pública
 categoriasRoutes.get('/', categorias_controller_1.default.listar);
 // GET /api/v1/categorias/trending
 categoriasRoutes.get('/trending', optionalAuthMiddleware_1.middlewareAutenticacaoOpcional, rateLimiter_1.limitadorLeitura, categorias_controller_1.getTrending);
-// --- Escrita Protegida (Exige privilégios de Administrador) ---
+/* Escrita Protegida Exige privilégios de Administrador
+ Mas ainda não foi sincronizada por está em faze de desenvolvimento */
 // POST /api/v1/categorias
 categoriasRoutes.post('/', authMiddleware_1.middlewareAutenticacao, 
 // middlewareAdministrador, 
-(0, validate_middleware_1.validate)({ body: categoria_types_1.CategoriaCreateSchema }), // 🛡️ Bloqueia qualquer campo extra (Mass Assignment)
+(0, validate_middleware_1.validate)({ body: categoria_types_1.CategoriaCreateSchema }), // Bloqueia qualquer campo extra
 categorias_controller_1.default.criar);
 // PATCH /api/v1/categorias/:id
 const CategoriaIdParamsSchema = zod_1.z.object({ id: zod_1.z.coerce.number().positive() }).strict();
@@ -66,7 +62,7 @@ categoriasRoutes.patch('/:id', authMiddleware_1.middlewareAutenticacao,
 (0, validate_middleware_1.validate)({
     params: CategoriaIdParamsSchema,
     body: categoria_types_1.CategoriaUpdateSchema
-}), // 🛡️ Garante que apenas o campo 'nome' seja editado
+}), // Garante que apenas o campo 'nome' seja editado
 categorias_controller_1.default.atualizar);
 // DELETE /api/v1/categorias/:id
 categoriasRoutes.delete('/:id', authMiddleware_1.middlewareAutenticacao, 
@@ -76,7 +72,7 @@ categoriasRoutes.delete('/:id', authMiddleware_1.middlewareAutenticacao,
     body: EmptyBodySchema
 }), categorias_controller_1.default.excluir);
 exports.default = categoriasRoutes;
-// ====== Fusão de Interesses (Taxonomia) ======
+// Fusão de Interesses
 const CategoriaIdParamsSchema2 = zod_1.z.object({ id: zod_1.z.coerce.number().positive() }).strict();
 categoriasRoutes.get('/interesses', authMiddleware_1.middlewareAutenticacao, categorias_controller_2.listarInteressesCategoria);
 categoriasRoutes.post('/:id/interesse', authMiddleware_1.middlewareAutenticacao, rateLimiter_1.limitadorEngajamento, (0, validate_middleware_1.validate)({

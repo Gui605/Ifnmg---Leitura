@@ -30,6 +30,8 @@ export interface HeaderProps {
   toggleRight?: () => void;
   isLeftVisible?: boolean;
   isRightVisible?: boolean;
+  disabledNav?: boolean;
+  hideMobileMenu?: boolean;
 }
 
 export default function Header({
@@ -43,7 +45,9 @@ export default function Header({
   toggleLeft,
   toggleRight,
   isLeftVisible,
-  isRightVisible
+  isRightVisible,
+  disabledNav = false,
+  hideMobileMenu = false
 }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -94,13 +98,15 @@ export default function Header({
             </button>
           )}
 
-          {/* Menu Mobile */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 hover:bg-[var(--input-bg)] rounded-lg md:hidden transition-colors"
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Menu Mobile Renderizado Condicional*/}
+          {!hideMobileMenu && (
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 hover:bg-[var(--input-bg)] rounded-lg md:hidden transition-colors"
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          )}
         </div>
 
         {/* Busca ou Título */}
@@ -133,15 +139,27 @@ export default function Header({
         {/* Nav Links */}
         {navLinks && (
           <nav className="hidden lg:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <Link 
-                key={link.path} 
-                to={link.path}
-                className="text-sm font-medium text-[var(--text-primary)] hover:text-[var(--accent-primary)] transition-colors font-lexend"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isDisabled = disabledNav || link.label === 'Comunidade' || link.label === 'Notificações' || link.label === 'Salvos';
+              return isDisabled ? (
+                <span
+                  key={link.path}
+                  className="text-sm font-medium text-[var(--text-secondary)] opacity-40 cursor-not-allowed select-none font-lexend tracking-wider"
+                  title="Funcionalidade em desenvolvimento"
+                  style={{ cursor: 'not-allowed' }}
+                >
+                  {link.label}
+                </span>
+              ) : (
+                <Link 
+                  key={link.path} 
+                  to={link.path}
+                  className="text-sm font-medium text-[var(--text-primary)] hover:text-[var(--accent-primary)] transition-colors font-lexend"
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
         )}
 
@@ -228,6 +246,38 @@ export default function Header({
           </div>
         )}
       </div>
+
+      {/* Menu suspenso */}
+      {isMobileMenuOpen && navLinks && (
+        <div className="absolute top-16 left-0 w-full bg-[var(--bg-card)] border-b border-[var(--accent-primary)]/10 shadow-xl md:hidden flex flex-col p-4 gap-3 animate-in fade-in slide-in-from-top-4 duration-200 z-50 backdrop-blur-md">
+          <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider px-3 py-1 font-lexend">Navegação do Sistema</p>
+          <nav className="flex flex-col gap-1">
+            {navLinks.map((link) => {
+              const isDisabled = disabledNav || link.label === 'Comunidade' || link.label === 'Notificações' || link.label === 'Salvos';
+              return isDisabled ? (
+                <span
+                  key={link.path}
+                  className="text-sm font-semibold text-[var(--text-secondary)] opacity-40 cursor-not-allowed select-none font-lexend tracking-wider p-3 bg-[var(--input-bg)]/30 rounded-xl"
+                  title="Funcionalidade em desenvolvimento"
+                  style={{ cursor: 'not-allowed' }}
+                >
+                  {link.label} (Breve)
+                </span>
+              ) : (
+                <Link 
+                  key={link.path} 
+                  to={link.path}
+                  onClick={() => setIsMobileMenuOpen(false)} // Fecha a gaveta após o clique
+                  className="text-sm font-bold text-[var(--text-primary)] hover:text-[var(--accent-primary)] hover:bg-[var(--input-bg)] p-3 rounded-xl transition-all font-lexend flex items-center"
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      )}
+
     </header>
   );
 }

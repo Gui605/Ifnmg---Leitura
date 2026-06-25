@@ -48,7 +48,7 @@ const listar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     });
 });
 const criar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
-    // 🛡️ Extração limpa: O Middleware Zod já garantiu que 'nome' existe e é válido.
+    // Extração limpa: O Middleware Zod já garantiu que 'nome' existe e é válido.
     const { nome } = req.body;
     const nova = await categorias_service_1.default.criar({ nome }, req.requestId);
     res.status(201).json({
@@ -61,7 +61,7 @@ const criar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
 const atualizar = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const id = Number(req.params.id);
     const { nome } = req.body;
-    // 🛡️ Proteção contra IDs malformados ou ataques de estouro de inteiro
+    // Proteção contra IDs malformados ou ataques de estouro de inteiro
     if (isNaN(id) || !Number.isSafeInteger(id) || id <= 0) {
         throw AppError_1.AppError.badRequest("ID de categoria inválido.");
     }
@@ -87,7 +87,7 @@ const excluir = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     });
 });
 exports.default = { listar, criar, atualizar, excluir };
-// ====== Fusão de Interesses (Taxonomia) ======
+// Fusão de Interesses
 exports.listarInteressesCategoria = (0, asyncHandler_1.tratarAssincrono)(async (req, res) => {
     const perfilId = req.user.perfil_id;
     const interesses = await (0, categorias_service_1.listarInteresses)(perfilId, req.requestId);

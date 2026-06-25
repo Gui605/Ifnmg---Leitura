@@ -26,7 +26,8 @@ export default function PostActions({ postId, upvotes: upvotesProp = 0, comments
     setUpvotes(prev => prev + 1);
     try {
       await apiClient.post(`/posts/${postId}/votar`, { tipo: 'UP' }, z.any());
-      Notificacao.toast.sucesso("Voto registrado!", "Você ganhou +2 XP e o autor ganhou +10 XP.");
+      //deixar comentado por enquanto
+      // Notificacao.toast.sucesso("Voto registrado!", "Você ganhou +2 XP e o autor ganhou +10 XP.");
     } catch (err: any) {
       setUpvotes(prev => Math.max(0, prev - 1));
     } finally {

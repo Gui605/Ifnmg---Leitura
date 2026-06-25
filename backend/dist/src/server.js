@@ -63,32 +63,31 @@ const limpezaContas_1 = require("./shared/agendador/limpezaContas");
 const AppError_1 = require("./shared/utils/AppError");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
-// --- 1. INFRAESTRUTURA ---
 app.set('trust proxy', 1);
-// --- 2. MIDDLEWARES DE SEGURANÇA E PARSING ---
-// 1. Rastreamento deve ser o primeiro para logar tudo
+// Middlewares de segurança 
+// Rastreamento deve ser o primeiro para logar tudo
 app.use(requestId_middleware_1.middlewareRequestId);
-// 2. CORS deve vir antes de qualquer middleware que possa bloquear a requisição (como Helmet ou Security)
+// CORS deve vir antes de qualquer middleware que possa bloquear a requisiçã
 app.use((0, cors_1.default)({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
-// 3. Tratamento explícito de Preflight para evitar 401/403 antes de chegar no CORS
+// Tratamento explícito de requisições OPTIONS para evitar 401/403 antes de chegar no CORS
 app.options('*', (0, cors_1.default)());
-// 4. Segurança e Parsers (Agora em ambiente seguro pois o CORS já passou)
+// Agora em ambiente seguro pois o CORS já passou
 app.use((0, helmet_1.default)());
 app.use(helmet_1.default.hsts({ maxAge: 31536000, includeSubDomains: true, preload: true }));
 app.use(express_1.default.json({ limit: '100kb' }));
 app.use((0, jsonDepth_middleware_1.jsonDepthMiddleware)(7));
 app.use(security_middleware_1.enforceSecurity); // Proteção contra requisições maliciosas
 app.use(responseEnveloper_middleware_1.responseEnveloper);
-// --- 3. VALIDAÇÃO DE SEGURANÇA DE PRODUÇÃO ---
+// Validação de segurança em produção
 if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
     throw new Error('CONFIGURAÇÃO FATAL: JWT_SECRET não configurado em produção.');
 }
-// --- 4. ROTAS ---
+// Rotas
 app.use('/api/v1/auth', auth_routes_1.default);
 app.use('/api/v1/perfil', perfil_routes_1.default);
 app.use('/api/v1/posts', posts_routes_1.default);
@@ -96,10 +95,10 @@ app.use('/api/v1/categorias', categorias_routes_1.default);
 app.use('/api/v1/saude', health_routes_1.default);
 app.use('/api/v1/denuncias', denuncias_routes_1.default);
 app.use('/api/v1/obras', obras_routes_1.default);
-// --- 5. FALLBACK E ERROS ---
+// Fallback e erros
 app.all('*', (req, _res, next) => next(AppError_1.AppError.notFound(`Rota ${req.originalUrl} não existe.`)));
 app.use(errorHandler_middleware_1.tratadorDeErros);
-// --- 6. INICIALIZAÇÃO ---
+// Inicialização
 const iniciarServidor = async () => {
     try {
         app.listen(Number(PORT), '0.0.0.0', () => {

@@ -108,7 +108,7 @@ async function atualizarObra(obraId: number, perfilId: number, data: ObraUpdateB
         if (data.categorias) {
             await tx.obrasCategorias.deleteMany({ where: { obra_id: obraId } });
             
-            // Usamos loop pois createMany não retorna as relações no include e queremos consistência
+            // Usamos loop pois createMany não retorna as relações no include 
             for (const catId of data.categorias) {
                 await tx.obrasCategorias.create({
                     data: {
@@ -124,7 +124,8 @@ async function atualizarObra(obraId: number, perfilId: number, data: ObraUpdateB
             data: {
                 titulo: data.titulo,
                 descricao: data.descricao,
-                imagem_capa: data.imagem_capa
+                imagem_capa: data.imagem_capa,
+                status: data.status
             },
             include: {
                 categorias: {

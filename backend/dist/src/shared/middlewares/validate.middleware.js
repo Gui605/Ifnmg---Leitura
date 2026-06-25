@@ -5,16 +5,16 @@ const sanitize_1 = require("../utils/sanitize");
 const validate = (schema) => {
     return async (req, _res, next) => {
         try {
-            // 1. Extraímos o ID como string (com fallback para undefined se não existir)
+            // Extraímos o ID como string com fallback para undefined se não existir
             const requestId = req.headers['x-request-id'];
-            // 2. Sanitização (Passando a string do requestId corretamente)
+            // Sanitização: Passando a string do requestId corretamente
             if (req.body)
                 req.body = (0, sanitize_1.limpezaDeEntrada)(req.body, requestId);
             if (req.query)
                 req.query = (0, sanitize_1.limpezaDeEntrada)(req.query, requestId);
             if (req.params)
                 req.params = (0, sanitize_1.limpezaDeEntrada)(req.params, requestId);
-            // 3. Validação com Zod
+            // Validação com Zod
             if (schema.body) {
                 req.body = await schema.body.parseAsync(req.body);
             }
