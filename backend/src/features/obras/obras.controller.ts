@@ -27,7 +27,8 @@ const criarObra = tratarAssincrono(async (req: Request<{}, any, ObraCreateBody>,
 });
 
 const listarObras = tratarAssincrono(async (req: Request, res: Response) => {
-    const autorId = req.query.autorId ? Number(req.query.autorId) : undefined;
+    // Se houver um autorId na query, usa ele (para perfis públicos), caso contrário, força o ID do usuário logado
+    const autorId = req.query.autorId ? Number(req.query.autorId) : req.user?.perfil_id;
     const obras = await obrasService.listarObras(autorId);
 
     return res.status(200).json({

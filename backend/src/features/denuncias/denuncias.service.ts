@@ -20,10 +20,7 @@ async function registrarDenuncia(perfilId: number, postId: number, data: DadosDe
     if (!post) throw AppError.notFound('Publicação não encontrada.');
 
 
-    //desabilitar snapshot por enquanto e colocar uma verção com string simples
-    //Para armazenar textos longos, a coluna
-    // precisa ser do tipo Text ou Json no schema.prisma
-    /*const snapshot = JSON.stringify({
+    const snapshotObj = {
       post_id: post.post_id,
       titulo: post.titulo,
       conteudo: post.conteudo,
@@ -31,23 +28,18 @@ async function registrarDenuncia(perfilId: number, postId: number, data: DadosDe
       total_upvotes: post.total_upvotes,
       total_downvotes: post.total_downvotes,
       total_comentarios: post.total_comentarios
-    });*/
+    };
 
-    const snapshot = JSON.stringify({
-      post_id: post.post_id,
-      titulo: post.titulo.substring(0, 50),
-      conteudo: post.conteudo ? post.conteudo.substring(0, 100) + '...' : "",
-      autor_id: post.autor_id
-    });
     const created = await tx.denuncias.create({
       data: {
         denuncia_tipo: data.denuncia_tipo,
         descricao: data.descricao ?? null,
-        conteudo_snapshot: snapshot,
+        conteudo_snapshot: snapshotObj,
         post_id: postId,
         perfil_id: perfilId
       }
     });
+    
     return created;
   });
   await registrarLog(perfilId, 'REPORT_CREATED', { denuncia_id: result.denuncia_id, post_id: postId }, requestId);

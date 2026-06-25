@@ -495,8 +495,8 @@ model Denuncias {
   denuncia_id Int @id @default(autoincrement())
 
   denuncia_tipo     Int
-  descricao         String?
-  conteudo_snapshot String
+  descricao         String?        @db.VarChar(255)
+  conteudo_snapshot Json
   status            DenunciaStatus @default(PENDENTE)
   data_criacao      DateTime @default(now())
 

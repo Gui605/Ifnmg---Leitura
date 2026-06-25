@@ -3,9 +3,8 @@ import { z } from 'zod';
 
 export const DenunciaCreateSchema = z.object({
   denuncia_tipo: z.number().int().positive(),
-  descricao: z.string().max(500).optional()
-  // ficará desabilitado por enquando, implamartar, refatorar
-  //conteudo_snapshot: z.string().min(1, "O snapshot do conteúdo é obrigatório")
+  descricao: z.string().max(500).optional(),
+  conteudo_snapshot: z.any()
 }).strict();
 
 export type DenunciaCreateBody = z.infer<typeof DenunciaCreateSchema>;
@@ -19,6 +18,6 @@ export const DenunciaResponseSchema = z.object({
     perfil_id: z.number().nullable(),
     denuncia_tipo: z.number(),
     descricao: z.string().nullable(),
-    conteudo_snapshot: z.string(),
+    conteudo_snapshot: z.any(),
     data_criacao: z.date()
 });
