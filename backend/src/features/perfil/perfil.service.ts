@@ -7,21 +7,23 @@ import { AppError } from '../../shared/utils/AppError';
 
 async function atualizarPerfil(perfilId: number, data: PerfilPatchBody, _requestId?: string) {
     try {
-        const { nome } = data;
+        const { nome, titulo_ativo } = data as any; 
 
-        // Se o nome não foi enviado ou é inválido, não tentamos atualizar
         const updateData: any = {};
         if (nome !== undefined) {
             updateData.nome_user = nome?.trim();
         }
-
+        if (titulo_ativo !== undefined) {
+            updateData.titulo_ativo = titulo_ativo === null ? null : titulo_ativo.trim();
+        }
         return await prisma.perfis.update({
             where: { perfil_id: perfilId },
-            data: updateData, // Injetamos apenas campos validados
+            data: updateData, 
             select: {
                 perfil_id: true,
                 nome_user: true,
                 score_karma: true,
+                titulo_ativo: true,
                 reading_points: true,
                 data_criacao: true
             }

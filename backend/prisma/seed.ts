@@ -5,7 +5,7 @@ import prisma from '../src/shared/prisma/prisma.client';
 async function main() {
   console.log('🌱 Iniciando Seed Unificado: Segurança, Robustez & Dados Acadêmicos...');
 
-  // --- 1. LIMPEZA EM CASCATA ---
+  // --- 1. LIMPEZA ---
   await prisma.denuncias.deleteMany();
   await prisma.votos.deleteMany();
   await prisma.comentarios.deleteMany();
@@ -40,7 +40,7 @@ async function main() {
     categoriasMapeadas[nome] = cat.categoria_id;
   }
 
-  // --- 3. USUÁRIOS E PERFIS DO ARQUIVO ANTIGO (MANTIDOS E CORRIGIDOS) ---
+  // --- 3. USUÁRIOS E PERFIS DO ARQUIVO ANTIGO ---
   const userSenior = await prisma.perfis.create({
     data: {
       nome_user: 'Dev Sênior',
@@ -107,7 +107,7 @@ async function main() {
     }
   });
 
-  // --- 4. NOVOS USUÁRIOS ACADÊMICOS PADRONIZADOS IFNMG ---
+  // --- 4. NOVOS USUÁRIOS ACADÊMICOS---
   const dadosUsuariosNovos = [
     { nome: 'Guilherme Silva', user: 'guilherme_dev', campus: 'Araçuaí', email: 'guilherme.silva@ifnmg.edu.br', admin: true },
     { nome: 'Ana Beatriz Oliveira', user: 'ana_bio', campus: 'Januária', email: 'ana.oliveira@ifnmg.edu.br', admin: false },
@@ -174,9 +174,9 @@ async function main() {
     }
   });
 
-  // --- 6. CRIAÇÃO DE POSTS E CAPÍTULOS DE OBRAS EXPANDIDOS (15 CAPÍTULOS EXTRAS) ---
+  // --- 6. CRIAÇÃO DE POSTS E CAPÍTULOS DE OBRAS EXPANDIDOS---
   
-  // Post de Boas-vindas (Do arquivo Antigo)
+  // Post de Boas-vindas
   await prisma.posts.create({
     data: {
       titulo: 'Boas-vindas à Comunidade',
@@ -193,7 +193,7 @@ async function main() {
     }
   });
 
-  // Capítulos para "A Jornada do Código" (Obra Antiga - Adicionados 4 Capítulos)
+  // Capítulos para "A Jornada do Código" 
   await prisma.posts.createMany({
     data: [
       { titulo: 'Capítulo 1: O Nascimento do Bit', conteudo: 'No início, os cartões perfurados moldavam a arquitetura mecânica da computação moderna...', autor_id: userSenior.perfil_id, obra_id: obraAntiga.obra_id, ordem: 1, idioma: 'Português', status: 'CONCLUIDO' },
@@ -204,7 +204,7 @@ async function main() {
     ]
   });
 
-  // Capítulos Sequenciais para "Manual de Sobrevivência em Algoritmos" (Obra Nova 1 - Adicionados 6 Capítulos)
+  // Capítulos Sequenciais para "Manual de Sobrevivência em Algoritmos" 
   await prisma.posts.createMany({
     data: [
       { titulo: 'Capítulo 1: Desmistificando Ponteiros', conteudo: '# Ponteiros em C\n\nPonteiros guardam **endereços de memória**.', autor_id: profGuilherme.perfil_id, obra_id: obraProgramacao.obra_id, ordem: 1, idioma: 'Português', status: 'CONCLUIDO' },
@@ -217,7 +217,7 @@ async function main() {
     ]
   });
 
-  // Capítulos Sequenciais para "Sistemas de Irrigação no Semiárido" (Obra Nova 2 - Adicionados 5 Capítulos)
+  // Capítulos Sequenciais para "Sistemas de Irrigação no Semiárido" 
   await prisma.posts.createMany({
     data: [
       { titulo: 'Capítulo 1: Gotejamento Subsuperficial', conteudo: 'A técnica de gotejamento reduz drasticamente a taxa de evaporação do solo no Jequitinhonha.', autor_id: alunoMarcos.perfil_id, obra_id: obraAgronomia.obra_id, ordem: 1, idioma: 'Português', status: 'CONCLUIDO' },
@@ -228,7 +228,7 @@ async function main() {
     ]
   });
 
-  // --- 7. CRIAÇÃO DE POSTS SIMPLES/AVULSOS (10 POSTS NO TOTAL) ---
+  // --- 7. CRIAÇÃO DE POSTS SIMPLES/AVULSOS  ---
   const postsSimples = [
     { titulo: 'Guia de Redação Nota 1000', conteudo: '# Estrutura Dissertativa\n\n* **Introdução**\n* **Desenvolvimento**\n* **Conclusão**', autor: alunaAna.perfil_id, cat: 'Redação Acadêmica' },
     { titulo: 'Introdução às Redes Neurais Artificiais', conteudo: '# IA Prática\n\nPerceptrons e funções de ativação como ReLU ou Sigmoide.', autor: profaJoana.perfil_id, cat: 'Inteligência Artificial' },
